@@ -1,0 +1,36 @@
+# From https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs#using-the-nodejs-starter-workflow
+name: Node.js and Solana CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      # Install Solana
+      # From https://docs.solana.com/cli/install-solana-cli-tools
+      - run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+
+      - name: Add to PATH
+        shell: bash
+        run: |
+          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      # Install everything
+      - run: npm ci
+
+      - name: Check Solana keygen is installed
+        run: which solana-keygen
+
+      # Run tests
+      - run: npm test
