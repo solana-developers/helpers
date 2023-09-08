@@ -1,8 +1,8 @@
-import { describe, test, beforeEach } from "node:test";
+import { describe, test, before } from "node:test";
 import assert from "node:assert/strict";
 import { promisify } from "util";
-import { exec as lameExec } from "child_process";
-const exec = promisify(lameExec);
+import { exec as execForOldPeople } from "child_process";
+const exec = promisify(execForOldPeople);
 import { Keypair } from "@solana/web3.js";
 import { getKeypairFromFile, getKeypairFromEnvironment } from "./index";
 import { writeFile } from "node:fs/promises";
@@ -13,85 +13,78 @@ const log = console.log;
 const TEMP_DIR = "src/temp";
 
 describe("getKeypairFromFile", () => {
-  test("getting a keypair from a file", async () => {
-    const TEST_FILE_NAME = `${TEMP_DIR}/test-keyfile-do-not-use.json`;
+  let TEST_FILE_NAME: string;
+  let MISSING_FILE_NAME = "THIS FILE DOES NOT EXIST";
+  let CORRUPT_TEST_FILE_NAME: string;
+  before(async () => {
+    TEST_FILE_NAME = `${TEMP_DIR}/test-keyfile-do-not-use.json`;
     const { stdout, stderr } = await exec(
       `solana-keygen new --force --no-bip39-passphrase -o ${TEST_FILE_NAME}`,
     );
     assert(stdout.includes("Wrote new keypair"));
-    const keypair = await getKeypairFromFile(TEST_FILE_NAME);
+
+    CORRUPT_TEST_FILE_NAME = `${TEMP_DIR}/corrupt-keyfile-do-not-use.json`;
+    await writeFile(CORRUPT_TEST_FILE_NAME, "I AM CORRUPT");
+  });
+
+  test("getting a keypair from a file", async () => {
+    await getKeypairFromFile(TEST_FILE_NAME);
   });
 
   test("throws a nice error if the file is missing", async () => {
-    try {
-      await getKeypairFromFile("I DONT EXIST");
-    } catch (thrownObject) {
-      const error = thrownObject as Error;
-      assert.strictEqual(
-        error.message,
-        `Could not read keypair from file at 'I DONT EXIST'`,
-      );
-    }
+    assert.rejects(async () => await getKeypairFromFile(MISSING_FILE_NAME), {
+      message: `Could not read keypair from file at '${MISSING_FILE_NAME}'`,
+    });
   });
 
   test("throws a nice error if the file is corrupt", async () => {
-    const TEST_FILE_NAME = `${TEMP_DIR}/corrupt-keyfile-do-not-use.json`;
-    await writeFile(TEST_FILE_NAME, "I AM CORRUPT");
-    try {
-      await getKeypairFromFile(TEST_FILE_NAME);
-    } catch (thrownObject) {
-      const error = thrownObject as Error;
-      assert.strictEqual(
-        error.message,
-        `Invalid secret key file at '${TEST_FILE_NAME}'!`,
-      );
-    }
+    assert.rejects(() => getKeypairFromFile(CORRUPT_TEST_FILE_NAME), {
+      message: `Invalid secret key file at '${CORRUPT_TEST_FILE_NAME}'!`,
+    });
   });
 });
 
 describe("getKeypairFromEnvironment", () => {
-  test("getting a keypair from an environment variable (array of numbers format)", async () => {
+  let TEST_ENV_VAR_ARRAY_OF_NUMBERS: string;
+  let TEST_ENV_VAR_BASE58: string;
+  let TEST_ENV_VAR_WITH_BAD_VALUE: string;
+
+  before(async () => {
     const randomKeypair = Keypair.generate();
-    const TEST_ENV_VAR = "TEST_ENV_VAR";
-    process.env[TEST_ENV_VAR] = JSON.stringify(
+
+    TEST_ENV_VAR_ARRAY_OF_NUMBERS = "TEST_ENV_VAR_ARRAY_OF_NUMBERS";
+    process.env[TEST_ENV_VAR_ARRAY_OF_NUMBERS] = JSON.stringify(
       Object.values(randomKeypair.secretKey),
     );
 
-    await getKeypairFromEnvironment(TEST_ENV_VAR);
+    TEST_ENV_VAR_BASE58 = "TEST_ENV_VAR_BASE58";
+    process.env[TEST_ENV_VAR_BASE58] = base58.encode(randomKeypair.secretKey);
+
+    TEST_ENV_VAR_WITH_BAD_VALUE = "TEST_ENV_VAR_WITH_BAD_VALUE";
+    process.env[TEST_ENV_VAR_WITH_BAD_VALUE] =
+      "this isn't a valid value for a secret key";
+  });
+
+  test("getting a keypair from an environment variable (array of numbers format)", async () => {
+    await getKeypairFromEnvironment(TEST_ENV_VAR_ARRAY_OF_NUMBERS);
   });
 
   test("getting a keypair from an environment variable (base58 format)", async () => {
-    const randomKeypair = Keypair.generate();
-    const TEST_ENV_VAR = "TEST_ENV_VAR";
-    process.env[TEST_ENV_VAR] = base58.encode(randomKeypair.secretKey);
-    await getKeypairFromEnvironment(TEST_ENV_VAR);
+    await getKeypairFromEnvironment(TEST_ENV_VAR_BASE58);
   });
 
   test("throws a nice error if the env var doesn't exist", async () => {
-    let keypair: Keypair;
-    try {
-      keypair = await getKeypairFromEnvironment("MISSING_ENV_VAR");
-    } catch (thrownObject) {
-      const error = thrownObject as Error;
-      assert.strictEqual(
-        error.message,
-        `Please set 'MISSING_ENV_VAR' in environment.`,
-      );
-    }
+    assert.rejects(async () => getKeypairFromEnvironment("MISSING_ENV_VAR"), {
+      message: `Please set 'MISSING_ENV_VAR' in environment.`,
+    });
   });
 
   test("throws a nice error if the value of the env var isn't valid", async () => {
-    const TEST_ENV_VAR = "TEST_ENV_VAR_WITH_BAD_VALUE";
-    process.env[TEST_ENV_VAR] = "this isn't a valid value for a secret key";
-
-    try {
-      await getKeypairFromEnvironment(TEST_ENV_VAR);
-    } catch (thrownObject) {
-      const error = thrownObject as Error;
-      assert.strictEqual(
-        error.message,
-        `Invalid secret key in environment variable '${TEST_ENV_VAR}'!`,
-      );
-    }
+    assert.rejects(
+      async () => getKeypairFromEnvironment("TEST_ENV_VAR_WITH_BAD_VALUE"),
+      {
+        message: `Invalid secret key in environment variable 'TEST_ENV_VAR_WITH_BAD_VALUE'!`,
+      },
+    );
   });
 });
