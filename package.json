@@ -1,0 +1,23 @@
+{
+  "name": "@solana-developers/node-helpers",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx esbuild src/index.ts --outdir=dist",
+    "test": "esrun src/index.test.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@digitak/esrun": "^3.2.24",
+    "bs58": "^5.0.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "@solana/web3.js": "^1.78.4",
+    "@types/node": "^20.5.7"
+  }
+}
