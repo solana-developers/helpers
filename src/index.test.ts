@@ -13,17 +13,15 @@ const log = console.log;
 const TEMP_DIR = "src/temp";
 
 describe("getKeypairFromFile", () => {
-  let TEST_FILE_NAME: string;
+  let TEST_FILE_NAME = `${TEMP_DIR}/test-keyfile-do-not-use.json`;
   let MISSING_FILE_NAME = "THIS FILE DOES NOT EXIST";
-  let CORRUPT_TEST_FILE_NAME: string;
+  let CORRUPT_TEST_FILE_NAME = `${TEMP_DIR}/corrupt-keyfile-do-not-use.json`;
   before(async () => {
-    TEST_FILE_NAME = `${TEMP_DIR}/test-keyfile-do-not-use.json`;
-    const { stdout, stderr } = await exec(
+    const { stdout } = await exec(
       `solana-keygen new --force --no-bip39-passphrase -o ${TEST_FILE_NAME}`,
     );
     assert(stdout.includes("Wrote new keypair"));
 
-    CORRUPT_TEST_FILE_NAME = `${TEMP_DIR}/corrupt-keyfile-do-not-use.json`;
     await writeFile(CORRUPT_TEST_FILE_NAME, "I AM CORRUPT");
   });
 
@@ -45,22 +43,19 @@ describe("getKeypairFromFile", () => {
 });
 
 describe("getKeypairFromEnvironment", () => {
-  let TEST_ENV_VAR_ARRAY_OF_NUMBERS: string;
-  let TEST_ENV_VAR_BASE58: string;
-  let TEST_ENV_VAR_WITH_BAD_VALUE: string;
+  let TEST_ENV_VAR_ARRAY_OF_NUMBERS = "TEST_ENV_VAR_ARRAY_OF_NUMBERS";
+  let TEST_ENV_VAR_BASE58 = "TEST_ENV_VAR_BASE58";
+  let TEST_ENV_VAR_WITH_BAD_VALUE = "TEST_ENV_VAR_WITH_BAD_VALUE";
 
   before(async () => {
     const randomKeypair = Keypair.generate();
 
-    TEST_ENV_VAR_ARRAY_OF_NUMBERS = "TEST_ENV_VAR_ARRAY_OF_NUMBERS";
     process.env[TEST_ENV_VAR_ARRAY_OF_NUMBERS] = JSON.stringify(
       Object.values(randomKeypair.secretKey),
     );
 
-    TEST_ENV_VAR_BASE58 = "TEST_ENV_VAR_BASE58";
     process.env[TEST_ENV_VAR_BASE58] = base58.encode(randomKeypair.secretKey);
 
-    TEST_ENV_VAR_WITH_BAD_VALUE = "TEST_ENV_VAR_WITH_BAD_VALUE";
     process.env[TEST_ENV_VAR_WITH_BAD_VALUE] =
       "this isn't a valid value for a secret key";
   });
