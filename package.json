@@ -1,8 +1,9 @@
 {
   "name": "@solana-developers/node-helpers",
   "version": "1.0.0",
-  "description": "",
+  "description": "Solana helper functions for node.js",
   "main": "index.js",
+  "private": false,
   "scripts": {
     "build": "npx esbuild src/index.ts --outdir=dist",
     "test": "esrun src/index.test.ts"
