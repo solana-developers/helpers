@@ -10,25 +10,29 @@ Gets a keypair from a file - the format must be the same as [Solana CLI](https:/
 
 To load the default keypair `~/.config/solana/id.json`, just run:
 
-```
-const keyPair = await Keypair.fromFile();
+```typescript
+const keyPair = await getKeypairFromFile();
 ```
 
 or to load a specific file:
 
-```
-const keyPair = await Keypair.fromFile('somefile.json');
+```typescript
+const keyPair = await getKeypairFromFile("somefile.json");
 ```
 
 or using home dir expansion:
 
-```
-const keyPair = await Keypair.fromFile('~/code/solana/demos/steve.json');
+```typescript
+const keyPair = await getKeypairFromFile("~/code/solana/demos/steve.json");
 ```
 
 ## getKeypairFromEnvironment
 
 Gets a keypair from a secret key stored in an environment variable. This is typically used to load secret keys from [env files](https://stackoverflow.com/questions/68267862/what-is-an-env-or-dotenv-file-exactly).
+
+```typescript
+const keyPair = await getKeypairFromEnvironment(TEST_ENV_VAR_BASE58);
+```
 
 ### Secret key format
 
