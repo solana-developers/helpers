@@ -20,5 +20,9 @@
   "devDependencies": {
     "@solana/web3.js": "^1.78.4",
     "@types/node": "^20.5.7"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
