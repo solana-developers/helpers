@@ -31,7 +31,7 @@ const keyPair = await getKeypairFromFile("~/code/solana/demos/steve.json");
 Gets a keypair from a secret key stored in an environment variable. This is typically used to load secret keys from [env files](https://stackoverflow.com/questions/68267862/what-is-an-env-or-dotenv-file-exactly).
 
 ```typescript
-const keyPair = await getKeypairFromEnvironment(TEST_ENV_VAR_BASE58);
+const keyPair = await getKeypairFromEnvironment("SECRET_KEY");
 ```
 
 ### Secret key format
