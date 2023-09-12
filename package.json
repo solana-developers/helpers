@@ -1,11 +1,12 @@
 {
   "name": "@solana-developers/node-helpers",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Solana helper functions for node.js",
-  "main": "index.js",
+  "main": "dist/index.js",
   "private": false,
   "scripts": {
-    "build": "npx esbuild src/index.ts --outdir=dist",
+    "build": "tsup src/index.ts --dts",
+    "clean": "rm -rf dist",
     "test": "esrun src/index.test.ts"
   },
   "keywords": [
@@ -25,7 +26,8 @@
   },
   "devDependencies": {
     "@solana/web3.js": "^1.78.4",
-    "@types/node": "^20.5.7"
+    "@types/node": "^20.5.7",
+    "tsup": "^7.2.0"
   },
   "publishConfig": {
     "access": "public",
