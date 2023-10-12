@@ -1,12 +1,16 @@
-import { describe, test, before } from "node:test";
-import assert from "node:assert/strict";
-import { promisify } from "util";
-import { exec as execForOldPeople } from "child_process";
-const exec = promisify(execForOldPeople);
+import { before, describe, test } from "node:test";
+import { getKeypairFromEnvironment, getKeypairFromFile } from "./index";
+
 import { Keypair } from "@solana/web3.js";
-import { getKeypairFromFile, getKeypairFromEnvironment } from "./index";
-import { writeFile } from "node:fs/promises";
+import assert from "node:assert/strict";
 import base58 from "bs58";
+import dotenv from "dotenv";
+import { exec as execForOldPeople } from "child_process";
+import { promisify } from "util";
+import { unlinkSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
+
+const exec = promisify(execForOldPeople);
 
 const log = console.log;
 
@@ -68,10 +72,24 @@ describe("getKeypairFromEnvironment", () => {
     await getKeypairFromEnvironment(TEST_ENV_VAR_BASE58);
   });
 
-  test("throws a nice error if the env var doesn't exist", async () => {
-    assert.rejects(async () => getKeypairFromEnvironment("MISSING_ENV_VAR"), {
-      message: `Please set 'MISSING_ENV_VAR' in environment.`,
-    });
+  test("generates new keypair and writes to env if variable doesn't exist", async () => {
+    // Returns a new keypair and writes it to the .env file
+    const newKeypair = await getKeypairFromEnvironment("MISSING_ENV_VAR");
+    // Load the .env file
+    dotenv.config();
+    // Get the secret from the .env file
+    const secretKeyString = process.env["MISSING_ENV_VAR"];
+
+    if (!secretKeyString) {
+      throw new Error("MISSING_ENV_VAR not found in environment");
+    }
+    const decodedSecretKey = Uint8Array.from(JSON.parse(secretKeyString));
+    const envKeypair = Keypair.fromSecretKey(decodedSecretKey);
+
+    assert.deepStrictEqual(newKeypair.secretKey, envKeypair.secretKey);
+
+    // delete the .env file
+    unlinkSync(".env");
   });
 
   test("throws a nice error if the value of the env var isn't valid", async () => {
