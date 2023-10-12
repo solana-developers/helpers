@@ -4,6 +4,11 @@ The `node-helpers` package package contains node.js specific Solana helper funct
 
 See `@solana/web3.js` for functions that work in both the browser and node.js.
 
+## Installation 
+```bash
+npm i @solana-developers/node-helpers
+```
+
 ## getKeypairFromFile
 
 Gets a keypair from a file - the format must be the same as [Solana CLI](https://docs.solana.com/wallet-guide/file-system-wallet) uses, ie, a JSON array of numbers:
