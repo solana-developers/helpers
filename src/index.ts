@@ -1,8 +1,8 @@
 import { Keypair } from "@solana/web3.js";
 import base58 from "bs58";
-import fs from "fs";
 import path from "path";
 import { readFile } from "fs/promises";
+import { appendFileSync } from "node:fs";
 const log = console.log;
 
 // Default value from Solana CLI
@@ -46,13 +46,7 @@ export const getKeypairFromFile = async (filepath?: string) => {
 export const getKeypairFromEnvironment = (variableName: string) => {
   const secretKeyString = process.env[variableName];
   if (!secretKeyString) {
-    // Generate a new keypair if one doesn't exist and add it to a `.env` file
-    const keypair = Keypair.generate();
-    fs.appendFileSync(
-      ".env",
-      `\n${variableName}=${JSON.stringify(Array.from(keypair.secretKey))}`,
-    );
-    return keypair;
+    throw new Error(`Please set '${variableName}' in environment.`);
   }
 
   // Try the shorter base58 format first
@@ -78,4 +72,18 @@ export const getKeypairFromEnvironment = (variableName: string) => {
     );
   }
   return Keypair.fromSecretKey(decodedSecretKey);
+};
+
+export const addKeypairToEnvironment = (variableName: string) => {
+  const secretKeyString = process.env[variableName];
+  if (!secretKeyString) {
+    // Generate a new keypair if one doesn't exist and add it to a `.env` file
+    const keypair = Keypair.generate();
+    appendFileSync(
+      ".env",
+      `\n${variableName}=${JSON.stringify(Array.from(keypair.secretKey))}`,
+    );
+  } else {
+    throw new Error(`'${variableName}' already exists in environment.`);
+  }
 };

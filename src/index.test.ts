@@ -1,14 +1,17 @@
 import { before, describe, test } from "node:test";
-import { getKeypairFromEnvironment, getKeypairFromFile } from "./index";
+import {
+  getKeypairFromEnvironment,
+  getKeypairFromFile,
+  addKeypairToEnvironment,
+} from "./index";
 
 import { Keypair } from "@solana/web3.js";
 import assert from "node:assert/strict";
 import base58 from "bs58";
-import dotenv from "dotenv";
 import { exec as execForOldPeople } from "child_process";
 import { promisify } from "util";
-import { unlinkSync } from "node:fs";
-import { writeFile } from "node:fs/promises";
+import { writeFile, unlink } from "node:fs/promises";
+import dotenv from "dotenv";
 
 const exec = promisify(execForOldPeople);
 
@@ -72,24 +75,10 @@ describe("getKeypairFromEnvironment", () => {
     await getKeypairFromEnvironment(TEST_ENV_VAR_BASE58);
   });
 
-  test("generates new keypair and writes to env if variable doesn't exist", async () => {
-    // Returns a new keypair and writes it to the .env file
-    const newKeypair = await getKeypairFromEnvironment("MISSING_ENV_VAR");
-    // Load the .env file
-    dotenv.config();
-    // Get the secret from the .env file
-    const secretKeyString = process.env["MISSING_ENV_VAR"];
-
-    if (!secretKeyString) {
-      throw new Error("MISSING_ENV_VAR not found in environment");
-    }
-    const decodedSecretKey = Uint8Array.from(JSON.parse(secretKeyString));
-    const envKeypair = Keypair.fromSecretKey(decodedSecretKey);
-
-    assert.deepStrictEqual(newKeypair.secretKey, envKeypair.secretKey);
-
-    // delete the .env file
-    unlinkSync(".env");
+  test("throws a nice error if the env var doesn't exist", async () => {
+    assert.rejects(async () => getKeypairFromEnvironment("MISSING_ENV_VAR"), {
+      message: `Please set 'MISSING_ENV_VAR' in environment.`,
+    });
   });
 
   test("throws a nice error if the value of the env var isn't valid", async () => {
@@ -97,6 +86,46 @@ describe("getKeypairFromEnvironment", () => {
       async () => getKeypairFromEnvironment("TEST_ENV_VAR_WITH_BAD_VALUE"),
       {
         message: `Invalid secret key in environment variable 'TEST_ENV_VAR_WITH_BAD_VALUE'!`,
+      },
+    );
+  });
+});
+
+describe("addKeypairToEnvironment", () => {
+  let TEST_ENV_VAR_ARRAY_OF_NUMBERS = "TEST_ENV_VAR_ARRAY_OF_NUMBERS";
+
+  before(async () => {
+    const randomKeypair = Keypair.generate();
+
+    process.env[TEST_ENV_VAR_ARRAY_OF_NUMBERS] = JSON.stringify(
+      Object.values(randomKeypair.secretKey),
+    );
+  });
+
+  test("generates new keypair and writes to env if variable doesn't exist", async () => {
+    // Generates new keypair and writes it to the .env file
+    addKeypairToEnvironment("TEMP_KEYPAIR");
+    // Load the .env file
+    dotenv.config();
+    // Get the secret from the .env file
+    const secretKeyString = process.env["TEMP_KEYPAIR"];
+
+    if (!secretKeyString) {
+      throw new Error("TEMP_KEYPAIR not found in environment");
+    }
+    const decodedSecretKey = Uint8Array.from(JSON.parse(secretKeyString));
+    const envKeypair = Keypair.fromSecretKey(decodedSecretKey);
+
+    assert.ok(envKeypair.secretKey);
+
+    unlink(".env");
+  });
+
+  test("throws a nice error if the env var already exists", async () => {
+    assert.rejects(
+      async () => addKeypairToEnvironment(TEST_ENV_VAR_ARRAY_OF_NUMBERS),
+      {
+        message: `'TEST_ENV_VAR_ARRAY_OF_NUMBERS' already exists in environment.`,
       },
     );
   });
