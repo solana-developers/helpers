@@ -1,12 +1,19 @@
-import { describe, test, before } from "node:test";
-import assert from "node:assert/strict";
-import { promisify } from "util";
-import { exec as execForOldPeople } from "child_process";
-const exec = promisify(execForOldPeople);
+import { before, describe, test } from "node:test";
+import {
+  getKeypairFromEnvironment,
+  getKeypairFromFile,
+  addKeypairToEnvironment,
+} from "./index";
+
 import { Keypair } from "@solana/web3.js";
-import { getKeypairFromFile, getKeypairFromEnvironment } from "./index";
-import { writeFile } from "node:fs/promises";
+import assert from "node:assert/strict";
 import base58 from "bs58";
+import { exec as execForOldPeople } from "child_process";
+import { promisify } from "util";
+import { writeFile, unlink } from "node:fs/promises";
+import dotenv from "dotenv";
+
+const exec = promisify(execForOldPeople);
 
 const log = console.log;
 
@@ -79,6 +86,46 @@ describe("getKeypairFromEnvironment", () => {
       async () => getKeypairFromEnvironment("TEST_ENV_VAR_WITH_BAD_VALUE"),
       {
         message: `Invalid secret key in environment variable 'TEST_ENV_VAR_WITH_BAD_VALUE'!`,
+      },
+    );
+  });
+});
+
+describe("addKeypairToEnvironment", () => {
+  let TEST_ENV_VAR_ARRAY_OF_NUMBERS = "TEST_ENV_VAR_ARRAY_OF_NUMBERS";
+
+  before(async () => {
+    const randomKeypair = Keypair.generate();
+
+    process.env[TEST_ENV_VAR_ARRAY_OF_NUMBERS] = JSON.stringify(
+      Object.values(randomKeypair.secretKey),
+    );
+  });
+
+  test("generates new keypair and writes to env if variable doesn't exist", async () => {
+    // Generates new keypair and writes it to the .env file
+    addKeypairToEnvironment("TEMP_KEYPAIR");
+    // Load the .env file
+    dotenv.config();
+    // Get the secret from the .env file
+    const secretKeyString = process.env["TEMP_KEYPAIR"];
+
+    if (!secretKeyString) {
+      throw new Error("TEMP_KEYPAIR not found in environment");
+    }
+    const decodedSecretKey = Uint8Array.from(JSON.parse(secretKeyString));
+    const envKeypair = Keypair.fromSecretKey(decodedSecretKey);
+
+    assert.ok(envKeypair.secretKey);
+
+    unlink(".env");
+  });
+
+  test("throws a nice error if the env var already exists", async () => {
+    assert.rejects(
+      async () => addKeypairToEnvironment(TEST_ENV_VAR_ARRAY_OF_NUMBERS),
+      {
+        message: `'TEST_ENV_VAR_ARRAY_OF_NUMBERS' already exists in environment.`,
       },
     );
   });

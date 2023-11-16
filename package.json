@@ -21,6 +21,7 @@
   "dependencies": {
     "@digitak/esrun": "^3.2.24",
     "bs58": "^5.0.0",
+    "dotenv": "^16.3.1",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
   },
