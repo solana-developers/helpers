@@ -1,12 +1,15 @@
 import { Keypair } from "@solana/web3.js";
 import base58 from "bs58";
 import path from "path";
-import { readFile } from "fs/promises";
-import { appendFileSync } from "node:fs";
+import { readFile, appendFile } from "fs/promises";
 const log = console.log;
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
+
+export const keypairToSecretKeyJSON = (keypair: Keypair): string => {
+  return JSON.stringify(Array.from(keypair.secretKey));
+};
 
 export const getKeypairFromFile = async (filepath?: string) => {
   // Work out correct file name
@@ -74,16 +77,18 @@ export const getKeypairFromEnvironment = (variableName: string) => {
   return Keypair.fromSecretKey(decodedSecretKey);
 };
 
-export const addKeypairToEnvironment = (variableName: string) => {
-  const secretKeyString = process.env[variableName];
-  if (!secretKeyString) {
-    // Generate a new keypair if one doesn't exist and add it to a `.env` file
-    const keypair = Keypair.generate();
-    appendFileSync(
-      ".env",
-      `\n${variableName}=${JSON.stringify(Array.from(keypair.secretKey))}`,
-    );
-  } else {
-    throw new Error(`'${variableName}' already exists in environment.`);
+export const addKeypairToEnvFile = async (
+  keypair: Keypair,
+  variableName: string,
+  fileName?: string,
+) => {
+  if (!fileName) {
+    fileName = ".env";
   }
+  const existingSecretKey = process.env[variableName];
+  if (existingSecretKey) {
+    throw new Error(`'${variableName}' already exists in env file.`);
+  }
+  const secretKeyString = keypairToSecretKeyJSON(keypair);
+  await appendFile(fileName, `\n${variableName}=${secretKeyString}`);
 };

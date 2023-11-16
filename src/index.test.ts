@@ -2,18 +2,18 @@ import { before, describe, test } from "node:test";
 import {
   getKeypairFromEnvironment,
   getKeypairFromFile,
-  addKeypairToEnvironment,
+  addKeypairToEnvFile,
 } from "./index";
-
 import { Keypair } from "@solana/web3.js";
 import assert from "node:assert/strict";
 import base58 from "bs58";
-import { exec as execForOldPeople } from "child_process";
+// See https://m.media-amazon.com/images/I/51TJeGHxyTL._SY445_SX342_.jpg
+import { exec as execNoPromises } from "child_process";
 import { promisify } from "util";
-import { writeFile, unlink } from "node:fs/promises";
+import { writeFile, unlink as deleteFile } from "node:fs/promises";
 import dotenv from "dotenv";
 
-const exec = promisify(execForOldPeople);
+const exec = promisify(execNoPromises);
 
 const log = console.log;
 
@@ -75,15 +75,15 @@ describe("getKeypairFromEnvironment", () => {
     await getKeypairFromEnvironment(TEST_ENV_VAR_BASE58);
   });
 
-  test("throws a nice error if the env var doesn't exist", async () => {
-    assert.rejects(async () => getKeypairFromEnvironment("MISSING_ENV_VAR"), {
+  test("throws a nice error if the env var doesn't exist", () => {
+    assert.throws(() => getKeypairFromEnvironment("MISSING_ENV_VAR"), {
       message: `Please set 'MISSING_ENV_VAR' in environment.`,
     });
   });
 
-  test("throws a nice error if the value of the env var isn't valid", async () => {
-    assert.rejects(
-      async () => getKeypairFromEnvironment("TEST_ENV_VAR_WITH_BAD_VALUE"),
+  test("throws a nice error if the value of the env var isn't valid", () => {
+    assert.throws(
+      () => getKeypairFromEnvironment("TEST_ENV_VAR_WITH_BAD_VALUE"),
       {
         message: `Invalid secret key in environment variable 'TEST_ENV_VAR_WITH_BAD_VALUE'!`,
       },
@@ -91,22 +91,24 @@ describe("getKeypairFromEnvironment", () => {
   });
 });
 
-describe("addKeypairToEnvironment", () => {
+describe("addKeypairToEnvFile", () => {
   let TEST_ENV_VAR_ARRAY_OF_NUMBERS = "TEST_ENV_VAR_ARRAY_OF_NUMBERS";
+  let testKeypair: Keypair;
 
   before(async () => {
-    const randomKeypair = Keypair.generate();
+    testKeypair = Keypair.generate();
 
     process.env[TEST_ENV_VAR_ARRAY_OF_NUMBERS] = JSON.stringify(
-      Object.values(randomKeypair.secretKey),
+      Object.values(testKeypair.secretKey),
     );
   });
 
   test("generates new keypair and writes to env if variable doesn't exist", async () => {
-    // Generates new keypair and writes it to the .env file
-    addKeypairToEnvironment("TEMP_KEYPAIR");
-    // Load the .env file
+    addKeypairToEnvFile(testKeypair, "TEMP_KEYPAIR");
+
+    // Now reload the environemnt and check it matches our test keypair
     dotenv.config();
+
     // Get the secret from the .env file
     const secretKeyString = process.env["TEMP_KEYPAIR"];
 
@@ -118,14 +120,15 @@ describe("addKeypairToEnvironment", () => {
 
     assert.ok(envKeypair.secretKey);
 
-    unlink(".env");
+    deleteFile(".env");
   });
 
   test("throws a nice error if the env var already exists", async () => {
     assert.rejects(
-      async () => addKeypairToEnvironment(TEST_ENV_VAR_ARRAY_OF_NUMBERS),
+      async () =>
+        addKeypairToEnvFile(testKeypair, TEST_ENV_VAR_ARRAY_OF_NUMBERS),
       {
-        message: `'TEST_ENV_VAR_ARRAY_OF_NUMBERS' already exists in environment.`,
+        message: `'TEST_ENV_VAR_ARRAY_OF_NUMBERS' already exists in env file.`,
       },
     );
   });
