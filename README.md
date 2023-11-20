@@ -10,7 +10,7 @@ See `@solana/web3.js` for functions that work in both the browser and node.js.
 npm i @solana-developers/node-helpers
 ```
 
-## getKeypairFromFile
+## getKeypairFromFile()
 
 Gets a keypair from a file - the format must be the same as [Solana CLI](https://docs.solana.com/wallet-guide/file-system-wallet) uses, ie, a JSON array of numbers:
 
@@ -32,7 +32,7 @@ or using home dir expansion:
 const keyPair = await getKeypairFromFile("~/code/solana/demos/steve.json");
 ```
 
-## getKeypairFromEnvironment
+## getKeypairFromEnvironment()
 
 Gets a keypair from a secret key stored in an environment variable. This is typically used to load secret keys from [env files](https://stackoverflow.com/questions/68267862/what-is-an-env-or-dotenv-file-exactly).
 
