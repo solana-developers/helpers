@@ -24,7 +24,10 @@ jobs:
       - name: Add to PATH
         shell: bash
         run: |
-          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          echo "~/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      # Run Solana validator
+      - run: solana-test-validator
 
       # Install everything
       - run: npm ci
