@@ -104,9 +104,9 @@ describe("addKeypairToEnvFile", () => {
   });
 
   test("generates new keypair and writes to env if variable doesn't exist", async () => {
-    addKeypairToEnvFile(testKeypair, "TEMP_KEYPAIR");
+    await addKeypairToEnvFile(testKeypair, "TEMP_KEYPAIR");
 
-    // Now reload the environemnt and check it matches our test keypair
+    // Now reload the environment and check it matches our test keypair
     dotenv.config();
 
     // Get the secret from the .env file
