@@ -1,7 +1,7 @@
 {
-  "name": "@solana-developers/node-helpers",
-  "version": "1.2.2",
-  "description": "Solana helper functions for node.js",
+  "name": "@solana-developers/helpers",
+  "version": "1.3.0",
+  "description": "Solana helper functions",
   "main": "dist/index.js",
   "private": false,
   "scripts": {
@@ -19,14 +19,14 @@
   "author": "Mike MacCana <mike.maccana@solana.org>",
   "license": "MIT",
   "dependencies": {
-    "@digitak/esrun": "^3.2.24",
+    "@solana/web3.js": "^1.78.4",
     "bs58": "^5.0.0",
     "dotenv": "^16.3.1",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
   },
   "devDependencies": {
-    "@solana/web3.js": "^1.78.4",
+    "@digitak/esrun": "^3.2.24",
     "@types/node": "^20.5.7",
     "tsup": "^7.2.0"
   },
