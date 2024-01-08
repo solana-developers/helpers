@@ -17,23 +17,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      # Install Solana
+
       # From https://docs.solana.com/cli/install-solana-cli-tools
-      - run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+      - name: Install Solana
+        run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
 
       - name: Add to PATH
-        shell: bash
-        run: |
-          echo "~/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        run: echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      # Run Solana validator (and background it)
-      - run: solana-test-validator &
+      - name: Run Solana validator (and background it)
+        run: solana-test-validator &
 
-      # Install everything
-      - run: npm ci
+      - name: Install everything
+        run: npm ci
 
       - name: Check Solana keygen is installed
-        run: which solana-keygen
+        run: echo $PATH; which solana-keygen
 
-      # Run tests
-      - run: npm test
+      - name: Run tests
+        run: npm test
