@@ -26,8 +26,8 @@ jobs:
         run: |
           echo "~/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      # Run Solana validator
-      - run: solana-test-validator
+      # Run Solana validator (and background it)
+      - run: solana-test-validator &
 
       # Install everything
       - run: npm ci
