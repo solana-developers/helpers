@@ -18,9 +18,9 @@ Sometimes Solana libaries return an error like:
 
 > failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10
 
-`getCustomErrorMessage()` allows you to turn this message into the more readable message that matches the number message from the custom program:
+`getCustomErrorMessage()` allows you to turn this message into the more readable message that matches the number message from the custom program, like:
 
-> This token mint cannot freeze accounts"
+> This token mint cannot freeze accounts
 
 Just:
 
