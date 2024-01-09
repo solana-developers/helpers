@@ -24,14 +24,14 @@ Sometimes Solana libaries return an error like:
 
 Just:
 
-- Get the errors from your programs `error.rs` file - for example, there are [the errors for the Token Program](https://github.com/solana-labs/solana-program-library/blob/master/token/program/src/error.rs)
+- Get the errors from the specific program's `error.rs` file - for example, there are [the errors for the Token Program](https://github.com/solana-labs/solana-program-library/blob/master/token/program/src/error.rs)
 
 - Save the errors into an array
 
 ```
 // Token program errors
 // https://github.com/solana-labs/solana-program-library/blob/master/token/program/src/error.rs
-const programErrors = [
+const tokenProgramErrors = [
   "Lamport balance below rent-exempt threshold",
   "Insufficient funds",
   "Invalid Mint",
@@ -59,7 +59,7 @@ Then run:
 
 ```
 const errorMessage = getCustomErrorMessage(
-  programErrors,
+  tokenProgramErrors,
   "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10",
 );
 ```
