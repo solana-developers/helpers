@@ -11,6 +11,23 @@ export const keypairToSecretKeyJSON = (keypair: Keypair): string => {
   return JSON.stringify(Array.from(keypair.secretKey));
 };
 
+export const getCustomErrorMessage = (
+  possibleProgramErrors: Array<string>,
+  errorMessage: string,
+): string | null => {
+  const customErrorExpression =
+    /.*custom program error: 0x(?<errorNumber>[0-9abcdef]+)/;
+
+  let match = customErrorExpression.exec(errorMessage);
+  const errorNumberFound = match?.groups?.errorNumber;
+  if (!errorNumberFound) {
+    return null;
+  }
+  // errorNumberFound is a base16 string
+  const errorNumber = parseInt(errorNumberFound, 16);
+  return possibleProgramErrors[errorNumber] || null;
+};
+
 export const getKeypairFromFile = async (filepath?: string) => {
   // Work out correct file name
   if (!filepath) {

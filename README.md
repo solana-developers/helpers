@@ -1,14 +1,76 @@
-# Solana node helpers
+# Solana helpers
 
-The `node-helpers` package package contains node.js specific Solana helper functions.
+The `helpers` package contains Solana helper functions, for use in the browser and/or node.js
 
-See `@solana/web3.js` for functions that work in both the browser and node.js.
+Eventually most of these will end up in `@solana/web3.js`.
 
 ## Installation
 
 ```bash
 npm i @solana-developers/node-helpers
 ```
+
+# helpers for the browser and node.js
+
+## getCustomErrorMessage()
+
+Sometimes Solana libaries return an error like:
+
+> failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10
+
+`getCustomErrorMessage()` allows you to turn this message into the more readable message that matches the number message from the custom program:
+
+> This token mint cannot freeze accounts"
+
+Just:
+
+- Get the errors from your programs `error.rs` file - for example, there are [the errors for the Token Program](https://github.com/solana-labs/solana-program-library/blob/master/token/program/src/error.rs)
+
+- Save the errors into an array
+
+```
+// Token program errors
+// https://github.com/solana-labs/solana-program-library/blob/master/token/program/src/error.rs
+const programErrors = [
+  "Lamport balance below rent-exempt threshold",
+  "Insufficient funds",
+  "Invalid Mint",
+  "Account not associated with this Mint",
+  "Owner does not match",
+  "Fixed supply",
+  "Already in use",
+  "Invalid number of provided signers",
+  "Invalid number of required signers",
+  "State is unititialized",
+  "Instruction does not support native tokens",
+  "Non-native account can only be closed if its balance is zero",
+  "Invalid instruction",
+  "State is invalid for requested operation",
+  "Operation overflowed",
+  "Account does not support specified authority type",
+  "This token mint cannot freeze accounts",
+  "Account is frozen",
+  "The provided decimals value different from the Mint decimals",
+  "Instruction does not support non-native tokens",
+];
+```
+
+Then run:
+
+```
+const errorMessage = getCustomErrorMessage(
+  programErrors,
+  "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10",
+);
+```
+
+And `errorMessage` will now be:
+
+```
+"This token mint cannot freeze accounts";
+```
+
+# node.js specific helpers
 
 ## getKeypairFromFile()
 
