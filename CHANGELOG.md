@@ -1,8 +1,8 @@
 ## 1.3
 
-- Now just `helpers`
-- Added `requestAndConfirmAirdrop`
-- Added `getCustomErrorMessage`
+- Now just `helpers`. The old `node-helpers` package is marked as deprecated.
+- Added `requestAndConfirmAirdrop()`
+- Added `getCustomErrorMessage()`
 
 ## 1.2
 
