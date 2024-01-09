@@ -1,4 +1,4 @@
-import { Keypair } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import base58 from "bs58";
 import path from "path";
 import { readFile, appendFile } from "fs/promises";
@@ -108,4 +108,26 @@ export const addKeypairToEnvFile = async (
   }
   const secretKeyString = keypairToSecretKeyJSON(keypair);
   await appendFile(fileName, `\n${variableName}=${secretKeyString}`);
+};
+
+export const requestAndConfirmAirdrop = async (
+  connection: Connection,
+  publicKey: PublicKey,
+  amount: number,
+) => {
+  let airdropTransactionSignature = await connection.requestAirdrop(
+    publicKey,
+    amount,
+  );
+  // Wait for airdrop confirmation
+  const latestBlockHash = await connection.getLatestBlockhash();
+  await connection.confirmTransaction(
+    {
+      blockhash: latestBlockHash.blockhash,
+      lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      signature: airdropTransactionSignature,
+    },
+    "confirmed",
+  );
+  return connection.getBalance(publicKey, "confirmed");
 };

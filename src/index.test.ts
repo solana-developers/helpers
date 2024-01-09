@@ -4,8 +4,9 @@ import {
   getKeypairFromFile,
   addKeypairToEnvFile,
   getCustomErrorMessage,
+  requestAndConfirmAirdrop,
 } from "./index";
-import { Keypair } from "@solana/web3.js";
+import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import assert from "node:assert/strict";
 import base58 from "bs58";
 // See https://m.media-amazon.com/images/I/51TJeGHxyTL._SY445_SX342_.jpg
@@ -166,5 +167,22 @@ describe("addKeypairToEnvFile", () => {
         message: `'TEST_ENV_VAR_ARRAY_OF_NUMBERS' already exists in env file.`,
       },
     );
+  });
+});
+
+describe("requestAndConfirmAirdrop", () => {
+  test("Checking the balance after requestAndConfirmAirdrop", async () => {
+    const keypair = Keypair.generate();
+    const connection = new Connection("http://127.0.0.1:8899");
+    const originalBalance = await connection.getBalance(keypair.publicKey);
+    const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL;
+    assert.equal(originalBalance, 0);
+    const newBalance = await requestAndConfirmAirdrop(
+      connection,
+      keypair.publicKey,
+      lamportsToAirdrop,
+    );
+
+    assert.equal(newBalance, lamportsToAirdrop);
   });
 });
