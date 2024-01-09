@@ -28,7 +28,7 @@ Just:
 
 - Save the errors into an array
 
-```
+```typescript
 // Token program errors
 // https://github.com/solana-labs/solana-program-library/blob/master/token/program/src/error.rs
 const tokenProgramErrors = [
@@ -57,7 +57,7 @@ const tokenProgramErrors = [
 
 Then run:
 
-```
+```typescript
 const errorMessage = getCustomErrorMessage(
   tokenProgramErrors,
   "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10",
