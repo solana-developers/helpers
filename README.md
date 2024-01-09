@@ -10,9 +10,9 @@ Eventually most of these will end up in `@solana/web3.js`.
 npm i @solana-developers/helpers
 ```
 
-# helpers for the browser and node.js
+## helpers for the browser and node.js
 
-## getCustomErrorMessage()
+### getCustomErrorMessage()
 
 Sometimes Solana libaries return an error like:
 
@@ -70,7 +70,7 @@ And `errorMessage` will now be:
 "This token mint cannot freeze accounts";
 ```
 
-## requestAndConfirmAirdrop()
+### requestAndConfirmAirdrop()
 
 Request and confirm an airdrop in one step. This is built the next future version of web3.js, but we've added it here now for your convenience.
 
@@ -84,9 +84,9 @@ const balance = await requestAndConfirmAirdrop(
 
 As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned by requestAndConfirmAirdrop(). This makes `requestAndConfirmAirdrop()` very handy in testing scripts.
 
-# node.js specific helpers
+## node.js specific helpers
 
-## getKeypairFromFile()
+### getKeypairFromFile()
 
 Gets a keypair from a file - the format must be the same as [Solana CLI](https://docs.solana.com/wallet-guide/file-system-wallet) uses, ie, a JSON array of numbers:
 
@@ -108,7 +108,7 @@ or using home dir expansion:
 const keyPair = await getKeypairFromFile("~/code/solana/demos/steve.json");
 ```
 
-## getKeypairFromEnvironment()
+### getKeypairFromEnvironment()
 
 Gets a keypair from a secret key stored in an environment variable. This is typically used to load secret keys from [env files](https://stackoverflow.com/questions/68267862/what-is-an-env-or-dotenv-file-exactly).
 
@@ -116,7 +116,7 @@ Gets a keypair from a secret key stored in an environment variable. This is typi
 const keyPair = await getKeypairFromEnvironment("SECRET_KEY");
 ```
 
-## addKeypairToEnvFile()
+### addKeypairToEnvFile()
 
 Saves a keypair to the environment file.
 
@@ -132,7 +132,7 @@ await addKeypairToEnvFile(testKeypair, "SECRET_KEY", ".env.local");
 
 This will also reload the env file
 
-## requestAndConfirmAirdrop()
+### requestAndConfirmAirdrop()
 
 Request and confirm an airdrop in one step. This is built into the next version of web3.js, but we've added it here now for your convenience.
 
@@ -146,7 +146,7 @@ await requestAndConfirmAirdrop(
 
 As soon as the `await` returns, the airdropped tokens will be ready in the address. This makes `requestAndConfirmAirdrop()` very handy in testing scripts. Note you may want to check the balance (`const balance = await connection.getBalance(keypair.publicKey);`) to ensure you only use your airdrops when you need them.
 
-### Secret key format
+## Secret key format
 
 Secret keys can be read in either the more compact base58 format (`base58.encode(randomKeypair.secretKey);`), like:
 
