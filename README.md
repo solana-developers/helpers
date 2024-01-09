@@ -7,7 +7,7 @@ Eventually most of these will end up in `@solana/web3.js`.
 ## Installation
 
 ```bash
-npm i @solana-developers/node-helpers
+npm i @solana-developers/helpers
 ```
 
 # helpers for the browser and node.js
