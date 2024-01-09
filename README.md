@@ -72,7 +72,7 @@ And `errorMessage` will now be:
 
 ### requestAndConfirmAirdrop()
 
-Request and confirm an airdrop in one step. This is built the next future version of web3.js, but we've added it here now for your convenience.
+Request and confirm an airdrop in one step. This is built into the next future version of web3.js, but we've added it here now for your convenience.
 
 ```typescript
 const balance = await requestAndConfirmAirdrop(
