@@ -84,6 +84,19 @@ const balance = await requestAndConfirmAirdrop(
 
 As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned by requestAndConfirmAirdrop(). This makes `requestAndConfirmAirdrop()` very handy in testing scripts.
 
+## requestAndConfirmAirdropIfRequired()
+
+If you're running the same script repeatedly, you probably don't want to request airdrops on every single run. So to ask for 1 SOL, if the balance is below 0.5 SOL, you can use:
+
+```typescript
+const newBalance = await requestAndConfirmAirdropIfRequired(
+  connection,
+  keypair.publicKey,
+  1 * LAMPORTS_PER_SOL,
+  0.5 * LAMPORTS_PER_SOL,
+);
+```
+
 ## node.js specific helpers
 
 ### getKeypairFromFile()
@@ -166,7 +179,13 @@ We always save keys using the 'array of numbers' format, since most other Solana
 
 ## Development
 
-To run tests
+To run tests - open a terminal tab, and run:
+
+```
+solana-test-validator
+```
+
+Then in a different tab, run:
 
 ```
 npm run test

@@ -131,3 +131,16 @@ export const requestAndConfirmAirdrop = async (
   );
   return connection.getBalance(publicKey, "confirmed");
 };
+
+export const requestAndConfirmAirdropIfRequired = async (
+  connection: Connection,
+  publicKey: PublicKey,
+  airdropAmount: number,
+  minimumBalance: number,
+): Promise<number> => {
+  const balance = await connection.getBalance(publicKey, "confirmed");
+  if (balance < minimumBalance) {
+    return requestAndConfirmAirdrop(connection, publicKey, airdropAmount);
+  }
+  return balance;
+};

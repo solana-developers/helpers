@@ -5,6 +5,7 @@ import {
   addKeypairToEnvFile,
   getCustomErrorMessage,
   requestAndConfirmAirdrop,
+  requestAndConfirmAirdropIfRequired,
 } from "./index";
 import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import assert from "node:assert/strict";
@@ -16,6 +17,8 @@ import { writeFile, unlink as deleteFile } from "node:fs/promises";
 import dotenv from "dotenv";
 
 const exec = promisify(execNoPromises);
+
+const LOCALHOST = "http://127.0.0.1:8899";
 
 const log = console.log;
 
@@ -173,10 +176,11 @@ describe("addKeypairToEnvFile", () => {
 describe("requestAndConfirmAirdrop", () => {
   test("Checking the balance after requestAndConfirmAirdrop", async () => {
     const keypair = Keypair.generate();
-    const connection = new Connection("http://127.0.0.1:8899");
+    const connection = new Connection(LOCALHOST);
     const originalBalance = await connection.getBalance(keypair.publicKey);
-    const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL;
     assert.equal(originalBalance, 0);
+    const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL;
+
     const newBalance = await requestAndConfirmAirdrop(
       connection,
       keypair.publicKey,
@@ -184,5 +188,52 @@ describe("requestAndConfirmAirdrop", () => {
     );
 
     assert.equal(newBalance, lamportsToAirdrop);
+  });
+});
+
+describe("requestAndConfirmAirdropIfRequired", () => {
+  test("requestAndConfirmAirdropIfRequired doesn't request unnecessary airdrops", async () => {
+    const keypair = Keypair.generate();
+    const connection = new Connection(LOCALHOST);
+    const originalBalance = await connection.getBalance(keypair.publicKey);
+    assert.equal(originalBalance, 0);
+    const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL;
+
+    await requestAndConfirmAirdrop(
+      connection,
+      keypair.publicKey,
+      lamportsToAirdrop,
+    );
+    const finalBalance = await requestAndConfirmAirdropIfRequired(
+      connection,
+      keypair.publicKey,
+      lamportsToAirdrop,
+      1 * LAMPORTS_PER_SOL,
+    );
+    // Check second airdrop didn't happen (since we only had 1 sol)
+    assert.equal(finalBalance, 1 * lamportsToAirdrop);
+  });
+
+  test("requestAndConfirmAirdropIfRequired does airdrop when necessary", async () => {
+    const keypair = Keypair.generate();
+    const connection = new Connection(LOCALHOST);
+    const originalBalance = await connection.getBalance(keypair.publicKey);
+    assert.equal(originalBalance, 0);
+    // Ensure we are just below threshhold for second airdrop to happen
+    const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL - 1;
+    await requestAndConfirmAirdrop(
+      connection,
+      keypair.publicKey,
+      lamportsToAirdrop,
+    );
+    // We only have 999_999_999 lamports, so we should need another airdrop
+    const finalBalance = await requestAndConfirmAirdropIfRequired(
+      connection,
+      keypair.publicKey,
+      1 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+    // Check second airdrop happened
+    assert.equal(finalBalance, 2 * LAMPORTS_PER_SOL - 1);
   });
 });
