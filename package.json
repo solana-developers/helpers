@@ -1,6 +1,6 @@
 {
   "name": "@solana-developers/helpers",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Solana helper functions",
   "main": "dist/index.js",
   "private": false,
