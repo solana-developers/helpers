@@ -86,7 +86,7 @@ As soon as the `await` returns, the airdropped tokens will be ready in the addre
 
 Note you may want to use `requestAndConfirmAirdropIfRequired()` (see below) to ensure you only use your airdrops when you need them.
 
-## requestAndConfirmAirdropIfRequired()
+### requestAndConfirmAirdropIfRequired()
 
 If you're running the same script repeatedly, you probably don't want to request airdrops on every single run. So to ask for 1 SOL, if the balance is below 0.5 SOL, you can use:
 
