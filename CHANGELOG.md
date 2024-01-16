@@ -1,3 +1,7 @@
+## 1.4
+
+- Added `requestAndConfirmAirdropIfRequired()`
+
 ## 1.3
 
 - Now just `helpers`. The old `node-helpers` package is marked as deprecated.

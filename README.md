@@ -84,6 +84,8 @@ const balance = await requestAndConfirmAirdrop(
 
 As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned by requestAndConfirmAirdrop(). This makes `requestAndConfirmAirdrop()` very handy in testing scripts.
 
+Note you may want to use `requestAndConfirmAirdropIfRequired()` (see below) to ensure you only use your airdrops when you need them.
+
 ## requestAndConfirmAirdropIfRequired()
 
 If you're running the same script repeatedly, you probably don't want to request airdrops on every single run. So to ask for 1 SOL, if the balance is below 0.5 SOL, you can use:
@@ -144,20 +146,6 @@ await addKeypairToEnvFile(testKeypair, "SECRET_KEY", ".env.local");
 ```
 
 This will also reload the env file
-
-### requestAndConfirmAirdrop()
-
-Request and confirm an airdrop in one step. This is built into the next version of web3.js, but we've added it here now for your convenience.
-
-```typescript
-await requestAndConfirmAirdrop(
-  connection,
-  keypair.publicKey,
-  lamportsToAirdrop,
-);
-```
-
-As soon as the `await` returns, the airdropped tokens will be ready in the address. This makes `requestAndConfirmAirdrop()` very handy in testing scripts. Note you may want to check the balance (`const balance = await connection.getBalance(keypair.publicKey);`) to ensure you only use your airdrops when you need them.
 
 ## Secret key format
 
