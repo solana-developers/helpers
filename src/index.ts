@@ -28,6 +28,16 @@ export const getCustomErrorMessage = (
   return possibleProgramErrors[errorNumber] || null;
 };
 
+const encodeURL = (baseUrl: string, searchParams: Record<string, string>) => {
+  // This was a little new to me, but it's the
+  // recommended way to build URLs with query params
+  // (and also means you don't have to do any encoding)
+  // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+  const url = new URL(baseUrl);
+  url.search = new URLSearchParams(searchParams).toString();
+  return url.toString();
+};
+
 export const getExplorerLink = (
   linkType: "transaction" | "tx" | "address" | "block",
   id: string,
@@ -53,13 +63,7 @@ export const getExplorerLink = (
   if (linkType === "block") {
     baseUrl = `https://explorer.solana.com/block/${id}`;
   }
-  // This was a little new to me, but it's the
-  // recommended way to build URLs with query params
-  // (and also means you don't ave to do any encoding)
-  // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
-  const url = new URL(baseUrl);
-  url.search = new URLSearchParams(searchParams).toString();
-  return url.toString();
+  return encodeURL(baseUrl, searchParams);
 };
 
 export const getKeypairFromFile = async (filepath?: string) => {

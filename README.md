@@ -138,7 +138,7 @@ Gets a keypair from a file - the format must be the same as [Solana CLI](https:/
 To load the default keypair `~/.config/solana/id.json`, just run:
 
 ```typescript
-const keyPair = await getKeypairFromFile([file]);
+const keyPair = await getKeypairFromFile(file);
 ```
 
 or to load a specific file:
@@ -161,7 +161,7 @@ Gets a keypair from a secret key stored in an environment variable. This is typi
 const keyPair = await getKeypairFromEnvironment("SECRET_KEY");
 ```
 
-### addKeypairToEnvFile(keypair, environmentVariable, [file])
+### addKeypairToEnvFile(keypair, environmentVariable, file)
 
 Saves a keypair to the environment file.
 
