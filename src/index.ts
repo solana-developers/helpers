@@ -1,4 +1,4 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Cluster, Connection, Keypair, PublicKey } from "@solana/web3.js";
 import base58 from "bs58";
 import path from "path";
 import { readFile, appendFile } from "fs/promises";
@@ -26,6 +26,39 @@ export const getCustomErrorMessage = (
   // errorNumberFound is a base16 string
   const errorNumber = parseInt(errorNumberFound, 16);
   return possibleProgramErrors[errorNumber] || null;
+};
+
+export const getExplorerLink = (
+  linkType: "transaction" | "tx" | "address" | "block",
+  id: string,
+  cluster: Cluster | "localnet" = "mainnet-beta",
+): string => {
+  const queryParams: Record<string, string> = {};
+  if (cluster !== "mainnet-beta") {
+    if (cluster === "localnet") {
+      // localnet technically isn't a cluster, so requires special handling
+      queryParams["cluster"] = "custom";
+      queryParams["customUrl"] = "http://localhost:8899";
+    } else {
+      queryParams["cluster"] = cluster;
+    }
+  }
+  let url: string = "";
+  if (linkType === "address") {
+    url = `https://explorer.solana.com/address/${id}`;
+  }
+  if (linkType === "transaction" || linkType === "tx") {
+    url = `https://explorer.solana.com/tx/${id}`;
+  }
+  if (linkType === "block") {
+    url = `https://explorer.solana.com/block/${id}`;
+  }
+
+  if (Object.keys(queryParams).length === 0) {
+    return url;
+  }
+  const queryParamsString = new URLSearchParams(queryParams);
+  return `${url}?${queryParamsString}`;
 };
 
 export const getKeypairFromFile = async (filepath?: string) => {

@@ -99,6 +99,36 @@ const newBalance = await requestAndConfirmAirdropIfRequired(
 );
 ```
 
+### getExplorerLink(type, identifier, clusterName)
+
+Get an explorer link for an `address`, `block` or `transaction` (`tx` works too).
+
+```
+getExplorerLink(
+  "address",
+  "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8",
+  "mainnet-beta",
+);
+```
+
+Will return `"https://explorer.solana.com/address/dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8"`. The cluster name isn't included since mainnet-beta is the default.
+
+```
+getExplorerLink(
+  "address",
+  "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8",
+  "devnet",
+);
+```
+
+Will return `"https://explorer.solana.com/address/dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8?cluster=devnet"`
+
+```
+getExplorerLink("block", "241889720", "mainnet-beta");
+```
+
+Will return `"https://explorer.solana.com/block/241889720"`
+
 ## node.js specific helpers
 
 ### getKeypairFromFile(filename)

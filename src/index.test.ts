@@ -6,6 +6,7 @@ import {
   getCustomErrorMessage,
   requestAndConfirmAirdrop,
   requestAndConfirmAirdropIfRequired,
+  getExplorerLink,
 } from "./index";
 import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import assert from "node:assert/strict";
@@ -235,5 +236,53 @@ describe("requestAndConfirmAirdropIfRequired", () => {
     );
     // Check second airdrop happened
     assert.equal(finalBalance, 2 * LAMPORTS_PER_SOL - 1);
+  });
+});
+
+describe("getExplorerLink", () => {
+  test("getExplorerLink works for a block mainnet", () => {
+    const link = getExplorerLink("block", "242233124", "mainnet-beta");
+    assert.equal(link, "https://explorer.solana.com/block/242233124");
+  });
+
+  test("getExplorerLink works for an address on mainnet", () => {
+    const link = getExplorerLink(
+      "address",
+      "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8",
+      "mainnet-beta",
+    );
+    assert.equal(
+      link,
+      "https://explorer.solana.com/address/dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8",
+    );
+  });
+
+  test("getExplorerLink works for an address on devnet", () => {
+    const link = getExplorerLink(
+      "address",
+      "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8",
+      "devnet",
+    );
+    assert.equal(
+      link,
+      "https://explorer.solana.com/address/dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8?cluster=devnet",
+    );
+  });
+
+  test("getExplorerLink works for a transaction on mainnet", () => {
+    const link = getExplorerLink(
+      "transaction",
+      "4nzNU7YxPtPsVzeg16oaZvLz4jMPtbAzavDfEFmemHNv93iYXKKYAaqBJzFCwEVxiULqTYYrbjPwQnA1d9ZCTELg",
+      "mainnet-beta",
+    );
+    assert.equal(
+      link,
+      "https://explorer.solana.com/tx/4nzNU7YxPtPsVzeg16oaZvLz4jMPtbAzavDfEFmemHNv93iYXKKYAaqBJzFCwEVxiULqTYYrbjPwQnA1d9ZCTELg",
+    );
+  });
+
+  test("getExplorerLink works for a block on mainnet", () => {
+    const link = getExplorerLink("block", "241889720", "mainnet-beta");
+    assert.equal(link, "https://explorer.solana.com/block/241889720");
   });
 });
