@@ -33,32 +33,33 @@ export const getExplorerLink = (
   id: string,
   cluster: Cluster | "localnet" = "mainnet-beta",
 ): string => {
-  const queryParams: Record<string, string> = {};
+  const searchParams: Record<string, string> = {};
   if (cluster !== "mainnet-beta") {
     if (cluster === "localnet") {
       // localnet technically isn't a cluster, so requires special handling
-      queryParams["cluster"] = "custom";
-      queryParams["customUrl"] = "http://localhost:8899";
+      searchParams["cluster"] = "custom";
+      searchParams["customUrl"] = "http://localhost:8899";
     } else {
-      queryParams["cluster"] = cluster;
+      searchParams["cluster"] = cluster;
     }
   }
-  let url: string = "";
+  let baseUrl: string = "";
   if (linkType === "address") {
-    url = `https://explorer.solana.com/address/${id}`;
+    baseUrl = `https://explorer.solana.com/address/${id}`;
   }
   if (linkType === "transaction" || linkType === "tx") {
-    url = `https://explorer.solana.com/tx/${id}`;
+    baseUrl = `https://explorer.solana.com/tx/${id}`;
   }
   if (linkType === "block") {
-    url = `https://explorer.solana.com/block/${id}`;
+    baseUrl = `https://explorer.solana.com/block/${id}`;
   }
-
-  if (Object.keys(queryParams).length === 0) {
-    return url;
-  }
-  const queryParamsString = new URLSearchParams(queryParams);
-  return `${url}?${queryParamsString}`;
+  // This was a little new to me, but it's the
+  // recommended way to build URLs with query params
+  // (and also means you don't ave to do any encoding)
+  // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+  const url = new URL(baseUrl);
+  url.search = new URLSearchParams(searchParams).toString();
+  return url.toString();
 };
 
 export const getKeypairFromFile = async (filepath?: string) => {
