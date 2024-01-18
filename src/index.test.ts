@@ -240,7 +240,7 @@ describe("requestAndConfirmAirdropIfRequired", () => {
 });
 
 describe("getExplorerLink", () => {
-  test("getExplorerLink works for a block mainnet", () => {
+  test("getExplorerLink works for a block on mainnet", () => {
     const link = getExplorerLink("block", "242233124", "mainnet-beta");
     assert.equal(link, "https://explorer.solana.com/block/242233124");
   });
