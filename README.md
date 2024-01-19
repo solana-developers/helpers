@@ -1,6 +1,6 @@
 # Solana helpers
 
-The `helpers` package contains Solana helper functions, for use in the browser and/or node.js
+The `helpers` package contains Solana helper functions, for use in the browser and/or node.js, [made by the Solana Foundation Developer Ecosystem team](https://youtu.be/zvQIa68ObK8?t=319).
 
 Eventually most of these will end up in `@solana/web3.js`.
 
