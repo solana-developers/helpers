@@ -7,11 +7,17 @@ Eventually most of these will end up in `@solana/web3.js`.
 ## What can I do with this module?
 
 [Resolve a custom error message](#getcustomerrormessageprogramerrors-errormessage)
+
 [Get an airdrop, and wait until it's confirmed](#requestandconfirmairdropconnection-publickey-lamports)
+
 [Get an airdrop if your balance is below some amount](#requestandconfirmairdropifrequiredconnection-publickey-lamports-maximumbalance)
+
 [Get a Solana Explorer link for a transaction, address, or block](#getexplorerlinktype-identifier-clustername)
+
 [Get a keypair from a keypair file (like id.json)](#getkeypairfromfilefilename)
+
 [Get a keypair from an environment variable](#getkeypairfromenvironmentenvironmentvariable)
+
 [Add a new keypair to an env file](#addkeypairtoenvfilekeypair-environmentvariable-file)
 
 ## Installation
