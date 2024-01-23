@@ -10,9 +10,7 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 [Resolve a custom error message](#getcustomerrormessageprogramerrors-errormessage)
 
-[Get an airdrop, and wait until it's confirmed](#requestandconfirmairdropconnection-publickey-lamports)
-
-[Get an airdrop if your balance is below some amount](#requestandconfirmairdropifrequiredconnection-publickey-lamports-maximumbalance)
+[Get an airdrop if your balance is below some amount, and wait until it's confirmed](#airdropIfRequired-publickey-lamports-maximumbalance)
 
 [Get a Solana Explorer link for a transaction, address, or block](#getexplorerlinktype-identifier-clustername)
 
@@ -98,32 +96,18 @@ And `errorMessage` will now be:
 "This token mint cannot freeze accounts";
 ```
 
-### requestAndConfirmAirdrop(connection, publicKey, lamports)
+### airdropIfRequired(connection, publicKey, lamports, maximumBalance)
 
-Request and confirm an airdrop in one step. This is built into the next future version of web3.js, but we've added it here now for your convenience.
+Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unneccessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
 
-```typescript
-const balance = await requestAndConfirmAirdrop(
-  connection,
-  keypair.publicKey,
-  lamportsToAirdrop,
-);
-```
-
-As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned by requestAndConfirmAirdrop(). This makes `requestAndConfirmAirdrop()` very handy in testing scripts.
-
-Note you may want to use `requestAndConfirmAirdropIfRequired()` (see below) to ensure you only use your airdrops when you need them.
-
-### requestAndConfirmAirdropIfRequired(connection, publicKey, lamports, maximumBalance)
-
-If you're running the same script repeatedly, you probably don't want to request airdrops on every single run. So to ask for 1 SOL, if the balance is below 0.5 SOL, you can use:
+To ask for 0.5 SOL, if the balance is below 1 SOL, use:
 
 ```typescript
-const newBalance = await requestAndConfirmAirdropIfRequired(
+const newBalance = await airdropIfRequired(
   connection,
   keypair.publicKey,
-  1 * LAMPORTS_PER_SOL,
   0.5 * LAMPORTS_PER_SOL,
+  1 * LAMPORTS_PER_SOL,
 );
 ```
 

@@ -4,8 +4,7 @@ import {
   getKeypairFromFile,
   addKeypairToEnvFile,
   getCustomErrorMessage,
-  requestAndConfirmAirdrop,
-  requestAndConfirmAirdropIfRequired,
+  airdropIfRequired,
   getExplorerLink,
   confirmTransaction,
   makeKeypairs,
@@ -182,38 +181,38 @@ describe("addKeypairToEnvFile", () => {
   });
 });
 
-describe("requestAndConfirmAirdrop", () => {
-  test("Checking the balance after requestAndConfirmAirdrop", async () => {
+describe("airdropIfRequired", () => {
+  test("Checking the balance after airdropIfRequired", async () => {
     const keypair = Keypair.generate();
     const connection = new Connection(LOCALHOST);
     const originalBalance = await connection.getBalance(keypair.publicKey);
     assert.equal(originalBalance, 0);
     const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL;
 
-    const newBalance = await requestAndConfirmAirdrop(
+    const newBalance = await airdropIfRequired(
       connection,
       keypair.publicKey,
       lamportsToAirdrop,
+      500_000,
     );
 
     assert.equal(newBalance, lamportsToAirdrop);
   });
-});
 
-describe("requestAndConfirmAirdropIfRequired", () => {
-  test("requestAndConfirmAirdropIfRequired doesn't request unnecessary airdrops", async () => {
+  test("doesn't request unnecessary airdrops", async () => {
     const keypair = Keypair.generate();
     const connection = new Connection(LOCALHOST);
     const originalBalance = await connection.getBalance(keypair.publicKey);
     assert.equal(originalBalance, 0);
     const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL;
 
-    await requestAndConfirmAirdrop(
+    await airdropIfRequired(
       connection,
       keypair.publicKey,
       lamportsToAirdrop,
+      500_000,
     );
-    const finalBalance = await requestAndConfirmAirdropIfRequired(
+    const finalBalance = await airdropIfRequired(
       connection,
       keypair.publicKey,
       lamportsToAirdrop,
@@ -223,20 +222,21 @@ describe("requestAndConfirmAirdropIfRequired", () => {
     assert.equal(finalBalance, 1 * lamportsToAirdrop);
   });
 
-  test("requestAndConfirmAirdropIfRequired does airdrop when necessary", async () => {
+  test("airdropIfRequired does airdrop when necessary", async () => {
     const keypair = Keypair.generate();
     const connection = new Connection(LOCALHOST);
     const originalBalance = await connection.getBalance(keypair.publicKey);
     assert.equal(originalBalance, 0);
-    // Ensure we are just below threshhold for second airdrop to happen
+    // Get 999_999_999 lamports if we have less than 500_000 lamports
     const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL - 1;
-    await requestAndConfirmAirdrop(
+    await airdropIfRequired(
       connection,
       keypair.publicKey,
       lamportsToAirdrop,
+      500_000,
     );
     // We only have 999_999_999 lamports, so we should need another airdrop
-    const finalBalance = await requestAndConfirmAirdropIfRequired(
+    const finalBalance = await airdropIfRequired(
       connection,
       keypair.publicKey,
       1 * LAMPORTS_PER_SOL,
