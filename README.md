@@ -12,7 +12,7 @@ npm i @solana-developers/helpers
 
 ## helpers for the browser and node.js
 
-### getCustomErrorMessage()
+### getCustomErrorMessage(programErrors, errorMessage)
 
 Sometimes Solana libaries return an error like:
 
@@ -70,7 +70,7 @@ And `errorMessage` will now be:
 "This token mint cannot freeze accounts";
 ```
 
-### requestAndConfirmAirdrop()
+### requestAndConfirmAirdrop(connection, publicKey, lamports)
 
 Request and confirm an airdrop in one step. This is built into the next future version of web3.js, but we've added it here now for your convenience.
 
@@ -86,7 +86,7 @@ As soon as the `await` returns, the airdropped tokens will be ready in the addre
 
 Note you may want to use `requestAndConfirmAirdropIfRequired()` (see below) to ensure you only use your airdrops when you need them.
 
-### requestAndConfirmAirdropIfRequired()
+### requestAndConfirmAirdropIfRequired(connection, publicKey, lamports, maximumBalance)
 
 If you're running the same script repeatedly, you probably don't want to request airdrops on every single run. So to ask for 1 SOL, if the balance is below 0.5 SOL, you can use:
 
@@ -99,16 +99,46 @@ const newBalance = await requestAndConfirmAirdropIfRequired(
 );
 ```
 
+### getExplorerLink(type, identifier, clusterName)
+
+Get an explorer link for an `address`, `block` or `transaction` (`tx` works too).
+
+```
+getExplorerLink(
+  "address",
+  "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8",
+  "mainnet-beta",
+);
+```
+
+Will return `"https://explorer.solana.com/address/dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8"`. The cluster name isn't included since mainnet-beta is the default.
+
+```
+getExplorerLink(
+  "address",
+  "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8",
+  "devnet",
+);
+```
+
+Will return `"https://explorer.solana.com/address/dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8?cluster=devnet"`
+
+```
+getExplorerLink("block", "241889720", "mainnet-beta");
+```
+
+Will return `"https://explorer.solana.com/block/241889720"`
+
 ## node.js specific helpers
 
-### getKeypairFromFile()
+### getKeypairFromFile(filename)
 
 Gets a keypair from a file - the format must be the same as [Solana CLI](https://docs.solana.com/wallet-guide/file-system-wallet) uses, ie, a JSON array of numbers:
 
 To load the default keypair `~/.config/solana/id.json`, just run:
 
 ```typescript
-const keyPair = await getKeypairFromFile();
+const keyPair = await getKeypairFromFile(file);
 ```
 
 or to load a specific file:
@@ -123,7 +153,7 @@ or using home dir expansion:
 const keyPair = await getKeypairFromFile("~/code/solana/demos/steve.json");
 ```
 
-### getKeypairFromEnvironment()
+### getKeypairFromEnvironment(environmentVariable)
 
 Gets a keypair from a secret key stored in an environment variable. This is typically used to load secret keys from [env files](https://stackoverflow.com/questions/68267862/what-is-an-env-or-dotenv-file-exactly).
 
@@ -131,7 +161,7 @@ Gets a keypair from a secret key stored in an environment variable. This is typi
 const keyPair = await getKeypairFromEnvironment("SECRET_KEY");
 ```
 
-### addKeypairToEnvFile()
+### addKeypairToEnvFile(keypair, environmentVariable, file)
 
 Saves a keypair to the environment file.
 

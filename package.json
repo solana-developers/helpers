@@ -1,6 +1,6 @@
 {
   "name": "@solana-developers/helpers",
-  "version": "1.4.3",
+  "version": "1.5.0",
   "description": "Solana helper functions",
   "main": "dist/index.js",
   "private": false,
@@ -14,9 +14,16 @@
     "blockchain",
     "secret key",
     "private key",
-    "keypair"
+    "keypair",
+    "devnet SOL",
+    "faucet"
   ],
   "author": "Mike MacCana <mike.maccana@solana.org>",
+  "contributors": [
+    "Nick Frostbutter",
+    "John Liu",
+    "Steven Luscher"
+  ],
   "license": "MIT",
   "dependencies": {
     "@solana/web3.js": "^1.78.4",

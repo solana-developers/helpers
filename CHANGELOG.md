@@ -1,3 +1,7 @@
+## 1.5
+
+- Added `getExplorerLink()`
+
 ## 1.4
 
 - Added `requestAndConfirmAirdropIfRequired()`
