@@ -32,11 +32,11 @@ npm i @solana-developers/helpers
 
 ### getCustomErrorMessage(programErrors, errorMessage)
 
-Sometimes Solana libaries return an error like:
+Sometimes Solana transactions throw an error with a message like:
 
 > failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10
 
-`getCustomErrorMessage()` allows you to turn this message into the more readable message that matches the number message from the custom program, like:
+`getCustomErrorMessage()` allows you to turn this message into a more readable message from the custom program, like:
 
 > This token mint cannot freeze accounts
 
