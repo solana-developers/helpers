@@ -14,6 +14,8 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 [Get a Solana Explorer link for a transaction, address, or block](#getexplorerlinktype-identifier-clustername)
 
+[Make a bunch of keypairs at once](#makekeypairs-amount)
+
 [Get a keypair from a keypair file (like id.json)](#getkeypairfromfilefilename)
 
 [Get a keypair from an environment variable](#getkeypairfromenvironmentenvironmentvariable)
@@ -144,6 +146,16 @@ getExplorerLink("block", "241889720", "mainnet-beta");
 ```
 
 Will return `"https://explorer.solana.com/block/241889720"`
+
+### makeKeypairs(amount)
+
+Particularly in tests, Solana developers often need to make multiple keypairs at once. So just:
+
+```
+const [alice, bob, tokenA, tokenB] = makeKeypairs(4);
+```
+
+And you'll now have `alice`, `bob`, `tokenA` and `tokenB` as distinct keypairs.
 
 ## node.js specific helpers
 
