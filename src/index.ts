@@ -168,6 +168,8 @@ const requestAndConfirmAirdrop = async (
       lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
       signature: airdropTransactionSignature,
     },
+    // "finalised" is slow but we must be absolutely sure
+    // the airdrop has gone through
     "finalized",
   );
   return connection.getBalance(publicKey, "finalized");

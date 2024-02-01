@@ -193,10 +193,24 @@ describe("airdropIfRequired", () => {
       connection,
       keypair.publicKey,
       lamportsToAirdrop,
-      500_000,
+      1 * LAMPORTS_PER_SOL,
     );
 
     assert.equal(newBalance, lamportsToAirdrop);
+
+    const recipient = Keypair.generate();
+
+    // Spend our SOL now to ensure we can use the airdrop immediately
+    await connection.sendTransaction(
+      new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: keypair.publicKey,
+          toPubkey: recipient.publicKey,
+          lamports: 500_000_000,
+        }),
+      ),
+      [keypair],
+    );
   });
 
   test("doesn't request unnecessary airdrops", async () => {
@@ -300,10 +314,11 @@ describe.only("confirmTransaction", () => {
     const connection = new Connection(LOCALHOST);
     const [sender, recipient] = [Keypair.generate(), Keypair.generate()];
     const lamportsToAirdrop = 2 * LAMPORTS_PER_SOL;
-    await requestAndConfirmAirdrop(
+    await airdropIfRequired(
       connection,
       sender.publicKey,
       lamportsToAirdrop,
+      1 * LAMPORTS_PER_SOL,
     );
 
     const transaction = await connection.sendTransaction(
