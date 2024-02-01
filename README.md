@@ -6,6 +6,8 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 ## What can I do with this module?
 
+[Make multiple keypairs at once](#makekeypairs-amount)
+
 [Resolve a custom error message](#getcustomerrormessageprogramerrors-errormessage)
 
 [Get an airdrop, and wait until it's confirmed](#requestandconfirmairdropconnection-publickey-lamports)
@@ -27,6 +29,14 @@ npm i @solana-developers/helpers
 ```
 
 ## helpers for the browser and node.js
+
+### makeKeypairs(amount)
+
+In some situations - like making tests for your on-chain programs - you might need to make lots of keypairs at once. You can use `makeKeypairs()` combined with JS destructuring to quickly create multiple variables with distinct keypairs.
+
+```typescript
+const [sender, recipient] = makeKeypairs(2);
+```
 
 ### getCustomErrorMessage(programErrors, errorMessage)
 

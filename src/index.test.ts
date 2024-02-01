@@ -7,6 +7,7 @@ import {
   requestAndConfirmAirdrop,
   requestAndConfirmAirdropIfRequired,
   getExplorerLink,
+  makeKeypairs,
 } from "./index";
 import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import assert from "node:assert/strict";
@@ -284,5 +285,12 @@ describe("getExplorerLink", () => {
   test("getExplorerLink works for a block on mainnet", () => {
     const link = getExplorerLink("block", "241889720", "mainnet-beta");
     assert.equal(link, "https://explorer.solana.com/block/241889720");
+  });
+});
+
+describe("makeKeypairs", () => {
+  test("makeKeypairs() creates the correct number of keypairs", () => {
+    const keypairs = makeKeypairs(3);
+    assert.equal(keypairs.length, 3);
   });
 });
