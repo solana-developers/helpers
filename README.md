@@ -14,6 +14,8 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 [Get a Solana Explorer link for a transaction, address, or block](#getexplorerlinktype-identifier-clustername)
 
+[Confirm a transaction (includes getting a recent blockhash)](#confirmTransaction)
+
 [Get a keypair from a keypair file (like id.json)](#getkeypairfromfilefilename)
 
 [Get a keypair from an environment variable](#getkeypairfromenvironmentenvironmentvariable)
@@ -144,6 +146,14 @@ getExplorerLink("block", "241889720", "mainnet-beta");
 ```
 
 Will return `"https://explorer.solana.com/block/241889720"`
+
+### confirmTransaction(connection, transaction)
+
+Confirm a transaction, and also gets the recent blockhash required to confirm it.
+
+```typescript
+await confirmTransaction(connection, transaction);
+```
 
 ## node.js specific helpers
 

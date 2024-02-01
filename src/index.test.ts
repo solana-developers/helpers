@@ -7,8 +7,15 @@ import {
   requestAndConfirmAirdrop,
   requestAndConfirmAirdropIfRequired,
   getExplorerLink,
+  confirmTransaction,
 } from "./index";
-import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import assert from "node:assert/strict";
 import base58 from "bs58";
 // See https://m.media-amazon.com/images/I/51TJeGHxyTL._SY445_SX342_.jpg
@@ -284,5 +291,31 @@ describe("getExplorerLink", () => {
   test("getExplorerLink works for a block on mainnet", () => {
     const link = getExplorerLink("block", "241889720", "mainnet-beta");
     assert.equal(link, "https://explorer.solana.com/block/241889720");
+  });
+});
+
+describe.only("confirmTransaction", () => {
+  test("confirmTransaction works for a successful transaction", async () => {
+    const connection = new Connection(LOCALHOST);
+    const [sender, recipient] = [Keypair.generate(), Keypair.generate()];
+    const lamportsToAirdrop = 2 * LAMPORTS_PER_SOL;
+    await requestAndConfirmAirdrop(
+      connection,
+      sender.publicKey,
+      lamportsToAirdrop,
+    );
+
+    const transaction = await connection.sendTransaction(
+      new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: sender.publicKey,
+          toPubkey: recipient.publicKey,
+          lamports: 1_000_000,
+        }),
+      ),
+      [sender],
+    );
+
+    await confirmTransaction(connection, transaction);
   });
 });

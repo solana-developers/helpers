@@ -165,9 +165,9 @@ export const requestAndConfirmAirdrop = async (
       lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
       signature: airdropTransactionSignature,
     },
-    "confirmed",
+    "finalized",
   );
-  return connection.getBalance(publicKey, "confirmed");
+  return connection.getBalance(publicKey, "finalized");
 };
 
 export const requestAndConfirmAirdropIfRequired = async (
@@ -181,4 +181,16 @@ export const requestAndConfirmAirdropIfRequired = async (
     return requestAndConfirmAirdrop(connection, publicKey, airdropAmount);
   }
   return balance;
+};
+
+export const confirmTransaction = async (
+  connection: Connection,
+  signature: string,
+): Promise<string> => {
+  const block = await connection.getLatestBlockhash();
+  await connection.confirmTransaction({
+    signature,
+    ...block,
+  });
+  return signature;
 };
