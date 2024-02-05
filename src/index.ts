@@ -194,7 +194,7 @@ export const confirmTransaction = async (
   });
 
   /**
-   * note: `confirmTransaction` does not throw an error if the transaction,
+   * note: `confirmTransaction` does not throw an error if the confirmation does not succeed,
    * but rather a `TransactionError` object. so we handle that here
    *
    * https://solana-labs.github.io/solana-web3.js/classes/Connection.html#confirmTransaction.confirmTransaction-1
