@@ -188,18 +188,18 @@ export const confirmTransaction = async (
   signature: string,
 ): Promise<string> => {
   const block = await connection.getLatestBlockhash();
-  const res = await connection.confirmTransaction({
+  const response = await connection.confirmTransaction({
     signature,
     ...block,
   });
 
-  /**
-   * note: `confirmTransaction` does not throw an error if the confirmation does not succeed,
-   * but rather a `TransactionError` object. so we handle that here
-   *
-   * https://solana-labs.github.io/solana-web3.js/classes/Connection.html#confirmTransaction.confirmTransaction-1
-   */
-  if (!!res.value.err) throw Error(res.value.err.toString());
+  // Note: `confirmTransaction` does not throw an error if the confirmation does not succeed,
+  // but rather the response will have an `err` key with a `TransactionError` object | string.
+  // See https://solana-labs.github.io/solana-web3.js/classes/Connection.html#confirmTransaction.confirmTransaction-1
+  const error = response.value.err;
+  if (error) {
+    throw Error(error.toString());
+  }
 
   return signature;
 };
