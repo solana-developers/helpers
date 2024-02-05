@@ -8,6 +8,7 @@ import {
   requestAndConfirmAirdropIfRequired,
   getExplorerLink,
   confirmTransaction,
+  makeKeypairs,
 } from "./index";
 import {
   Connection,
@@ -317,5 +318,12 @@ describe.only("confirmTransaction", () => {
     );
 
     await confirmTransaction(connection, transaction);
+  });
+});
+
+describe("makeKeypairs", () => {
+  test("makeKeypairs() creates the correct number of keypairs", () => {
+    const keypairs = makeKeypairs(3);
+    assert.equal(keypairs.length, 3);
   });
 });

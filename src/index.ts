@@ -203,3 +203,8 @@ export const confirmTransaction = async (
 
   return signature;
 };
+
+// Shout out to deanmlittle for this technique
+export const makeKeypairs = (amount: number): Array<Keypair> => {
+  return Array.from({ length: amount }, () => Keypair.generate());
+};
