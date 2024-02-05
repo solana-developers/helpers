@@ -165,9 +165,9 @@ export const requestAndConfirmAirdrop = async (
       lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
       signature: airdropTransactionSignature,
     },
-    "confirmed",
+    "finalized",
   );
-  return connection.getBalance(publicKey, "confirmed");
+  return connection.getBalance(publicKey, "finalized");
 };
 
 export const requestAndConfirmAirdropIfRequired = async (
@@ -181,6 +181,27 @@ export const requestAndConfirmAirdropIfRequired = async (
     return requestAndConfirmAirdrop(connection, publicKey, airdropAmount);
   }
   return balance;
+};
+
+export const confirmTransaction = async (
+  connection: Connection,
+  signature: string,
+): Promise<string> => {
+  const block = await connection.getLatestBlockhash();
+  const res = await connection.confirmTransaction({
+    signature,
+    ...block,
+  });
+
+  /**
+   * note: `confirmTransaction` does not throw an error if the confirmation does not succeed,
+   * but rather a `TransactionError` object. so we handle that here
+   *
+   * https://solana-labs.github.io/solana-web3.js/classes/Connection.html#confirmTransaction.confirmTransaction-1
+   */
+  if (!!res.value.err) throw Error(res.value.err.toString());
+
+  return signature;
 };
 
 // Shout out to deanmlittle for this technique
