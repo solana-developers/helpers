@@ -14,9 +14,11 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 [Get a Solana Explorer link for a transaction, address, or block](#getexplorerlinktype-identifier-clustername)
 
-[Confirm a transaction (includes getting a recent blockhash)](#confirmTransaction)
+[Confirm a transaction (includes getting a recent blockhash)](#confirmtransaction-connection-transaction)
 
-[Get a keypair from a keypair file (like id.json)](#getkeypairfromfilefilename)
+[Get a transaction's logs](#getlogs-connection-transaction)
+
+[Get a keypair from a keypair file (like id.json)](#getkeypairfromfilename)
 
 [Get a keypair from an environment variable](#getkeypairfromenvironmentenvironmentvariable)
 
@@ -148,6 +150,25 @@ Confirm a transaction, and also gets the recent blockhash required to confirm it
 ```typescript
 await confirmTransaction(connection, transaction);
 ```
+
+### getLogs(connection, transaction)
+
+Get the logs for a transaction signature:
+
+```typescript
+const logs = await getLogs(connection, transaction);
+```
+
+The `logs` will be an array of strings, eg:
+
+```
+[
+  "Program 11111111111111111111111111111111 invoke [1]",
+  "Program 11111111111111111111111111111111 success",
+];
+```
+
+This a good way to assert your onchain programs returned particular logs during unit tests.
 
 ## node.js specific helpers
 
