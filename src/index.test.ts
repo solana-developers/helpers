@@ -310,7 +310,7 @@ describe("getExplorerLink", () => {
   });
 });
 
-describe.only("confirmTransaction", () => {
+describe("confirmTransaction", () => {
   test("confirmTransaction works for a successful transaction", async () => {
     const connection = new Connection(LOCALHOST);
     const [sender, recipient] = [Keypair.generate(), Keypair.generate()];
