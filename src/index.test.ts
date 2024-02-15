@@ -8,6 +8,7 @@ import {
   getExplorerLink,
   confirmTransaction,
   makeKeypairs,
+  getLogs,
 } from "./index";
 import {
   Connection,
@@ -340,5 +341,36 @@ describe("makeKeypairs", () => {
   test("makeKeypairs() creates the correct number of keypairs", () => {
     const keypairs = makeKeypairs(3);
     assert.equal(keypairs.length, 3);
+  });
+});
+
+describe(`getLogs`, () => {
+  test(`getLogs works`, async () => {
+    const connection = new Connection(LOCALHOST);
+    const [sender, recipient] = [Keypair.generate(), Keypair.generate()];
+    const lamportsToAirdrop = 2 * LAMPORTS_PER_SOL;
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      lamportsToAirdrop,
+      1 * LAMPORTS_PER_SOL,
+    );
+
+    const transaction = await connection.sendTransaction(
+      new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: sender.publicKey,
+          toPubkey: recipient.publicKey,
+          lamports: 1_000_000,
+        }),
+      ),
+      [sender],
+    );
+
+    const logs = await getLogs(connection, transaction);
+    assert.deepEqual(logs, [
+      "Program 11111111111111111111111111111111 invoke [1]",
+      "Program 11111111111111111111111111111111 success",
+    ]);
   });
 });

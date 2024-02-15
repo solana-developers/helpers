@@ -213,3 +213,15 @@ export const confirmTransaction = async (
 export const makeKeypairs = (amount: number): Array<Keypair> => {
   return Array.from({ length: amount }, () => Keypair.generate());
 };
+
+export const getLogs = async (
+  connection: Connection,
+  tx: string,
+): Promise<Array<string>> => {
+  await confirmTransaction(connection, tx);
+  const txDetails = await connection.getTransaction(tx, {
+    maxSupportedTransactionVersion: 0,
+    commitment: "confirmed",
+  });
+  return txDetails?.meta?.logMessages || [];
+};
