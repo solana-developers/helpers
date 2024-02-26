@@ -9,6 +9,8 @@ import {
   getExplorerLink,
   confirmTransaction,
   makeKeypairs,
+  initializeKeypairOptions,
+  initializeKeypair,
 } from "./index";
 import {
   Connection,
@@ -180,6 +182,47 @@ describe("addKeypairToEnvFile", () => {
       },
     );
   });
+});
+
+describe("initializeKeypair", () => {
+  const connection = new Connection(LOCALHOST);
+  const keypairVariableName = "TEMP_KEYPAIR";
+
+  test("generates a new keypair and airdrops needed amount", async () => {
+
+    const options: initializeKeypairOptions = {
+      variableName: keypairVariableName,
+  };
+
+    const signerFirstLoad = await initializeKeypair(connection, options);
+
+    // Check balance
+    const firstBalanceLoad = await connection.getBalance(signerFirstLoad.publicKey);
+    assert.ok(firstBalanceLoad > 0);
+
+    // Check that the environment variable was created
+    dotenv.config();
+    const secretKeyString = process.env[keypairVariableName];
+    if (!secretKeyString) {
+      throw new Error(`${secretKeyString} not found in environment`);
+    }
+
+    // Now reload the environment and check it matches our test keypair
+    const signerSecondLoad = await initializeKeypair(connection, options);
+
+    // Check the keypair is the same
+    assert.ok(signerFirstLoad.publicKey.equals(signerSecondLoad.publicKey));
+
+    // Check balance has not changed
+    const secondBalanceLoad = await connection.getBalance(signerSecondLoad.publicKey);
+    assert.equal(firstBalanceLoad, secondBalanceLoad);
+
+    // Check there is a secret key
+    assert.ok(signerSecondLoad.secretKey);
+
+    deleteFile(".env");
+  });
+
 });
 
 describe("requestAndConfirmAirdrop", () => {

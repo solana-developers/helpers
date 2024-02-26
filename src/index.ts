@@ -1,4 +1,4 @@
-import { Cluster, Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Cluster, Connection, Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import base58 from "bs58";
 import path from "path";
 import { readFile, appendFile } from "fs/promises";
@@ -148,12 +148,59 @@ export const addKeypairToEnvFile = async (
   await appendFile(fileName, `\n${variableName}=${secretKeyString}`);
 };
 
+export interface initializeKeypairOptions {
+  envFileName?: string; // .env file path
+  variableName?: string; // Variable name to call the secret key in the environment file
+  airdropAmount?: number; // Optional amount to airdrop in lamports
+  minimumBalance?: number; // Optional minimum balance to maintain in lamports
+  keypairPath?: string; // Optional path to a keypair file, if not provided, will look for the keypair in the environment
+}
+
+/**
+ * Loads a keypair from the environment or generates a new one if not found and writes it to the environment,
+ * then requests an airdrop if the balance is below the minimum balance
+ * 
+ * @param connection Connection to the Solana cluster
+ * @param options initializeKeypairOptions
+ * - envFileName: .env file path
+ * - variableName: Variable name to call the secret key in the environment file
+ * - airdropAmount: Optional amount to airdrop in lamports
+ * - minimumBalance: Optional minimum balance to maintain in lamports
+ * - keypairPath: Optional path to a keypair file, if not provided, will look for the keypair in the environment
+ * @returns A keypair with funds loaded
+ */
+export const initializeKeypair = async (connection: Connection, options?: initializeKeypairOptions): Promise<Keypair> => {
+  let { envFileName, variableName, airdropAmount, minimumBalance, keypairPath } = options || {};
+
+  let signer: Keypair;
+  variableName = variableName || "PRIVATE_KEY";
+
+  if(keypairPath) {
+    signer = await getKeypairFromFile(keypairPath);
+  } else if (process.env[variableName]) {
+    signer = getKeypairFromEnvironment(variableName);
+  } else {
+    signer = Keypair.generate();
+    await addKeypairToEnvFile(signer, variableName, envFileName);
+  }
+
+  await requestAndConfirmAirdropIfRequired(
+    connection,
+    signer.publicKey, 
+    airdropAmount || LAMPORTS_PER_SOL,
+    minimumBalance || LAMPORTS_PER_SOL >> 1,
+  );
+
+  return signer;
+}
+
+
 export const requestAndConfirmAirdrop = async (
   connection: Connection,
   publicKey: PublicKey,
   amount: number,
 ) => {
-  let airdropTransactionSignature = await connection.requestAirdrop(
+  const airdropTransactionSignature = await connection.requestAirdrop(
     publicKey,
     amount,
   );
