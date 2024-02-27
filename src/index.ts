@@ -148,7 +148,10 @@ export const addKeypairToEnvFile = async (
   await appendFile(fileName, `\n${variableName}=${secretKeyString}`);
 };
 
-export const requestAndConfirmAirdrop = async (
+// Not exported as we don't want to encourage people to
+// request airdrops when they don't need them, ie - don't bother
+// the faucet unless you really need to!
+const requestAndConfirmAirdrop = async (
   connection: Connection,
   publicKey: PublicKey,
   amount: number,
@@ -165,12 +168,14 @@ export const requestAndConfirmAirdrop = async (
       lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
       signature: airdropTransactionSignature,
     },
+    // "finalized" is slow but we must be absolutely sure
+    // the airdrop has gone through
     "finalized",
   );
   return connection.getBalance(publicKey, "finalized");
 };
 
-export const requestAndConfirmAirdropIfRequired = async (
+export const airdropIfRequired = async (
   connection: Connection,
   publicKey: PublicKey,
   airdropAmount: number,
