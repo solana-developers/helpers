@@ -149,7 +149,10 @@ export const addKeypairToEnvFile = async (
   await appendFile(fileName, `\n${variableName}=${secretKeyString}`);
 };
 
-export const requestAndConfirmAirdrop = async (
+// Not exported as we don't want to encourage people to
+// request airdrops when they don't need them, ie - don't bother
+// the faucet unless you really need to!
+const requestAndConfirmAirdrop = async (
   connection: Connection,
   publicKey: PublicKey,
   amount: number,
@@ -166,12 +169,14 @@ export const requestAndConfirmAirdrop = async (
       lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
       signature: airdropTransactionSignature,
     },
-    "confirmed",
+    // "finalized" is slow but we must be absolutely sure
+    // the airdrop has gone through
+    "finalized",
   );
-  return connection.getBalance(publicKey, "confirmed");
+  return connection.getBalance(publicKey, "finalized");
 };
 
-export const requestAndConfirmAirdropIfRequired = async (
+export const airdropIfRequired = async (
   connection: Connection,
   publicKey: PublicKey,
   airdropAmount: number,
@@ -182,6 +187,27 @@ export const requestAndConfirmAirdropIfRequired = async (
     return requestAndConfirmAirdrop(connection, publicKey, airdropAmount);
   }
   return balance;
+};
+
+export const confirmTransaction = async (
+  connection: Connection,
+  signature: string,
+): Promise<string> => {
+  const block = await connection.getLatestBlockhash();
+  const response = await connection.confirmTransaction({
+    signature,
+    ...block,
+  });
+
+  // Note: `confirmTransaction` does not throw an error if the confirmation does not succeed,
+  // but rather the response will have an `err` key with a `TransactionError` object | string.
+  // See https://solana-labs.github.io/solana-web3.js/classes/Connection.html#confirmTransaction.confirmTransaction-1
+  const error = response.value.err;
+  if (error) {
+    throw Error(error.toString());
+  }
+
+  return signature;
 };
 
 // Shout out to Dean from WBA for this technique

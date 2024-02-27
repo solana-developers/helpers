@@ -4,12 +4,18 @@ import {
   getKeypairFromFile,
   addKeypairToEnvFile,
   getCustomErrorMessage,
-  requestAndConfirmAirdrop,
-  requestAndConfirmAirdropIfRequired,
+  airdropIfRequired,
   getExplorerLink,
+  confirmTransaction,
   makeKeypairs,
 } from "./index";
-import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import assert from "node:assert/strict";
 import base58 from "bs58";
 // See https://m.media-amazon.com/images/I/51TJeGHxyTL._SY445_SX342_.jpg
@@ -175,38 +181,52 @@ describe("addKeypairToEnvFile", () => {
   });
 });
 
-describe("requestAndConfirmAirdrop", () => {
-  test("Checking the balance after requestAndConfirmAirdrop", async () => {
+describe("airdropIfRequired", () => {
+  test("Checking the balance after airdropIfRequired", async () => {
     const keypair = Keypair.generate();
     const connection = new Connection(LOCALHOST);
     const originalBalance = await connection.getBalance(keypair.publicKey);
     assert.equal(originalBalance, 0);
     const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL;
 
-    const newBalance = await requestAndConfirmAirdrop(
+    const newBalance = await airdropIfRequired(
       connection,
       keypair.publicKey,
       lamportsToAirdrop,
+      1 * LAMPORTS_PER_SOL,
     );
 
     assert.equal(newBalance, lamportsToAirdrop);
-  });
-});
 
-describe("requestAndConfirmAirdropIfRequired", () => {
-  test("requestAndConfirmAirdropIfRequired doesn't request unnecessary airdrops", async () => {
+    const recipient = Keypair.generate();
+
+    // Spend our SOL now to ensure we can use the airdrop immediately
+    await connection.sendTransaction(
+      new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: keypair.publicKey,
+          toPubkey: recipient.publicKey,
+          lamports: 500_000_000,
+        }),
+      ),
+      [keypair],
+    );
+  });
+
+  test("doesn't request unnecessary airdrops", async () => {
     const keypair = Keypair.generate();
     const connection = new Connection(LOCALHOST);
     const originalBalance = await connection.getBalance(keypair.publicKey);
     assert.equal(originalBalance, 0);
     const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL;
 
-    await requestAndConfirmAirdrop(
+    await airdropIfRequired(
       connection,
       keypair.publicKey,
       lamportsToAirdrop,
+      500_000,
     );
-    const finalBalance = await requestAndConfirmAirdropIfRequired(
+    const finalBalance = await airdropIfRequired(
       connection,
       keypair.publicKey,
       lamportsToAirdrop,
@@ -216,20 +236,21 @@ describe("requestAndConfirmAirdropIfRequired", () => {
     assert.equal(finalBalance, 1 * lamportsToAirdrop);
   });
 
-  test("requestAndConfirmAirdropIfRequired does airdrop when necessary", async () => {
+  test("airdropIfRequired does airdrop when necessary", async () => {
     const keypair = Keypair.generate();
     const connection = new Connection(LOCALHOST);
     const originalBalance = await connection.getBalance(keypair.publicKey);
     assert.equal(originalBalance, 0);
-    // Ensure we are just below threshhold for second airdrop to happen
+    // Get 999_999_999 lamports if we have less than 500_000 lamports
     const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL - 1;
-    await requestAndConfirmAirdrop(
+    await airdropIfRequired(
       connection,
       keypair.publicKey,
       lamportsToAirdrop,
+      500_000,
     );
     // We only have 999_999_999 lamports, so we should need another airdrop
-    const finalBalance = await requestAndConfirmAirdropIfRequired(
+    const finalBalance = await airdropIfRequired(
       connection,
       keypair.publicKey,
       1 * LAMPORTS_PER_SOL,
@@ -295,5 +316,38 @@ describe("makeKeypairs", () => {
     const keypairs = makeKeypairs(KEYPAIRS_TO_MAKE);
     assert.equal(keypairs.length, KEYPAIRS_TO_MAKE);
     assert.ok(keypairs[KEYPAIRS_TO_MAKE - 1].secretKey);
+});
+
+describe.only("confirmTransaction", () => {
+  test("confirmTransaction works for a successful transaction", async () => {
+    const connection = new Connection(LOCALHOST);
+    const [sender, recipient] = [Keypair.generate(), Keypair.generate()];
+    const lamportsToAirdrop = 2 * LAMPORTS_PER_SOL;
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      lamportsToAirdrop,
+      1 * LAMPORTS_PER_SOL,
+    );
+
+    const transaction = await connection.sendTransaction(
+      new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: sender.publicKey,
+          toPubkey: recipient.publicKey,
+          lamports: 1_000_000,
+        }),
+      ),
+      [sender],
+    );
+
+    await confirmTransaction(connection, transaction);
   });
+});
+
+describe("makeKeypairs", () => {
+  test("makeKeypairs() creates the correct number of keypairs", () => {
+    const keypairs = makeKeypairs(3);
+    assert.equal(keypairs.length, 3);
+
 });
