@@ -10,15 +10,19 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 [Resolve a custom error message](#getcustomerrormessageprogramerrors-errormessage)
 
-[Get an airdrop, and wait until it's confirmed](#requestandconfirmairdropconnection-publickey-lamports)
-
-[Get an airdrop if your balance is below some amount](#requestandconfirmairdropifrequiredconnection-publickey-lamports-maximumbalance)
+[Get an airdrop if your balance is below some amount, and wait until it's confirmed](#airdropifrequiredconnection-publickey-lamports-maximumbalance)
 
 [Get a Solana Explorer link for a transaction, address, or block](#getexplorerlinktype-identifier-clustername)
 
-[Confirm a transaction (includes getting a recent blockhash)](#confirmTransaction)
+[Make a bunch of keypairs at once](#makekeypairs-amount)
 
-[Get a keypair from a keypair file (like id.json)](#getkeypairfromfilefilename)
+[Make a bunch of keypairs at once](#makekeypairs-amount)
+
+[Confirm a transaction (includes getting a recent blockhash)](#confirmtransaction-connection-transaction)
+
+[Get a transaction's logs](#getlogs-connection-transaction)
+
+[Get a keypair from a keypair file (like id.json)](#getkeypairfromfilename)
 
 [Get a keypair from an environment variable](#getkeypairfromenvironmentenvironmentvariable)
 
@@ -42,11 +46,11 @@ const [sender, recipient] = makeKeypairs(2);
 
 ### getCustomErrorMessage(programErrors, errorMessage)
 
-Sometimes Solana libaries return an error like:
+Sometimes Solana transactions throw an error with a message like:
 
 > failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10
 
-`getCustomErrorMessage()` allows you to turn this message into the more readable message that matches the number message from the custom program, like:
+`getCustomErrorMessage()` allows you to turn this message into a more readable message from the custom program, like:
 
 > This token mint cannot freeze accounts
 
@@ -98,32 +102,18 @@ And `errorMessage` will now be:
 "This token mint cannot freeze accounts";
 ```
 
-### requestAndConfirmAirdrop(connection, publicKey, lamports)
+### airdropIfRequired(connection, publicKey, lamports, maximumBalance)
 
-Request and confirm an airdrop in one step. This is built into the next future version of web3.js, but we've added it here now for your convenience.
+Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unnecessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
 
-```typescript
-const balance = await requestAndConfirmAirdrop(
-  connection,
-  keypair.publicKey,
-  lamportsToAirdrop,
-);
-```
-
-As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned by requestAndConfirmAirdrop(). This makes `requestAndConfirmAirdrop()` very handy in testing scripts.
-
-Note you may want to use `requestAndConfirmAirdropIfRequired()` (see below) to ensure you only use your airdrops when you need them.
-
-### requestAndConfirmAirdropIfRequired(connection, publicKey, lamports, maximumBalance)
-
-If you're running the same script repeatedly, you probably don't want to request airdrops on every single run. So to ask for 1 SOL, if the balance is below 0.5 SOL, you can use:
+To ask for 0.5 SOL, if the balance is below 1 SOL, use:
 
 ```typescript
-const newBalance = await requestAndConfirmAirdropIfRequired(
+const newBalance = await airdropIfRequired(
   connection,
   keypair.publicKey,
-  1 * LAMPORTS_PER_SOL,
   0.5 * LAMPORTS_PER_SOL,
+  1 * LAMPORTS_PER_SOL,
 );
 ```
 
@@ -157,6 +147,16 @@ getExplorerLink("block", "241889720", "mainnet-beta");
 
 Will return `"https://explorer.solana.com/block/241889720"`
 
+### makeKeypairs(amount)
+
+Particularly in tests, Solana developers often need to make multiple keypairs at once. So just:
+
+```
+const [alice, bob, tokenA, tokenB] = makeKeypairs(4);
+```
+
+And you'll now have `alice`, `bob`, `tokenA` and `tokenB` as distinct keypairs.
+
 ### confirmTransaction(connection, transaction)
 
 Confirm a transaction, and also gets the recent blockhash required to confirm it.
@@ -164,6 +164,25 @@ Confirm a transaction, and also gets the recent blockhash required to confirm it
 ```typescript
 await confirmTransaction(connection, transaction);
 ```
+
+### getLogs(connection, transaction)
+
+Get the logs for a transaction signature:
+
+```typescript
+const logs = await getLogs(connection, transaction);
+```
+
+The `logs` will be an array of strings, eg:
+
+```
+[
+  "Program 11111111111111111111111111111111 invoke [1]",
+  "Program 11111111111111111111111111111111 success",
+];
+```
+
+This a good way to assert your onchain programs returned particular logs during unit tests.
 
 ## node.js specific helpers
 

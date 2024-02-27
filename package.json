@@ -1,6 +1,6 @@
 {
   "name": "@solana-developers/helpers",
-  "version": "1.5.1",
+  "version": "2.0.0",
   "description": "Solana helper functions",
   "main": "dist/index.js",
   "private": false,
@@ -27,7 +27,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@solana/web3.js": "^1.78.4",
+    "@solana/web3.js": "^1",
     "bs58": "^5.0.0",
     "dotenv": "^16.3.1"
   },

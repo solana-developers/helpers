@@ -1,7 +1,14 @@
-import { Cluster, Connection, Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  Cluster,
+  Connection,
+  Keypair,
+  PublicKey,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 import base58 from "bs58";
 import path from "path";
 import { readFile, appendFile } from "fs/promises";
+
 const log = console.log;
 
 // Default value from Solana CLI
@@ -159,7 +166,7 @@ export interface initializeKeypairOptions {
 /**
  * Loads a keypair from the environment or generates a new one if not found and writes it to the environment,
  * then requests an airdrop if the balance is below the minimum balance
- * 
+ *
  * @param connection Connection to the Solana cluster
  * @param options initializeKeypairOptions
  * - envFileName: .env file path
@@ -169,13 +176,22 @@ export interface initializeKeypairOptions {
  * - keypairPath: Optional path to a keypair file, if not provided, will look for the keypair in the environment
  * @returns A keypair with funds loaded
  */
-export const initializeKeypair = async (connection: Connection, options?: initializeKeypairOptions): Promise<Keypair> => {
-  let { envFileName, variableName, airdropAmount, minimumBalance, keypairPath } = options || {};
+export const initializeKeypair = async (
+  connection: Connection,
+  options?: initializeKeypairOptions,
+): Promise<Keypair> => {
+  let {
+    envFileName,
+    variableName,
+    airdropAmount,
+    minimumBalance,
+    keypairPath,
+  } = options || {};
 
   let signer: Keypair;
   variableName = variableName || "PRIVATE_KEY";
 
-  if(keypairPath) {
+  if (keypairPath) {
     signer = await getKeypairFromFile(keypairPath);
   } else if (process.env[variableName]) {
     signer = getKeypairFromEnvironment(variableName);
@@ -186,16 +202,73 @@ export const initializeKeypair = async (connection: Connection, options?: initia
 
   await requestAndConfirmAirdropIfRequired(
     connection,
-    signer.publicKey, 
+    signer.publicKey,
     airdropAmount || LAMPORTS_PER_SOL,
     minimumBalance || LAMPORTS_PER_SOL >> 1,
   );
 
   return signer;
+};
+
+export interface initializeKeypairOptions {
+  envFileName?: string; // .env file path
+  variableName?: string; // Variable name to call the secret key in the environment file
+  airdropAmount?: number; // Optional amount to airdrop in lamports
+  minimumBalance?: number; // Optional minimum balance to maintain in lamports
+  keypairPath?: string; // Optional path to a keypair file, if not provided, will look for the keypair in the environment
 }
 
+/**
+ * Loads a keypair from the environment or generates a new one if not found and writes it to the environment,
+ * then requests an airdrop if the balance is below the minimum balance
+ *
+ * @param connection Connection to the Solana cluster
+ * @param options initializeKeypairOptions
+ * - envFileName: .env file path
+ * - variableName: Variable name to call the secret key in the environment file
+ * - airdropAmount: Optional amount to airdrop in lamports
+ * - minimumBalance: Optional minimum balance to maintain in lamports
+ * - keypairPath: Optional path to a keypair file, if not provided, will look for the keypair in the environment
+ * @returns A keypair with funds loaded
+ */
+export const initializeKeypair = async (
+  connection: Connection,
+  options?: initializeKeypairOptions,
+): Promise<Keypair> => {
+  let {
+    envFileName,
+    variableName,
+    airdropAmount,
+    minimumBalance,
+    keypairPath,
+  } = options || {};
 
-export const requestAndConfirmAirdrop = async (
+  let signer: Keypair;
+  variableName = variableName || "PRIVATE_KEY";
+
+  if (keypairPath) {
+    signer = await getKeypairFromFile(keypairPath);
+  } else if (process.env[variableName]) {
+    signer = getKeypairFromEnvironment(variableName);
+  } else {
+    signer = Keypair.generate();
+    await addKeypairToEnvFile(signer, variableName, envFileName);
+  }
+
+  await requestAndConfirmAirdropIfRequired(
+    connection,
+    signer.publicKey,
+    airdropAmount || LAMPORTS_PER_SOL,
+    minimumBalance || LAMPORTS_PER_SOL >> 1,
+  );
+
+  return signer;
+};
+
+// Not exported as we don't want to encourage people to
+// request airdrops when they don't need them, ie - don't bother
+// the faucet unless you really need to!
+const requestAndConfirmAirdrop = async (
   connection: Connection,
   publicKey: PublicKey,
   amount: number,
@@ -212,12 +285,14 @@ export const requestAndConfirmAirdrop = async (
       lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
       signature: airdropTransactionSignature,
     },
+    // "finalized" is slow but we must be absolutely sure
+    // the airdrop has gone through
     "finalized",
   );
   return connection.getBalance(publicKey, "finalized");
 };
 
-export const requestAndConfirmAirdropIfRequired = async (
+export const airdropIfRequired = async (
   connection: Connection,
   publicKey: PublicKey,
   airdropAmount: number,
@@ -235,15 +310,18 @@ export const confirmTransaction = async (
   signature: string,
 ): Promise<string> => {
   const block = await connection.getLatestBlockhash();
-  const response = await connection.confirmTransaction({
-    signature,
-    ...block,
-  });
+  const result = await connection.confirmTransaction(
+    {
+      signature,
+      ...block,
+    },
+    "confirmed",
+  );
 
   // Note: `confirmTransaction` does not throw an error if the confirmation does not succeed,
-  // but rather the response will have an `err` key with a `TransactionError` object | string.
+  // but rather a `TransactionError` object. so we handle that here
   // See https://solana-labs.github.io/solana-web3.js/classes/Connection.html#confirmTransaction.confirmTransaction-1
-  const error = response.value.err;
+  const error = result.value.err;
   if (error) {
     throw Error(error.toString());
   }
@@ -251,7 +329,19 @@ export const confirmTransaction = async (
   return signature;
 };
 
-// Shout out to deanmlittle for this technique
+// Shout out to Dean from WBA for this technique
 export const makeKeypairs = (amount: number): Array<Keypair> => {
   return Array.from({ length: amount }, () => Keypair.generate());
+};
+
+export const getLogs = async (
+  connection: Connection,
+  tx: string,
+): Promise<Array<string>> => {
+  await confirmTransaction(connection, tx);
+  const txDetails = await connection.getTransaction(tx, {
+    maxSupportedTransactionVersion: 0,
+    commitment: "confirmed",
+  });
+  return txDetails?.meta?.logMessages || [];
 };
