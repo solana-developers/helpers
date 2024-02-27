@@ -316,6 +316,7 @@ describe("makeKeypairs", () => {
     const keypairs = makeKeypairs(KEYPAIRS_TO_MAKE);
     assert.equal(keypairs.length, KEYPAIRS_TO_MAKE);
     assert.ok(keypairs[KEYPAIRS_TO_MAKE - 1].secretKey);
+  });
 });
 
 describe.only("confirmTransaction", () => {
@@ -349,5 +350,5 @@ describe("makeKeypairs", () => {
   test("makeKeypairs() creates the correct number of keypairs", () => {
     const keypairs = makeKeypairs(3);
     assert.equal(keypairs.length, 3);
-
+  });
 });
