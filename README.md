@@ -6,27 +6,23 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 ## What can I do with this module?
 
-[Make multiple keypairs at once](#makekeypairs-amount)
+[Make multiple keypairs at once](#makekeypairs)
 
-[Resolve a custom error message](#getcustomerrormessageprogramerrors-errormessage)
+[Resolve a custom error message](#getcustomerrormessage)
 
-[Get an airdrop if your balance is below some amount, and wait until it's confirmed](#airdropifrequiredconnection-publickey-lamports-maximumbalance)
+[Get an airdrop if your balance is below some amount, and wait until it's confirmed](#airdropifrequired)
 
-[Get a Solana Explorer link for a transaction, address, or block](#getexplorerlinktype-identifier-clustername)
+[Get a Solana Explorer link for a transaction, address, or block](#getexplorerlink)
 
-[Make a bunch of keypairs at once](#makekeypairs-amount)
+[Confirm a transaction (includes getting a recent blockhash)](#confirmtransaction)
 
-[Make a bunch of keypairs at once](#makekeypairs-amount)
+[Get a transaction's logs](#getlogs)
 
-[Confirm a transaction (includes getting a recent blockhash)](#confirmtransaction-connection-transaction)
+[Get a keypair from a keypair file (like id.json)](#getkeypairfromfile)
 
-[Get a transaction's logs](#getlogs-connection-transaction)
+[Get a keypair from an environment variable](#getkeypairfromenvironment)
 
-[Get a keypair from a keypair file (like id.json)](#getkeypairfromfilename)
-
-[Get a keypair from an environment variable](#getkeypairfromenvironmentenvironmentvariable)
-
-[Add a new keypair to an env file](#addkeypairtoenvfilekeypair-environmentvariable-file)
+[Add a new keypair to an env file](#addkeypairtoenvfile)
 
 ## Installation
 
@@ -36,7 +32,7 @@ npm i @solana-developers/helpers
 
 ## helpers for the browser and node.js
 
-### makeKeypairs(amount)
+### makeKeypairs
 
 In some situations - like making tests for your on-chain programs - you might need to make lots of keypairs at once. You can use `makeKeypairs()` combined with JS destructuring to quickly create multiple variables with distinct keypairs.
 
@@ -44,7 +40,7 @@ In some situations - like making tests for your on-chain programs - you might ne
 const [sender, recipient] = makeKeypairs(2);
 ```
 
-### getCustomErrorMessage(programErrors, errorMessage)
+### getCustomErrorMessage
 
 Sometimes Solana transactions throw an error with a message like:
 
@@ -102,7 +98,7 @@ And `errorMessage` will now be:
 "This token mint cannot freeze accounts";
 ```
 
-### airdropIfRequired(connection, publicKey, lamports, maximumBalance)
+### airdropIfRequired
 
 Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unnecessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
 
@@ -117,7 +113,7 @@ const newBalance = await airdropIfRequired(
 );
 ```
 
-### getExplorerLink(type, identifier, clusterName)
+### getExplorerLink
 
 Get an explorer link for an `address`, `block` or `transaction` (`tx` works too).
 
@@ -147,7 +143,7 @@ getExplorerLink("block", "241889720", "mainnet-beta");
 
 Will return `"https://explorer.solana.com/block/241889720"`
 
-### makeKeypairs(amount)
+### makeKeypairs
 
 Particularly in tests, Solana developers often need to make multiple keypairs at once. So just:
 
@@ -157,7 +153,7 @@ const [alice, bob, tokenA, tokenB] = makeKeypairs(4);
 
 And you'll now have `alice`, `bob`, `tokenA` and `tokenB` as distinct keypairs.
 
-### confirmTransaction(connection, transaction)
+### confirmTransaction
 
 Confirm a transaction, and also gets the recent blockhash required to confirm it.
 
@@ -165,7 +161,7 @@ Confirm a transaction, and also gets the recent blockhash required to confirm it
 await confirmTransaction(connection, transaction);
 ```
 
-### getLogs(connection, transaction)
+### getLogs
 
 Get the logs for a transaction signature:
 
@@ -186,7 +182,7 @@ This a good way to assert your onchain programs returned particular logs during 
 
 ## node.js specific helpers
 
-### getKeypairFromFile(filename)
+### getKeypairFromFile
 
 Gets a keypair from a file - the format must be the same as [Solana CLI](https://docs.solana.com/wallet-guide/file-system-wallet) uses, ie, a JSON array of numbers:
 
@@ -208,15 +204,15 @@ or using home dir expansion:
 const keyPair = await getKeypairFromFile("~/code/solana/demos/steve.json");
 ```
 
-### getKeypairFromEnvironment(environmentVariable)
+### getKeypairFromEnvironment
 
 Gets a keypair from a secret key stored in an environment variable. This is typically used to load secret keys from [env files](https://stackoverflow.com/questions/68267862/what-is-an-env-or-dotenv-file-exactly).
 
 ```typescript
-const keyPair = await getKeypairFromEnvironment("SECRET_KEY");
+const keypair = await getKeypairFromEnvironment("SECRET_KEY");
 ```
 
-### addKeypairToEnvFile(keypair, environmentVariable, file)
+### addKeypairToEnvFile
 
 Saves a keypair to the environment file.
 
