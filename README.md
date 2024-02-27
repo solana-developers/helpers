@@ -10,7 +10,7 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 [Resolve a custom error message](#getcustomerrormessageprogramerrors-errormessage)
 
-[Get an airdrop if your balance is below some amount, and wait until it's confirmed](#airdropIfRequired-publickey-lamports-maximumbalance)
+[Get an airdrop if your balance is below some amount, and wait until it's confirmed](#airdropifrequiredconnection-publickey-lamports-maximumbalance)
 
 [Get a Solana Explorer link for a transaction, address, or block](#getexplorerlinktype-identifier-clustername)
 
@@ -98,7 +98,7 @@ And `errorMessage` will now be:
 
 ### airdropIfRequired(connection, publicKey, lamports, maximumBalance)
 
-Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unneccessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
+Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unnecessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
 
 To ask for 0.5 SOL, if the balance is below 1 SOL, use:
 
