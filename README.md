@@ -10,9 +10,13 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 [Resolve a custom error message](#getcustomerrormessageprogramerrors-errormessage)
 
-[Get an airdrop if your balance is below some amount, and wait until it's confirmed](#airdropIfRequired-publickey-lamports-maximumbalance)
+[Get an airdrop if your balance is below some amount, and wait until it's confirmed](#airdropifrequiredconnection-publickey-lamports-maximumbalance)
 
 [Get a Solana Explorer link for a transaction, address, or block](#getexplorerlinktype-identifier-clustername)
+
+[Make a bunch of keypairs at once](#makekeypairs-amount)
+
+[Make a bunch of keypairs at once](#makekeypairs-amount)
 
 [Confirm a transaction (includes getting a recent blockhash)](#confirmtransaction-connection-transaction)
 
@@ -42,11 +46,11 @@ const [sender, recipient] = makeKeypairs(2);
 
 ### getCustomErrorMessage(programErrors, errorMessage)
 
-Sometimes Solana libaries return an error like:
+Sometimes Solana transactions throw an error with a message like:
 
 > failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10
 
-`getCustomErrorMessage()` allows you to turn this message into the more readable message that matches the number message from the custom program, like:
+`getCustomErrorMessage()` allows you to turn this message into a more readable message from the custom program, like:
 
 > This token mint cannot freeze accounts
 
@@ -100,7 +104,7 @@ And `errorMessage` will now be:
 
 ### airdropIfRequired(connection, publicKey, lamports, maximumBalance)
 
-Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unneccessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
+Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unnecessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
 
 To ask for 0.5 SOL, if the balance is below 1 SOL, use:
 
@@ -142,6 +146,16 @@ getExplorerLink("block", "241889720", "mainnet-beta");
 ```
 
 Will return `"https://explorer.solana.com/block/241889720"`
+
+### makeKeypairs(amount)
+
+Particularly in tests, Solana developers often need to make multiple keypairs at once. So just:
+
+```
+const [alice, bob, tokenA, tokenB] = makeKeypairs(4);
+```
+
+And you'll now have `alice`, `bob`, `tokenA` and `tokenB` as distinct keypairs.
 
 ### confirmTransaction(connection, transaction)
 

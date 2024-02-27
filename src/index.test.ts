@@ -310,6 +310,26 @@ describe("getExplorerLink", () => {
   });
 });
 
+describe("makeKeypairs", () => {
+  test("makeKeypairs makes exactly the amount of keypairs requested", () => {
+    // We could test more, but keypair generation takes time and slows down tests
+    const KEYPAIRS_TO_MAKE = 3;
+    const keypairs = makeKeypairs(KEYPAIRS_TO_MAKE);
+    assert.equal(keypairs.length, KEYPAIRS_TO_MAKE);
+    assert.ok(keypairs[KEYPAIRS_TO_MAKE - 1].secretKey);
+  });
+});
+
+describe("makeKeypairs", () => {
+  test("makeKeypairs makes exactly the amount of keypairs requested", () => {
+    // We could test more, but keypair generation takes time and slows down tests
+    const KEYPAIRS_TO_MAKE = 3;
+    const keypairs = makeKeypairs(KEYPAIRS_TO_MAKE);
+    assert.equal(keypairs.length, KEYPAIRS_TO_MAKE);
+    assert.ok(keypairs[KEYPAIRS_TO_MAKE - 1].secretKey);
+  });
+});
+
 describe("confirmTransaction", () => {
   test("confirmTransaction works for a successful transaction", async () => {
     const connection = new Connection(LOCALHOST);
