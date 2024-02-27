@@ -8,6 +8,7 @@ import {
   getExplorerLink,
   confirmTransaction,
   makeKeypairs,
+  getLogs,
 } from "./index";
 import {
   Connection,
@@ -319,7 +320,17 @@ describe("makeKeypairs", () => {
   });
 });
 
-describe.only("confirmTransaction", () => {
+describe("makeKeypairs", () => {
+  test("makeKeypairs makes exactly the amount of keypairs requested", () => {
+    // We could test more, but keypair generation takes time and slows down tests
+    const KEYPAIRS_TO_MAKE = 3;
+    const keypairs = makeKeypairs(KEYPAIRS_TO_MAKE);
+    assert.equal(keypairs.length, KEYPAIRS_TO_MAKE);
+    assert.ok(keypairs[KEYPAIRS_TO_MAKE - 1].secretKey);
+  });
+});
+
+describe("confirmTransaction", () => {
   test("confirmTransaction works for a successful transaction", async () => {
     const connection = new Connection(LOCALHOST);
     const [sender, recipient] = [Keypair.generate(), Keypair.generate()];
@@ -350,5 +361,36 @@ describe("makeKeypairs", () => {
   test("makeKeypairs() creates the correct number of keypairs", () => {
     const keypairs = makeKeypairs(3);
     assert.equal(keypairs.length, 3);
+  });
+});
+
+describe(`getLogs`, () => {
+  test(`getLogs works`, async () => {
+    const connection = new Connection(LOCALHOST);
+    const [sender, recipient] = [Keypair.generate(), Keypair.generate()];
+    const lamportsToAirdrop = 2 * LAMPORTS_PER_SOL;
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      lamportsToAirdrop,
+      1 * LAMPORTS_PER_SOL,
+    );
+
+    const transaction = await connection.sendTransaction(
+      new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: sender.publicKey,
+          toPubkey: recipient.publicKey,
+          lamports: 1_000_000,
+        }),
+      ),
+      [sender],
+    );
+
+    const logs = await getLogs(connection, transaction);
+    assert.deepEqual(logs, [
+      "Program 11111111111111111111111111111111 invoke [1]",
+      "Program 11111111111111111111111111111111 success",
+    ]);
   });
 });
