@@ -170,7 +170,7 @@ describe("addKeypairToEnvFile", () => {
 
     assert.ok(envKeypair.secretKey);
 
-    deleteFile(".env");
+    await deleteFile(".env");
   });
 
   test("throws a nice error if the env var already exists", async () => {
