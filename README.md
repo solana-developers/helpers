@@ -14,6 +14,8 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 [Get a Solana Explorer link for a transaction, address, or block](#getexplorerlinktype-identifier-clustername)
 
+[Make a bunch of keypairs at once](#makekeypairs-amount)
+
 [Confirm a transaction (includes getting a recent blockhash)](#confirmTransaction)
 
 [Get a keypair from a keypair file (like id.json)](#getkeypairfromfilefilename)
@@ -40,11 +42,11 @@ const [sender, recipient] = makeKeypairs(2);
 
 ### getCustomErrorMessage(programErrors, errorMessage)
 
-Sometimes Solana libaries return an error like:
+Sometimes Solana transactions throw an error with a message like:
 
 > failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10
 
-`getCustomErrorMessage()` allows you to turn this message into the more readable message that matches the number message from the custom program, like:
+`getCustomErrorMessage()` allows you to turn this message into a more readable message from the custom program, like:
 
 > This token mint cannot freeze accounts
 
@@ -140,6 +142,16 @@ getExplorerLink("block", "241889720", "mainnet-beta");
 ```
 
 Will return `"https://explorer.solana.com/block/241889720"`
+
+### makeKeypairs(amount)
+
+Particularly in tests, Solana developers often need to make multiple keypairs at once. So just:
+
+```
+const [alice, bob, tokenA, tokenB] = makeKeypairs(4);
+```
+
+And you'll now have `alice`, `bob`, `tokenA` and `tokenB` as distinct keypairs.
 
 ### confirmTransaction(connection, transaction)
 

@@ -2,6 +2,7 @@ import { Cluster, Connection, Keypair, PublicKey } from "@solana/web3.js";
 import base58 from "bs58";
 import path from "path";
 import { readFile, appendFile } from "fs/promises";
+
 const log = console.log;
 
 // Default value from Solana CLI
@@ -209,7 +210,7 @@ export const confirmTransaction = async (
   return signature;
 };
 
-// Shout out to deanmlittle for this technique
+// Shout out to Dean from WBA for this technique
 export const makeKeypairs = (amount: number): Array<Keypair> => {
   return Array.from({ length: amount }, () => Keypair.generate());
 };
