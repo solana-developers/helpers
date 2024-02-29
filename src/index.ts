@@ -146,7 +146,7 @@ export const addKeypairToEnvFile = async (
     throw new Error(`'${variableName}' already exists in env file.`);
   }
   const secretKeyString = keypairToSecretKeyJSON(keypair);
-  await appendFile(fileName, `\n${variableName}=${secretKeyString}`);
+  await appendFile(fileName, `\n# ${keypair.publicKey}\n${variableName}=${secretKeyString}`);
 };
 
 // Not exported as we don't want to encourage people to
