@@ -2,6 +2,7 @@
 
 - **Breaking**: Replace both `requestAndConfirmAirdropIfRequired()` and `requestAndConfirmAirdrop()` with a single function, `airdropIfRequired()`. See [README.md]!
 - Fix error handling in `confirmTransaction()` to throw errors correctly.
+- Added `getLogs()` function
 
 ## 1.5
 
