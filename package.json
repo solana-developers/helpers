@@ -1,6 +1,6 @@
 {
   "name": "@solana-developers/helpers",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Solana helper functions",
   "main": "dist/index.js",
   "private": false,
@@ -42,5 +42,6 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
-  }
+  },
+  "type": "module"
 }
