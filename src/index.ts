@@ -157,7 +157,7 @@ const requestAndConfirmAirdrop = async (
   publicKey: PublicKey,
   amount: number,
 ) => {
-  let airdropTransactionSignature = await connection.requestAirdrop(
+  const airdropTransactionSignature = await connection.requestAirdrop(
     publicKey,
     amount,
   );
