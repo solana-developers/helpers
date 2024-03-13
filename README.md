@@ -1,30 +1,30 @@
 # Solana helpers
 
-The `helpers` package contains Solana helper functions, for use in the browser and/or node.js, [made by the Solana Foundation Developer Ecosystem team](https://youtu.be/zvQIa68ObK8?t=319).
+The `helpers` package contains Solana helper functions, for use in the browser and/or node.js, [made by the Solana Foundation Developer Ecosystem team](https://youtu.be/zvQIa68ObK8?t=319) and our friends at [Anza](https://anza.xyz), [Turbin3](https://turbin3.com/) and [Unboxed Software](https://beunboxed.com/).
 
 Eventually most of these will end up in `@solana/web3.js`.
 
 ## What can I do with this module?
 
-[Make multiple keypairs at once](#makekeypairs)
+[Make multiple keypairs at once](#make-multiple-keypairs-at-once)
 
-[Resolve a custom error message](#getcustomerrormessage)
+[Resolve a custom error message](#resolve-a-custom-error-message)
 
-[Get an airdrop if your balance is below some amount, and wait until it's confirmed](#airdropifrequired)
+[Get an airdrop if your balance is below some amount](#get-an-airdrop-if-your-balance-is-below-some-amount)
 
-[Get a Solana Explorer link for a transaction, address, or block](#getexplorerlink)
+[Get a Solana Explorer link for a transaction, address, or block](#get-a-solana-explorer-link-for-a-transaction-address-or-block)
 
-[Confirm a transaction (includes getting a recent blockhash)](#confirmtransaction)
+[Confirm a transaction](#confirm-a-transaction)
 
-[Get a transaction's logs](#getlogs)
+[Get the logs for a transaction](#get-the-logs-for-a-transaction)
 
-[Get a keypair from a keypair file (like id.json)](#getkeypairfromfile)
+[Get a keypair from a keypair file](#get-a-keypair-from-a-keypair-file)
 
-[Get a keypair from an environment variable](#getkeypairfromenvironment)
+[Get a keypair from an environment variable](#get-a-keypair-from-an-environment-variable)
 
-[Add a new keypair to an env file](#addkeypairtoenvfile)
+[Add a new keypair to an env file](#add-a-new-keypair-to-an-env-file)
 
-[Load and airdrop to a keypair](#initializekeypairconnection-options)
+[Load or create a keypair and airdrop to it if needed](#load-or-create-a-keypair-and-airdrop-to-it-if-needed)
 
 ## Installation
 
@@ -34,7 +34,13 @@ npm i @solana-developers/helpers
 
 ## helpers for the browser and node.js
 
-### makeKeypairs
+### Make multiple keypairs at once
+
+Usage:
+
+```
+makeKeypairs(amount)
+```
 
 In some situations - like making tests for your on-chain programs - you might need to make lots of keypairs at once. You can use `makeKeypairs()` combined with JS destructuring to quickly create multiple variables with distinct keypairs.
 
@@ -42,13 +48,23 @@ In some situations - like making tests for your on-chain programs - you might ne
 const [sender, recipient] = makeKeypairs(2);
 ```
 
-### getCustomErrorMessage
+### Resolve a custom error message
+
+Usage:
+
+```
+getCustomErrorMessage(programErrors, errorMessage)
+```
 
 Sometimes Solana transactions throw an error with a message like:
 
 > failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10
 
-`getCustomErrorMessage()` allows you to turn this message into a more readable message from the custom program, like:
+Usage:
+
+````
+getCustomErrorMessage()
+``` allows you to turn this message into a more readable message from the custom program, like:
 
 > This token mint cannot freeze accounts
 
@@ -83,7 +99,7 @@ const tokenProgramErrors = [
   "The provided decimals value different from the Mint decimals",
   "Instruction does not support non-native tokens",
 ];
-```
+````
 
 Then run:
 
@@ -100,7 +116,13 @@ And `errorMessage` will now be:
 "This token mint cannot freeze accounts";
 ```
 
-### airdropIfRequired
+### Get an airdrop if your balance is below some amount
+
+Usage:
+
+```
+airdropIfRequired(connection, publicKey, lamports, maximumBalance)
+```
 
 Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unnecessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
 
@@ -115,7 +137,13 @@ const newBalance = await airdropIfRequired(
 );
 ```
 
-### getExplorerLink
+### Get a Solana Explorer link for a transaction, address, or block
+
+Usage:
+
+```
+getExplorerLink(type, identifier, clusterName)
+```
 
 Get an explorer link for an `address`, `block` or `transaction` (`tx` works too).
 
@@ -145,17 +173,13 @@ getExplorerLink("block", "241889720", "mainnet-beta");
 
 Will return `"https://explorer.solana.com/block/241889720"`
 
-### makeKeypairs
+### Confirm a transaction
 
-Particularly in tests, Solana developers often need to make multiple keypairs at once. So just:
+Usage:
 
 ```
-const [alice, bob, tokenA, tokenB] = makeKeypairs(4);
+confirmTransaction(connection, transaction)
 ```
-
-And you'll now have `alice`, `bob`, `tokenA` and `tokenB` as distinct keypairs.
-
-### confirmTransaction
 
 Confirm a transaction, and also gets the recent blockhash required to confirm it.
 
@@ -163,7 +187,13 @@ Confirm a transaction, and also gets the recent blockhash required to confirm it
 await confirmTransaction(connection, transaction);
 ```
 
-### getLogs
+### Get the logs for a transaction
+
+Usage:
+
+```
+getLogs(connection, transaction)
+```
 
 Get the logs for a transaction signature:
 
@@ -180,11 +210,17 @@ The `logs` will be an array of strings, eg:
 ];
 ```
 
-This a good way to assert your onchain programs returned particular logs during unit tests.
+This a good way to assert your onchain programs return particular logs during unit tests.
 
 ## node.js specific helpers
 
-### getKeypairFromFile
+### Get a keypair from a keypair file
+
+Usage:
+
+```
+getKeypairFromFile(filename)
+```
 
 Gets a keypair from a file - the format must be the same as [Solana CLI](https://docs.solana.com/wallet-guide/file-system-wallet) uses, ie, a JSON array of numbers:
 
@@ -206,7 +242,13 @@ or using home dir expansion:
 const keyPair = await getKeypairFromFile("~/code/solana/demos/steve.json");
 ```
 
-### getKeypairFromEnvironment
+### Get a keypair from an environment variable
+
+Usage:
+
+```
+getKeypairFromEnvironment(environmentVariable)
+```
 
 Gets a keypair from a secret key stored in an environment variable. This is typically used to load secret keys from [env files](https://stackoverflow.com/questions/68267862/what-is-an-env-or-dotenv-file-exactly).
 
@@ -214,7 +256,13 @@ Gets a keypair from a secret key stored in an environment variable. This is typi
 const keypair = await getKeypairFromEnvironment("SECRET_KEY");
 ```
 
-### addKeypairToEnvFile
+### Add a new keypair to an env file
+
+Usage:
+
+```
+addKeypairToEnvFile(keypair, environmentVariable, file)
+```
 
 Saves a keypair to the environment file.
 
@@ -228,11 +276,17 @@ or to specify a file name:
 await addKeypairToEnvFile(testKeypair, "SECRET_KEY", ".env.local");
 ```
 
-This will also reload the env file
+This will also reload the env file.
 
-### initializeKeypair(connection, options)
+### Load or create a keypair and airdrop to it if needed
 
-Loads in a keypair from the filesystem, or environment and then airdrops to it if needed. 
+Usage:
+
+```
+initializeKeypair(connection, options)
+```
+
+Loads in a keypair from the filesystem, or environment and then airdrops to it if needed.
 
 How the keypair is initialized is dependant on the `initializeKeypairOptions`:
 
@@ -253,29 +307,32 @@ To load the keypair from the filesystem, pass in the `keypairPath`.
 After the keypair has been loaded, it will check the account's balance. If the balance is below the `minimumBalance`, it will airdrop the account `airdropAmount`.
 
 To initialize a keypair from the `.env` file, and airdrop it 1 sol if it's beneath 0.5 sol:
+
 ```typescript
 const keypair = await initializeKeypair(connection);
 ```
 
 To initialize a keypair from the `.env` file under a different variable name:
+
 ```typescript
 const keypair = await initializeKeypair(connection, {
-  envVariableName: 'TEST_KEYPAIR'
+  envVariableName: "TEST_KEYPAIR",
 });
 ```
 
 To initialize a keypair from the filesystem, and airdrop it 3 sol:
+
 ```typescript
 const keypair = await initializeKeypair(connection, {
-  keypairPath: '~/.config/solana/id.json',
-  airdropAmount: LAMPORTS_PER_SOL * 3
+  keypairPath: "~/.config/solana/id.json",
+  airdropAmount: LAMPORTS_PER_SOL * 3,
 });
 ```
 
 The default options are as follows:
 
 ```typescript
-const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL; 
+const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
 ```
@@ -300,7 +357,7 @@ We always save keys using the 'array of numbers' format, since most other Solana
 
 ## Development
 
-To run tests - open a terminal tab, and run:
+To run tests, open a terminal tab, and run:
 
 ```
 solana-test-validator
