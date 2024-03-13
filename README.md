@@ -62,9 +62,11 @@ Sometimes Solana transactions throw an error with a message like:
 
 Usage:
 
-````
+```
 getCustomErrorMessage()
-``` allows you to turn this message into a more readable message from the custom program, like:
+```
+
+Allows you to turn this message into a more readable message from the custom program, like:
 
 > This token mint cannot freeze accounts
 
@@ -99,7 +101,7 @@ const tokenProgramErrors = [
   "The provided decimals value different from the Mint decimals",
   "Instruction does not support non-native tokens",
 ];
-````
+```
 
 Then run:
 
