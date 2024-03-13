@@ -36,7 +36,11 @@ npm i @solana-developers/helpers
 
 ### Make multiple keypairs at once
 
-`makeKeypairs(amount)`
+Usage:
+
+```
+makeKeypairs(amount)
+```
 
 In some situations - like making tests for your on-chain programs - you might need to make lots of keypairs at once. You can use `makeKeypairs()` combined with JS destructuring to quickly create multiple variables with distinct keypairs.
 
@@ -46,13 +50,21 @@ const [sender, recipient] = makeKeypairs(2);
 
 ### Resolve a custom error message
 
-`getCustomErrorMessage(programErrors, errorMessage)`
+Usage:
+
+```
+getCustomErrorMessage(programErrors, errorMessage)
+```
 
 Sometimes Solana transactions throw an error with a message like:
 
 > failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x10
 
-`getCustomErrorMessage()` allows you to turn this message into a more readable message from the custom program, like:
+Usage:
+
+````
+getCustomErrorMessage()
+``` allows you to turn this message into a more readable message from the custom program, like:
 
 > This token mint cannot freeze accounts
 
@@ -87,7 +99,7 @@ const tokenProgramErrors = [
   "The provided decimals value different from the Mint decimals",
   "Instruction does not support non-native tokens",
 ];
-```
+````
 
 Then run:
 
@@ -106,7 +118,11 @@ And `errorMessage` will now be:
 
 ### Get an airdrop if your balance is below some amount
 
-`airdropIfRequired(connection, publicKey, lamports, maximumBalance)`
+Usage:
+
+```
+airdropIfRequired(connection, publicKey, lamports, maximumBalance)
+```
 
 Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unnecessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
 
@@ -123,7 +139,11 @@ const newBalance = await airdropIfRequired(
 
 ### Get a Solana Explorer link for a transaction, address, or block
 
-`getExplorerLink(type, identifier, clusterName)`
+Usage:
+
+```
+getExplorerLink(type, identifier, clusterName)
+```
 
 Get an explorer link for an `address`, `block` or `transaction` (`tx` works too).
 
@@ -155,7 +175,11 @@ Will return `"https://explorer.solana.com/block/241889720"`
 
 ### Confirm a transaction
 
-`confirmTransaction(connection, transaction)`
+Usage:
+
+```
+confirmTransaction(connection, transaction)
+```
 
 Confirm a transaction, and also gets the recent blockhash required to confirm it.
 
@@ -165,7 +189,11 @@ await confirmTransaction(connection, transaction);
 
 ### Get the logs for a transaction
 
-`getLogs(connection, transaction)`
+Usage:
+
+```
+getLogs(connection, transaction)
+```
 
 Get the logs for a transaction signature:
 
@@ -188,7 +216,11 @@ This a good way to assert your onchain programs return particular logs during un
 
 ### Get a keypair from a keypair file
 
-`getKeypairFromFile(filename)`
+Usage:
+
+```
+getKeypairFromFile(filename)
+```
 
 Gets a keypair from a file - the format must be the same as [Solana CLI](https://docs.solana.com/wallet-guide/file-system-wallet) uses, ie, a JSON array of numbers:
 
@@ -212,7 +244,11 @@ const keyPair = await getKeypairFromFile("~/code/solana/demos/steve.json");
 
 ### Get a keypair from an environment variable
 
-`getKeypairFromEnvironment(environmentVariable)`
+Usage:
+
+```
+getKeypairFromEnvironment(environmentVariable)
+```
 
 Gets a keypair from a secret key stored in an environment variable. This is typically used to load secret keys from [env files](https://stackoverflow.com/questions/68267862/what-is-an-env-or-dotenv-file-exactly).
 
@@ -222,7 +258,11 @@ const keypair = await getKeypairFromEnvironment("SECRET_KEY");
 
 ### Add a new keypair to an env file
 
-`addKeypairToEnvFile(keypair, environmentVariable, file)`
+Usage:
+
+```
+addKeypairToEnvFile(keypair, environmentVariable, file)
+```
 
 Saves a keypair to the environment file.
 
@@ -240,7 +280,11 @@ This will also reload the env file.
 
 ### Load or create a keypair and airdrop to it if needed
 
-`initializeKeypair(connection, options)`
+Usage:
+
+```
+initializeKeypair(connection, options)
+```
 
 Loads in a keypair from the filesystem, or environment and then airdrops to it if needed.
 
