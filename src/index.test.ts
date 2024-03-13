@@ -187,7 +187,7 @@ describe("initializeKeypair", () => {
 
   test("generates a new keypair and airdrops needed amount", async () => {
     const options: initializeKeypairOptions = {
-      variableName: keypairVariableName,
+      envVariableName: keypairVariableName,
     };
 
     const signerFirstLoad = await initializeKeypair(connection, options);

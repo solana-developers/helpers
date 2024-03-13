@@ -13,6 +13,10 @@ const log = console.log;
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
+const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL; 
+const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
+const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
+
 
 export const keypairToSecretKeyJSON = (keypair: Keypair): string => {
   return JSON.stringify(Array.from(keypair.secretKey));
@@ -156,58 +160,46 @@ export const addKeypairToEnvFile = async (
 };
 
 export interface initializeKeypairOptions {
-  envFileName?: string; // .env file path
-  variableName?: string; // Variable name to call the secret key in the environment file
-  airdropAmount?: number; // Optional amount to airdrop in lamports
-  minimumBalance?: number; // Optional minimum balance to maintain in lamports
-  keypairPath?: string; // Optional path to a keypair file, if not provided, will look for the keypair in the environment
+  envFileName?: string;
+  envVariableName?: string;
+  airdropAmount?: number;
+  minimumBalance?: number;
+  keypairPath?: string;
 }
 
-/**
- * Loads a keypair from the environment or generates a new one if not found and writes it to the environment,
- * then requests an airdrop if the balance is below the minimum balance
- *
- * @param connection Connection to the Solana cluster
- * @param options initializeKeypairOptions
- * - envFileName: .env file path
- * - variableName: Variable name to call the secret key in the environment file
- * - airdropAmount: Optional amount to airdrop in lamports
- * - minimumBalance: Optional minimum balance to maintain in lamports
- * - keypairPath: Optional path to a keypair file, if not provided, will look for the keypair in the environment
- * @returns A keypair with funds loaded
- */
 export const initializeKeypair = async (
   connection: Connection,
   options?: initializeKeypairOptions,
 ): Promise<Keypair> => {
+
   let {
     envFileName,
-    variableName,
+    envVariableName,
     airdropAmount,
     minimumBalance,
     keypairPath,
   } = options || {};
 
-  let signer: Keypair;
-  variableName = variableName || "PRIVATE_KEY";
+  let keypair: Keypair;
+  envVariableName = envVariableName || DEFAULT_ENV_KEYPAIR_VARIABLE_NAME;
 
   if (keypairPath) {
-    signer = await getKeypairFromFile(keypairPath);
-  } else if (process.env[variableName]) {
-    signer = getKeypairFromEnvironment(variableName);
+    keypair = await getKeypairFromFile(keypairPath);
+  } else if (process.env[envVariableName]) {
+    keypair = getKeypairFromEnvironment(envVariableName);
   } else {
-    signer = Keypair.generate();
-    await addKeypairToEnvFile(signer, variableName, envFileName);
+    keypair = Keypair.generate();
+    await addKeypairToEnvFile(keypair, envVariableName, envFileName);
   }
 
   await airdropIfRequired(
     connection,
-    signer.publicKey,
-    airdropAmount || LAMPORTS_PER_SOL,
-    minimumBalance || LAMPORTS_PER_SOL >> 1,
+    keypair.publicKey,
+    airdropAmount || DEFAULT_AIRDROP_AMOUNT,
+    minimumBalance || DEFAULT_MINIMUM_BALANCE,
   );
 
-  return signer;
+  return keypair;
 };
 
 // Not exported as we don't want to encourage people to
