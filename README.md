@@ -38,8 +38,8 @@ npm i @solana-developers/helpers
 
 Usage:
 
-```
-makeKeypairs(amount)
+```typescript
+makeKeypairs(amount);
 ```
 
 In some situations - like making tests for your on-chain programs - you might need to make lots of keypairs at once. You can use `makeKeypairs()` combined with JS destructuring to quickly create multiple variables with distinct keypairs.
@@ -52,8 +52,8 @@ const [sender, recipient] = makeKeypairs(2);
 
 Usage:
 
-```
-getCustomErrorMessage(programErrors, errorMessage)
+```typescript
+getCustomErrorMessage(programErrors, errorMessage);
 ```
 
 Sometimes Solana transactions throw an error with a message like:
@@ -62,9 +62,11 @@ Sometimes Solana transactions throw an error with a message like:
 
 Usage:
 
-````
-getCustomErrorMessage()
-``` allows you to turn this message into a more readable message from the custom program, like:
+```typescript
+getCustomErrorMessage();
+```
+
+allows you to turn this message into a more readable message from the custom program, like:
 
 > This token mint cannot freeze accounts
 
@@ -99,7 +101,7 @@ const tokenProgramErrors = [
   "The provided decimals value different from the Mint decimals",
   "Instruction does not support non-native tokens",
 ];
-````
+```
 
 Then run:
 
@@ -120,8 +122,8 @@ And `errorMessage` will now be:
 
 Usage:
 
-```
-airdropIfRequired(connection, publicKey, lamports, maximumBalance)
+```typescript
+airdropIfRequired(connection, publicKey, lamports, maximumBalance);
 ```
 
 Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unnecessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
@@ -141,8 +143,8 @@ const newBalance = await airdropIfRequired(
 
 Usage:
 
-```
-getExplorerLink(type, identifier, clusterName)
+```typescript
+getExplorerLink(type, identifier, clusterName);
 ```
 
 Get an explorer link for an `address`, `block` or `transaction` (`tx` works too).
@@ -150,8 +152,7 @@ Get an explorer link for an `address`, `block` or `transaction` (`tx` works too)
 ```
 getExplorerLink(
   "address",
-  "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8",
-  "mainnet-beta",
+  "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8"
 );
 ```
 
@@ -177,8 +178,8 @@ Will return `"https://explorer.solana.com/block/241889720"`
 
 Usage:
 
-```
-confirmTransaction(connection, transaction)
+```typescript
+confirmTransaction(connection, transaction);
 ```
 
 Confirm a transaction, and also gets the recent blockhash required to confirm it.
@@ -191,8 +192,8 @@ await confirmTransaction(connection, transaction);
 
 Usage:
 
-```
-getLogs(connection, transaction)
+```typescript
+getLogs(connection, transaction);
 ```
 
 Get the logs for a transaction signature:
@@ -218,8 +219,8 @@ This a good way to assert your onchain programs return particular logs during un
 
 Usage:
 
-```
-getKeypairFromFile(filename)
+```typescript
+getKeypairFromFile(filename);
 ```
 
 Gets a keypair from a file - the format must be the same as [Solana CLI](https://docs.solana.com/wallet-guide/file-system-wallet) uses, ie, a JSON array of numbers:
@@ -246,8 +247,8 @@ const keyPair = await getKeypairFromFile("~/code/solana/demos/steve.json");
 
 Usage:
 
-```
-getKeypairFromEnvironment(environmentVariable)
+```typescript
+getKeypairFromEnvironment(environmentVariable);
 ```
 
 Gets a keypair from a secret key stored in an environment variable. This is typically used to load secret keys from [env files](https://stackoverflow.com/questions/68267862/what-is-an-env-or-dotenv-file-exactly).
@@ -260,8 +261,8 @@ const keypair = await getKeypairFromEnvironment("SECRET_KEY");
 
 Usage:
 
-```
-addKeypairToEnvFile(keypair, environmentVariable, file)
+```typescript
+addKeypairToEnvFile(keypair, environmentVariable, file);
 ```
 
 Saves a keypair to the environment file.
@@ -282,8 +283,8 @@ This will also reload the env file.
 
 Usage:
 
-```
-initializeKeypair(connection, options)
+```typescript
+initializeKeypair(connection, options);
 ```
 
 Loads in a keypair from the filesystem, or environment and then airdrops to it if needed.
