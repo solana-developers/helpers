@@ -8,6 +8,8 @@ const log = console.log.bind(console);
 
 // Get all the headings from the README
 const command = `git grep -h '^### ' README.md`;
+// @ts-ignore - not adding "type": "module" to package.json as it breaks imports
+// in the rest of the code.
 const { stdout } = await exec(command);
 
 const headings = stdout.split("\n");
