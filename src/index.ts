@@ -1,4 +1,10 @@
-import { Cluster, Connection, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  Cluster,
+  Connection,
+  Keypair,
+  PublicKey,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 import base58 from "bs58";
 import path from "path";
 import { readFile, appendFile } from "fs/promises";
@@ -7,6 +13,10 @@ const log = console.log;
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
+const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL; 
+const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
+const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
+
 
 export const keypairToSecretKeyJSON = (keypair: Keypair): string => {
   return JSON.stringify(Array.from(keypair.secretKey));
@@ -147,6 +157,49 @@ export const addKeypairToEnvFile = async (
   }
   const secretKeyString = keypairToSecretKeyJSON(keypair);
   await appendFile(fileName, `\n${variableName}=${secretKeyString}`);
+};
+
+export interface initializeKeypairOptions {
+  envFileName?: string;
+  envVariableName?: string;
+  airdropAmount?: number;
+  minimumBalance?: number;
+  keypairPath?: string;
+}
+
+export const initializeKeypair = async (
+  connection: Connection,
+  options?: initializeKeypairOptions,
+): Promise<Keypair> => {
+
+  let {
+    envFileName,
+    envVariableName,
+    airdropAmount,
+    minimumBalance,
+    keypairPath,
+  } = options || {};
+
+  let keypair: Keypair;
+  envVariableName = envVariableName || DEFAULT_ENV_KEYPAIR_VARIABLE_NAME;
+
+  if (keypairPath) {
+    keypair = await getKeypairFromFile(keypairPath);
+  } else if (process.env[envVariableName]) {
+    keypair = getKeypairFromEnvironment(envVariableName);
+  } else {
+    keypair = Keypair.generate();
+    await addKeypairToEnvFile(keypair, envVariableName, envFileName);
+  }
+
+  await airdropIfRequired(
+    connection,
+    keypair.publicKey,
+    airdropAmount || DEFAULT_AIRDROP_AMOUNT,
+    minimumBalance || DEFAULT_MINIMUM_BALANCE,
+  );
+
+  return keypair;
 };
 
 // Not exported as we don't want to encourage people to

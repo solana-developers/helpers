@@ -8,6 +8,8 @@ import {
   getExplorerLink,
   confirmTransaction,
   makeKeypairs,
+  initializeKeypairOptions,
+  initializeKeypair,
   getLogs,
 } from "./index";
 import {
@@ -28,9 +30,6 @@ import dotenv from "dotenv";
 const exec = promisify(execNoPromises);
 
 const LOCALHOST = "http://127.0.0.1:8899";
-
-const log = console.log;
-
 const TEMP_DIR = "src/temp";
 
 describe(`getCustomErrorMessage`, () => {
@@ -182,6 +181,49 @@ describe("addKeypairToEnvFile", () => {
   });
 });
 
+describe("initializeKeypair", () => {
+  const connection = new Connection(LOCALHOST);
+  const keypairVariableName = "INITIALIZE_KEYPAIR_TEST";
+
+  test("generates a new keypair and airdrops needed amount", async () => {
+    const options: initializeKeypairOptions = {
+      envVariableName: keypairVariableName,
+    };
+
+    const signerFirstLoad = await initializeKeypair(connection, options);
+
+    // Check balance
+    const firstBalanceLoad = await connection.getBalance(
+      signerFirstLoad.publicKey,
+    );
+    assert.ok(firstBalanceLoad > 0);
+
+    // Check that the environment variable was created
+    dotenv.config();
+    const secretKeyString = process.env[keypairVariableName];
+    if (!secretKeyString) {
+      throw new Error(`${secretKeyString} not found in environment`);
+    }
+
+    // Now reload the environment and check it matches our test keypair
+    const signerSecondLoad = await initializeKeypair(connection, options);
+
+    // Check the keypair is the same
+    assert.ok(signerFirstLoad.publicKey.equals(signerSecondLoad.publicKey));
+
+    // Check balance has not changed
+    const secondBalanceLoad = await connection.getBalance(
+      signerSecondLoad.publicKey,
+    );
+    assert.equal(firstBalanceLoad, secondBalanceLoad);
+
+    // Check there is a secret key
+    assert.ok(signerSecondLoad.secretKey);
+
+    await deleteFile(".env");
+  });
+});
+
 describe("airdropIfRequired", () => {
   test("Checking the balance after airdropIfRequired", async () => {
     const keypair = Keypair.generate();
@@ -318,15 +360,10 @@ describe("makeKeypairs", () => {
     assert.equal(keypairs.length, KEYPAIRS_TO_MAKE);
     assert.ok(keypairs[KEYPAIRS_TO_MAKE - 1].secretKey);
   });
-});
 
-describe("makeKeypairs", () => {
-  test("makeKeypairs makes exactly the amount of keypairs requested", () => {
-    // We could test more, but keypair generation takes time and slows down tests
-    const KEYPAIRS_TO_MAKE = 3;
-    const keypairs = makeKeypairs(KEYPAIRS_TO_MAKE);
-    assert.equal(keypairs.length, KEYPAIRS_TO_MAKE);
-    assert.ok(keypairs[KEYPAIRS_TO_MAKE - 1].secretKey);
+  test("makeKeypairs() creates the correct number of keypairs", () => {
+    const keypairs = makeKeypairs(3);
+    assert.equal(keypairs.length, 3);
   });
 });
 
@@ -354,13 +391,6 @@ describe("confirmTransaction", () => {
     );
 
     await confirmTransaction(connection, transaction);
-  });
-});
-
-describe("makeKeypairs", () => {
-  test("makeKeypairs() creates the correct number of keypairs", () => {
-    const keypairs = makeKeypairs(3);
-    assert.equal(keypairs.length, 3);
   });
 });
 

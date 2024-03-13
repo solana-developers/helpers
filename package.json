@@ -22,7 +22,8 @@
   "contributors": [
     "Nick Frostbutter",
     "John Liu",
-    "Steven Luscher"
+    "Steven Luscher",
+    "Christian Krueger"
   ],
   "license": "MIT",
   "dependencies": {
