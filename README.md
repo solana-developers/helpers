@@ -24,7 +24,7 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 [Add a new keypair to an env file](#add-a-new-keypair-to-an-env-file)
 
-[Load and airdrop to a keypair](#initializekeypairconnection-options)
+[Load or create a keypair and airdrop to it if needed](#load-or-create-a-keypair-and-airdrop-to-it-if-needed)
 
 ## Installation
 
@@ -238,9 +238,11 @@ await addKeypairToEnvFile(testKeypair, "SECRET_KEY", ".env.local");
 
 This will also reload the env file.
 
-### initializeKeypair(connection, options)
+### Load or create a keypair and airdrop to it if needed
 
-Loads in a keypair from the filesystem, or environment and then airdrops to it if needed. 
+`initializeKeypair(connection, options)`
+
+Loads in a keypair from the filesystem, or environment and then airdrops to it if needed.
 
 How the keypair is initialized is dependant on the `initializeKeypairOptions`:
 
@@ -261,29 +263,32 @@ To load the keypair from the filesystem, pass in the `keypairPath`.
 After the keypair has been loaded, it will check the account's balance. If the balance is below the `minimumBalance`, it will airdrop the account `airdropAmount`.
 
 To initialize a keypair from the `.env` file, and airdrop it 1 sol if it's beneath 0.5 sol:
+
 ```typescript
 const keypair = await initializeKeypair(connection);
 ```
 
 To initialize a keypair from the `.env` file under a different variable name:
+
 ```typescript
 const keypair = await initializeKeypair(connection, {
-  envVariableName: 'TEST_KEYPAIR'
+  envVariableName: "TEST_KEYPAIR",
 });
 ```
 
 To initialize a keypair from the filesystem, and airdrop it 3 sol:
+
 ```typescript
 const keypair = await initializeKeypair(connection, {
-  keypairPath: '~/.config/solana/id.json',
-  airdropAmount: LAMPORTS_PER_SOL * 3
+  keypairPath: "~/.config/solana/id.json",
+  airdropAmount: LAMPORTS_PER_SOL * 3,
 });
 ```
 
 The default options are as follows:
 
 ```typescript
-const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL; 
+const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
 ```
