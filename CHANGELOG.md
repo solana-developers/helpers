@@ -1,3 +1,8 @@
+## 2.1
+
+- Add `initializeKeypair`
+- Change documentation to be task based.
+
 ## 2.0
 
 - **Breaking**: Replace both `requestAndConfirmAirdropIfRequired()` and `requestAndConfirmAirdrop()` with a single function, `airdropIfRequired()`. See [README.md]!
