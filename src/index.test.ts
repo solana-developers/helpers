@@ -8,7 +8,7 @@ import {
   getExplorerLink,
   confirmTransaction,
   makeKeypairs,
-  initializeKeypairOptions,
+  InitializeKeypairOptions,
   initializeKeypair,
   getLogs,
 } from "./index";
@@ -151,10 +151,12 @@ describe("addKeypairToEnvFile", () => {
   });
 
   test("generates new keypair and writes to env if variable doesn't exist", async () => {
-    await addKeypairToEnvFile(testKeypair, "TEMP_KEYPAIR");
+    // We need to use a specific file name to avoid conflicts with other tests
+    const envFileName = ".env-unittest-addkeypairtoenvfile";
+    await addKeypairToEnvFile(testKeypair, "TEMP_KEYPAIR", envFileName);
 
     // Now reload the environment and check it matches our test keypair
-    dotenv.config();
+    dotenv.config({ path: envFileName });
 
     // Get the secret from the .env file
     const secretKeyString = process.env["TEMP_KEYPAIR"];
@@ -167,7 +169,7 @@ describe("addKeypairToEnvFile", () => {
 
     assert.ok(envKeypair.secretKey);
 
-    await deleteFile(".env");
+    await deleteFile(envFileName);
   });
 
   test("throws a nice error if the env var already exists", async () => {
@@ -186,7 +188,10 @@ describe("initializeKeypair", () => {
   const keypairVariableName = "INITIALIZE_KEYPAIR_TEST";
 
   test("generates a new keypair and airdrops needed amount", async () => {
-    const options: initializeKeypairOptions = {
+    // We need to use a specific file name to avoid conflicts with other tests
+    const envFileName = ".env-unittest-initkeypair";
+    const options: InitializeKeypairOptions = {
+      envFileName,
       envVariableName: keypairVariableName,
     };
 
@@ -199,7 +204,7 @@ describe("initializeKeypair", () => {
     assert.ok(firstBalanceLoad > 0);
 
     // Check that the environment variable was created
-    dotenv.config();
+    dotenv.config({ path: envFileName });
     const secretKeyString = process.env[keypairVariableName];
     if (!secretKeyString) {
       throw new Error(`${secretKeyString} not found in environment`);
@@ -220,7 +225,7 @@ describe("initializeKeypair", () => {
     // Check there is a secret key
     assert.ok(signerSecondLoad.secretKey);
 
-    await deleteFile(".env");
+    await deleteFile(envFileName);
   });
 });
 

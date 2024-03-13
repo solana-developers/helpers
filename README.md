@@ -267,7 +267,7 @@ const keypair = await getKeypairFromEnvironment("SECRET_KEY");
 Usage:
 
 ```
-addKeypairToEnvFile(keypair, environmentVariable, file)
+addKeypairToEnvFile(keypair, environmentVariable, envFileName)
 ```
 
 Saves a keypair to the environment file.

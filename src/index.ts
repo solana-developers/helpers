@@ -13,10 +13,9 @@ const log = console.log;
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
-const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL; 
+const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
-
 
 export const keypairToSecretKeyJSON = (keypair: Keypair): string => {
   return JSON.stringify(Array.from(keypair.secretKey));
@@ -146,20 +145,20 @@ export const getKeypairFromEnvironment = (variableName: string) => {
 export const addKeypairToEnvFile = async (
   keypair: Keypair,
   variableName: string,
-  fileName?: string,
+  envFileName?: string,
 ) => {
-  if (!fileName) {
-    fileName = ".env";
+  if (!envFileName) {
+    envFileName = ".env";
   }
   const existingSecretKey = process.env[variableName];
   if (existingSecretKey) {
     throw new Error(`'${variableName}' already exists in env file.`);
   }
   const secretKeyString = keypairToSecretKeyJSON(keypair);
-  await appendFile(fileName, `\n${variableName}=${secretKeyString}`);
+  await appendFile(envFileName, `\n${variableName}=${secretKeyString}`);
 };
 
-export interface initializeKeypairOptions {
+export interface InitializeKeypairOptions {
   envFileName?: string;
   envVariableName?: string;
   airdropAmount?: number;
@@ -169,9 +168,8 @@ export interface initializeKeypairOptions {
 
 export const initializeKeypair = async (
   connection: Connection,
-  options?: initializeKeypairOptions,
+  options?: InitializeKeypairOptions,
 ): Promise<Keypair> => {
-
   let {
     envFileName,
     envVariableName,
