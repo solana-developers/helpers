@@ -34,7 +34,7 @@ npm i @solana-developers/helpers
 
 ## Contributing
 
-PRs are very much welcome! Read the [CONTRUBUTING guidelines for the Solana course](https://github.com/Unboxed-Software/solana-course/blob/main/CONTRIBUTING.md#code) then send a PR!
+PRs are very much welcome! Read the [CONTRIBUTING guidelines for the Solana course](https://github.com/Unboxed-Software/solana-course/blob/main/CONTRIBUTING.md#code) then send a PR!
 
 ## helpers for the browser and node.js
 
