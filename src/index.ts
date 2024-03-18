@@ -4,18 +4,69 @@ import {
   Keypair,
   PublicKey,
   LAMPORTS_PER_SOL,
+  TransactionInstruction,
+  AddressLookupTableAccount,
+  ComputeBudgetProgram,
+  VersionedTransaction,
+  TransactionMessage,
+  RpcResponseAndContext,
+  SignatureResult,
+  SimulatedTransactionResponse,
 } from "@solana/web3.js";
 import base58 from "bs58";
 import path from "path";
 import { readFile, appendFile } from "fs/promises";
-
-const log = console.log;
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
 const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
+
+const getErrorFromRPCResponse = (
+  rpcResponse: RpcResponseAndContext<
+    SignatureResult | SimulatedTransactionResponse
+  >,
+) => {
+  // Note: `confirmTransaction` does not throw an error if the confirmation does not succeed,
+  // but rather a `TransactionError` object. so we handle that here
+  // See https://solana-labs.github.io/solana-web3.js/classes/Connection.html#confirmTransaction.confirmTransaction-1
+
+  // log(
+  //   `DEBUG rpcResponse`,
+  //   stringify(rpcResponse.value.err),
+  //   rpcResponse?.value?.err?.constructor.name,
+  // );
+
+  const error = rpcResponse.value.err;
+  if (error) {
+    // Can be a string or an object (literally just {}, no further typing is provided by the library)
+    // https://github.com/solana-labs/solana-web3.js/blob/4436ba5189548fc3444a9f6efb51098272926945/packages/library-legacy/src/connection.ts#L2930
+    // TODO: if still occurs in web3.js 2 (unlikely), fix it.
+    if (typeof error === "object") {
+      const errorKeys = Object.keys(error);
+      if (errorKeys.length === 1) {
+        if (errorKeys[0] !== "InstructionError") {
+          throw new Error(`Unknown RPC error: ${error}`);
+        }
+        // @ts-ignore due to missing typing information mentioned above.
+        const instructionError = error["InstructionError"];
+        // An instruction error is a custom program error and looks like:
+        // [
+        //   1,
+        //   {
+        //     "Custom": 1
+        //   }
+        // ]
+        // See also https://solana.stackexchange.com/a/931/294
+        throw new Error(
+          `Error in transaction: instruction index ${instructionError[0]}, custom program error ${instructionError[1]["Custom"]}`,
+        );
+      }
+    }
+    throw Error(error.toString());
+  }
+};
 
 export const keypairToSecretKeyJSON = (keypair: Keypair): string => {
   return JSON.stringify(Array.from(keypair.secretKey));
@@ -245,7 +296,7 @@ export const confirmTransaction = async (
   signature: string,
 ): Promise<string> => {
   const block = await connection.getLatestBlockhash();
-  const result = await connection.confirmTransaction(
+  const rpcResponse = await connection.confirmTransaction(
     {
       signature,
       ...block,
@@ -253,13 +304,7 @@ export const confirmTransaction = async (
     "confirmed",
   );
 
-  // Note: `confirmTransaction` does not throw an error if the confirmation does not succeed,
-  // but rather a `TransactionError` object. so we handle that here
-  // See https://solana-labs.github.io/solana-web3.js/classes/Connection.html#confirmTransaction.confirmTransaction-1
-  const error = result.value.err;
-  if (error) {
-    throw Error(error.toString());
-  }
+  getErrorFromRPCResponse(rpcResponse);
 
   return signature;
 };
@@ -279,4 +324,38 @@ export const getLogs = async (
     commitment: "confirmed",
   });
   return txDetails?.meta?.logMessages || [];
+};
+
+// Was getSimulationUnits
+// Credit https://twitter.com/stegabob, originally from
+// https://x.com/stegaBOB/status/1766662289392889920
+export const getSimulationComputeUnits = async (
+  connection: Connection,
+  instructions: Array<TransactionInstruction>,
+  payer: PublicKey,
+  lookupTables: Array<AddressLookupTableAccount> | [],
+): Promise<number | null> => {
+  const testInstructions = [
+    // Set an arbitrarily high number in simulation
+    // so we can be sure the transaction will succeed
+    // and get the real compute units used
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
+    ...instructions,
+  ];
+
+  const testTransaction = new VersionedTransaction(
+    new TransactionMessage({
+      instructions: testInstructions,
+      payerKey: payer,
+      recentBlockhash: PublicKey.default.toString(),
+    }).compileToV0Message(lookupTables),
+  );
+
+  const rpcResponse = await connection.simulateTransaction(testTransaction, {
+    replaceRecentBlockhash: true,
+    sigVerify: false,
+  });
+
+  getErrorFromRPCResponse(rpcResponse);
+  return rpcResponse.value.unitsConsumed || null;
 };
