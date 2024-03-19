@@ -226,19 +226,23 @@ Usage:
 getSimulationComputeUnits(connection, instructions, payer, lookupTables);
 ```
 
-Get the compute units required for an array of instructions.
+Get the compute units required for an array of instructions. Create your instructions:
 
 ```typescript
 const sendSol = SystemProgram.transfer({
-  fromPubkey: sender.publicKey,
+  fromPubkey: payer.publicKey,
   toPubkey: recipient,
   lamports: 1_000_000,
 });
+```
 
+Then use `getSimulationComputeUnits` to get the number of compute units they will use:
+
+```
 const computeUnits = await getSimulationComputeUnits(
   connection,
   [sendSol],
-  sender.publicKey,
+  payer.publicKey,
 );
 ```
 
