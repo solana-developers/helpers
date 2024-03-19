@@ -32,12 +32,6 @@ const getErrorFromRPCResponse = (
   // but rather a `TransactionError` object. so we handle that here
   // See https://solana-labs.github.io/solana-web3.js/classes/Connection.html#confirmTransaction.confirmTransaction-1
 
-  // log(
-  //   `DEBUG rpcResponse`,
-  //   stringify(rpcResponse.value.err),
-  //   rpcResponse?.value?.err?.constructor.name,
-  // );
-
   const error = rpcResponse.value.err;
   if (error) {
     // Can be a string or an object (literally just {}, no further typing is provided by the library)
