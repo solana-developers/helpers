@@ -238,7 +238,7 @@ const sendSol = SystemProgram.transfer({
 const computeUnits = await getSimulationComputeUnits(
   connection,
   [sendSol],
-  sender.publicKey,
+  payer.publicKey,
 );
 ```
 
