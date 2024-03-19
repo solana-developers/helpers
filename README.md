@@ -376,3 +376,11 @@ npm run test
 ```
 
 The tests use the [node native test runner](https://blog.logrocket.com/exploring-node-js-native-test-runner/).
+
+If you'd like to run a single test, use:
+
+```
+esrun --node-test-name-pattern="getCustomErrorMessage" src/index.test.ts
+```
+
+To just run tests matching the name `getCustomErrorMessage`.
