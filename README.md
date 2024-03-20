@@ -238,15 +238,17 @@ const sendSol = SystemProgram.transfer({
 });
 ```
 
-Then use `getSimulationComputeUnits` to get the number of compute units they will use:
+Then use `getSimulationComputeUnits` to get the number of compute units the instructions will use:
 
 ```typescript
-const computeUnits = await getSimulationComputeUnits(
+const units = await getSimulationComputeUnits(
   connection,
   [sendSol],
   payer.publicKey,
 );
 ```
+
+You can then use `ComputeBudgetProgram.setComputeUnitLimit({ units })` as the first instruction in your transaction. See [How to Request Optimal Compute Budget](https://solana.com/developers/guides/advanced/how-to-request-optimal-compute) for more information on compute units.
 
 ## node.js specific helpers
 
