@@ -1,6 +1,6 @@
 # Solana helpers
 
-The `helpers` package contains Solana helper functions, for use in the browser and/or node.js, [made by the Solana Foundation Developer Ecosystem team](https://youtu.be/zvQIa68ObK8?t=319) and our friends at [Anza](https://anza.xyz), [Turbin3](https://turbin3.com/) and [Unboxed Software](https://beunboxed.com/).
+The `helpers` package contains Solana helper functions, for use in the browser and/or node.js, [made by the Solana Foundation Developer Ecosystem team](https://youtu.be/zvQIa68ObK8?t=319) and our friends at [Anza](https://anza.xyz), [Turbin3](https://turbin3.com/), [Unboxed Software](https://beunboxed.com/) and [StarAtlas](https://staratlas.com/).
 
 Eventually most of these will end up in `@solana/web3.js`.
 
@@ -17,6 +17,8 @@ Eventually most of these will end up in `@solana/web3.js`.
 [Confirm a transaction](#confirm-a-transaction)
 
 [Get the logs for a transaction](#get-the-logs-for-a-transaction)
+
+[Get simulated compute units (CUs) for transaction instructions](<#get-simulated-compute-units-(cus)-for-transaction-instructions>)
 
 [Get a keypair from a keypair file](#get-a-keypair-from-a-keypair-file)
 
@@ -217,6 +219,34 @@ The `logs` will be an array of strings, eg:
 ```
 
 This a good way to assert your onchain programs return particular logs during unit tests.
+
+### Get simulated compute units (CUs) for transaction instructions
+
+Usage:
+
+```typescript
+getSimulationComputeUnits(connection, instructions, payer, lookupTables);
+```
+
+Get the compute units required for an array of instructions. Create your instructions:
+
+```typescript
+const sendSol = SystemProgram.transfer({
+  fromPubkey: payer.publicKey,
+  toPubkey: recipient,
+  lamports: 1_000_000,
+});
+```
+
+Then use `getSimulationComputeUnits` to get the number of compute units they will use:
+
+```typescript
+const computeUnits = await getSimulationComputeUnits(
+  connection,
+  [sendSol],
+  payer.publicKey,
+);
+```
 
 ## node.js specific helpers
 

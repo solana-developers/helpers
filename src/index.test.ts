@@ -11,13 +11,16 @@ import {
   InitializeKeypairOptions,
   initializeKeypair,
   getLogs,
+  getSimulationComputeUnits,
 } from "./index";
 import {
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
+  PublicKey,
   SystemProgram,
   Transaction,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import assert from "node:assert/strict";
 import base58 from "bs58";
@@ -30,6 +33,9 @@ import dotenv from "dotenv";
 const exec = promisify(execNoPromises);
 
 const LOCALHOST = "http://127.0.0.1:8899";
+const MEMO_PROGRAM_ID = new PublicKey(
+  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
+);
 const TEMP_DIR = "src/temp";
 
 describe(`getCustomErrorMessage`, () => {
@@ -427,5 +433,52 @@ describe(`getLogs`, () => {
       "Program 11111111111111111111111111111111 invoke [1]",
       "Program 11111111111111111111111111111111 success",
     ]);
+  });
+});
+
+describe("getSimulationComputeUnits", () => {
+  test("getSimulationComputeUnits returns 300 CUs for a SOL transfer, and 3888 for a SOL transfer with a memo", async () => {
+    const connection = new Connection(LOCALHOST);
+    const sender = Keypair.generate();
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      1 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+    const recipient = Keypair.generate().publicKey;
+
+    const sendSol = SystemProgram.transfer({
+      fromPubkey: sender.publicKey,
+      toPubkey: recipient,
+      lamports: 1_000_000,
+    });
+
+    const sayThanks = new TransactionInstruction({
+      keys: [],
+      programId: MEMO_PROGRAM_ID,
+      data: Buffer.from("thanks"),
+    });
+
+    const computeUnitsSendSol = await getSimulationComputeUnits(
+      connection,
+      [sendSol],
+      sender.publicKey,
+      [],
+    );
+
+    // TODO: it would be useful to have a breakdown of exactly how 300 CUs is calculated
+    assert.equal(computeUnitsSendSol, 300);
+
+    const computeUnitsSendSolAndSayThanks = await getSimulationComputeUnits(
+      connection,
+      [sendSol, sayThanks],
+      sender.publicKey,
+      [],
+    );
+
+    // TODO: it would be useful to have a breakdown of exactly how 3888 CUs is calculated
+    // also worth reviewing why memo program seems to use so many CUs.
+    assert.equal(computeUnitsSendSolAndSayThanks, 3888);
   });
 });
