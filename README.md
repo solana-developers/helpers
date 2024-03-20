@@ -44,8 +44,8 @@ PRs are very much welcome! Read the [CONTRIBUTING guidelines for the Solana cour
 
 Usage:
 
-```
-makeKeypairs(amount)
+```typescript
+makeKeypairs(amount);
 ```
 
 In some situations - like making tests for your on-chain programs - you might need to make lots of keypairs at once. You can use `makeKeypairs()` combined with JS destructuring to quickly create multiple variables with distinct keypairs.
@@ -58,8 +58,8 @@ const [sender, recipient] = makeKeypairs(2);
 
 Usage:
 
-```
-getCustomErrorMessage(programErrors, errorMessage)
+```typescript
+getCustomErrorMessage(programErrors, errorMessage);
 ```
 
 Sometimes Solana transactions throw an error with a message like:
@@ -68,8 +68,8 @@ Sometimes Solana transactions throw an error with a message like:
 
 Usage:
 
-```
-getCustomErrorMessage()
+```typescript
+getCustomErrorMessage();
 ```
 
 Allows you to turn this message into a more readable message from the custom program, like:
@@ -120,7 +120,7 @@ const errorMessage = getCustomErrorMessage(
 
 And `errorMessage` will now be:
 
-```
+```typescript
 "This token mint cannot freeze accounts";
 ```
 
@@ -128,8 +128,8 @@ And `errorMessage` will now be:
 
 Usage:
 
-```
-airdropIfRequired(connection, publicKey, lamports, maximumBalance)
+```typescript
+airdropIfRequired(connection, publicKey, lamports, maximumBalance);
 ```
 
 Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unnecessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
@@ -149,13 +149,13 @@ const newBalance = await airdropIfRequired(
 
 Usage:
 
-```
-getExplorerLink(type, identifier, clusterName)
+```typescript
+getExplorerLink(type, identifier, clusterName);
 ```
 
 Get an explorer link for an `address`, `block` or `transaction` (`tx` works too).
 
-```
+```typescript
 getExplorerLink(
   "address",
   "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8",
@@ -165,7 +165,7 @@ getExplorerLink(
 
 Will return `"https://explorer.solana.com/address/dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8"`. The cluster name isn't included since mainnet-beta is the default.
 
-```
+```typescript
 getExplorerLink(
   "address",
   "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8",
@@ -175,7 +175,7 @@ getExplorerLink(
 
 Will return `"https://explorer.solana.com/address/dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8?cluster=devnet"`
 
-```
+```typescript
 getExplorerLink("block", "241889720", "mainnet-beta");
 ```
 
@@ -185,8 +185,8 @@ Will return `"https://explorer.solana.com/block/241889720"`
 
 Usage:
 
-```
-confirmTransaction(connection, transaction)
+```typescript
+confirmTransaction(connection, transaction);
 ```
 
 Confirm a transaction, and also gets the recent blockhash required to confirm it.
@@ -199,8 +199,8 @@ await confirmTransaction(connection, transaction);
 
 Usage:
 
-```
-getLogs(connection, transaction)
+```typescript
+getLogs(connection, transaction);
 ```
 
 Get the logs for a transaction signature:
@@ -211,7 +211,7 @@ const logs = await getLogs(connection, transaction);
 
 The `logs` will be an array of strings, eg:
 
-```
+```typescript
 [
   "Program 11111111111111111111111111111111 invoke [1]",
   "Program 11111111111111111111111111111111 success",
@@ -256,8 +256,8 @@ You can then use `ComputeBudgetProgram.setComputeUnitLimit({ units })` as the fi
 
 Usage:
 
-```
-getKeypairFromFile(filename)
+```typescript
+getKeypairFromFile(filename);
 ```
 
 Gets a keypair from a file - the format must be the same as [Solana CLI](https://docs.solana.com/wallet-guide/file-system-wallet) uses, ie, a JSON array of numbers:
@@ -284,8 +284,8 @@ const keyPair = await getKeypairFromFile("~/code/solana/demos/steve.json");
 
 Usage:
 
-```
-getKeypairFromEnvironment(environmentVariable)
+```typescript
+getKeypairFromEnvironment(environmentVariable);
 ```
 
 Gets a keypair from a secret key stored in an environment variable. This is typically used to load secret keys from [env files](https://stackoverflow.com/questions/68267862/what-is-an-env-or-dotenv-file-exactly).
@@ -298,8 +298,8 @@ const keypair = await getKeypairFromEnvironment("SECRET_KEY");
 
 Usage:
 
-```
-addKeypairToEnvFile(keypair, environmentVariable, envFileName)
+```typescript
+addKeypairToEnvFile(keypair, environmentVariable, envFileName);
 ```
 
 Saves a keypair to the environment file.
@@ -320,8 +320,8 @@ This will also reload the env file.
 
 Usage:
 
-```
-initializeKeypair(connection, options)
+```typescript
+initializeKeypair(connection, options);
 ```
 
 Loads in a keypair from the filesystem, or environment and then airdrops to it if needed.
@@ -379,14 +379,14 @@ const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
 
 Secret keys can be read in either the more compact base58 format (`base58.encode(randomKeypair.secretKey);`), like:
 
-```
+```bash
 # A random secret key for demo purposes
 SECRET_KEY=QqKYBnj5mcgUsS4vrCeyMczbTyV1SMrr7SjSAPj7JGFtxfrgD8AWU8NciwHNCbmkscbvj4HdeEen42GDBSHCj1N
 ```
 
 Or the longer, 'array of numbers' format `JSON.stringify(Object.values(randomKeypair.secretKey));`:
 
-```
+```bash
 # A random secret key for demo purposes
 SECRET_KEY=[112,222,91,246,55,109,221,4,23,148,251,127,212,180,44,249,182,139,18,13,209,208,6,7,193,210,186,249,148,237,237,1,70,118,1,153,238,134,239,75,187,96,101,138,147,130,181,71,22,82,44,217,194,122,59,208,134,119,98,53,136,108,44,105]
 ```
@@ -397,13 +397,13 @@ We always save keys using the 'array of numbers' format, since most other Solana
 
 To run tests, open a terminal tab, and run:
 
-```
+```bash
 solana-test-validator
 ```
 
 Then in a different tab, run:
 
-```
+```bash
 npm run test
 ```
 
@@ -411,7 +411,7 @@ The tests use the [node native test runner](https://blog.logrocket.com/exploring
 
 If you'd like to run a single test, use:
 
-```
+```bash
 esrun --node-test-name-pattern="getCustomErrorMessage" src/index.test.ts
 ```
 
