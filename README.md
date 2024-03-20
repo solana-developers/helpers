@@ -240,7 +240,7 @@ const sendSol = SystemProgram.transfer({
 
 Then use `getSimulationComputeUnits` to get the number of compute units they will use:
 
-```
+```typescript
 const computeUnits = await getSimulationComputeUnits(
   connection,
   [sendSol],
