@@ -1,6 +1,10 @@
+## 2.2
+
+- Add `getSimulationComputeUnits()`
+
 ## 2.1
 
-- Add `initializeKeypair`
+- Add `initializeKeypair()`
 - Change documentation to be task based.
 
 ## 2.0
