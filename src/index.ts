@@ -341,7 +341,8 @@ export const getSimulationComputeUnits = async (
     new TransactionMessage({
       instructions: testInstructions,
       payerKey: payer,
-      // It seems that recentBlockhash can by any public key duiring simulation
+      // RecentBlockhash can by any public key during simulation
+      // since 'replaceRecentBlockhash' is set to 'true' below
       recentBlockhash: PublicKey.default.toString(),
     }).compileToV0Message(lookupTables),
   );
