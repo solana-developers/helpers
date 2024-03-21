@@ -18,7 +18,7 @@ Eventually most of these will end up in `@solana/web3.js`.
 
 [Get the logs for a transaction](#get-the-logs-for-a-transaction)
 
-[Get simulated compute units (CUs) for transaction instructions](<#get-simulated-compute-units-(cus)-for-transaction-instructions>)
+[Get simulated compute units (CUs) for transaction instructions](#get-simulated-compute-units-cus-for-transaction-instructions)
 
 [Get a keypair from a keypair file](#get-a-keypair-from-a-keypair-file)
 
