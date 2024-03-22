@@ -200,7 +200,10 @@ export const addKeypairToEnvFile = async (
     throw new Error(`'${variableName}' already exists in env file.`);
   }
   const secretKeyString = keypairToSecretKeyJSON(keypair);
-  await appendFile(envFileName, `\n${variableName}=${secretKeyString}`);
+  await appendFile(
+    envFileName,
+    `\n# Solana Address: ${keypair.publicKey.toBase58()}\n${variableName}=${secretKeyString}`,
+  );
 };
 
 export interface InitializeKeypairOptions {
