@@ -332,10 +332,9 @@ How the keypair is initialized is dependant on the `initializeKeypairOptions`:
 interface initializeKeypairOptions {
   envFileName?: string;
   envVariableName?: string;
-  airdropAmount?: number;
+  airdropAmount?: number | null;
   minimumBalance?: number;
   keypairPath?: string;
-  requestAirdropIfRequired?: boolean;
 }
 ```
 
@@ -345,7 +344,7 @@ To load the keypair from the filesystem, pass in the `keypairPath`. When set, lo
 
 After the keypair has been loaded, it will check the account's balance. If the balance is below the `minimumBalance`, it will airdrop the account `airdropAmount`.
 
-After the keypair has been loaded, you can skip the airdrop on low balance by setting `requestAirdropIfRequired` to `false`.
+After the keypair has been loaded, you can skip the airdrop on low balance by setting `airdropAmount` to `0` or `null`.
 
 To initialize a keypair from the `.env` file, and airdrop it 1 sol if it's beneath 0.5 sol:
 

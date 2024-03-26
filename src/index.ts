@@ -206,10 +206,9 @@ export const addKeypairToEnvFile = async (
 export interface InitializeKeypairOptions {
   envFileName?: string;
   envVariableName?: string;
-  airdropAmount?: number;
+  airdropAmount?: number | null;
   minimumBalance?: number;
   keypairPath?: string;
-  requestAirdropIfRequired?: boolean;
 }
 
 export const initializeKeypair = async (
@@ -222,7 +221,6 @@ export const initializeKeypair = async (
     airdropAmount,
     minimumBalance,
     keypairPath,
-    requestAirdropIfRequired = true,
   } = options || {};
 
   let keypair: Keypair;
@@ -236,7 +234,7 @@ export const initializeKeypair = async (
     await addKeypairToEnvFile(keypair, envVariableName, envFileName);
   }
 
-  if (requestAirdropIfRequired) {
+  if (!!airdropAmount) {
     await airdropIfRequired(
       connection,
       keypair.publicKey,
