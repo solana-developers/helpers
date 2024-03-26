@@ -216,11 +216,11 @@ export const initializeKeypair = async (
   options?: InitializeKeypairOptions,
 ): Promise<Keypair> => {
   let {
+    keypairPath,
     envFileName,
     envVariableName = DEFAULT_ENV_KEYPAIR_VARIABLE_NAME,
-    airdropAmount,
-    minimumBalance,
-    keypairPath,
+    airdropAmount = DEFAULT_AIRDROP_AMOUNT,
+    minimumBalance = DEFAULT_MINIMUM_BALANCE,
   } = options || {};
 
   let keypair: Keypair;
@@ -238,8 +238,8 @@ export const initializeKeypair = async (
     await airdropIfRequired(
       connection,
       keypair.publicKey,
-      airdropAmount || DEFAULT_AIRDROP_AMOUNT,
-      minimumBalance || DEFAULT_MINIMUM_BALANCE,
+      airdropAmount,
+      minimumBalance,
     );
   }
 
