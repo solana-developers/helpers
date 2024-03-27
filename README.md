@@ -342,7 +342,7 @@ By default, the keypair will be retrieved from the `.env` file. If a `.env` file
 
 To load the keypair from the filesystem, pass in the `keypairPath`. When set, loading a keypair from the filesystem will take precedence over loading from the `.env` file.
 
-If `airdropAmount` amount is set to something other than `null` or `0`, this function will then will check the account's balance. If the balance is below the `minimumBalance`, it will airdrop the account `airdropAmount`.
+If `airdropAmount` amount is set to something other than `null` or `0`, this function will then check the account's balance. If the balance is below the `minimumBalance`, it will airdrop the account `airdropAmount`.
 
 To initialize a keypair from the `.env` file, and airdrop it 1 sol if it's beneath 0.5 sol:
 
