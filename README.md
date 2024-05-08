@@ -1,8 +1,8 @@
 # Solana helpers
 
-The `helpers` package contains Solana helper functions, for use in the browser and/or node.js, [made by the Solana Foundation Developer Ecosystem team](https://youtu.be/zvQIa68ObK8?t=319) and our friends at [Anza](https://anza.xyz), [Turbin3](https://turbin3.com/), [Unboxed Software](https://beunboxed.com/) and [StarAtlas](https://staratlas.com/).
+The `helpers` package contains Solana helper functions, for use in the browser and/or node.js, [made by the Solana Foundation Developer Ecosystem team](https://youtu.be/zvQIa68ObK8?t=319) and our friends at [Anza](https://anza.xyz), [Turbin3](https://turbin3.com/), [Unboxed Software](https://beunboxed.com/), and [StarAtlas](https://staratlas.com/).
 
-Eventually most of these will end up in `@solana/web3.js`.
+Eventually, most of these will end up in `@solana/web3.js`.
 
 ## What can I do with this module?
 
@@ -132,7 +132,7 @@ Usage:
 airdropIfRequired(connection, publicKey, lamports, maximumBalance);
 ```
 
-Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready in the address, and the new balance of tokens is returned. The `maximumBalance` is used to avoid errors caused by unnecessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
+Request and confirm an airdrop in one step. As soon as the `await` returns, the airdropped tokens will be ready to use, and the new balance of tokens will be returned. The `maximumBalance` is used to avoid errors caused by unnecessarily asking for SOL when there's already enough in the account, and makes `airdropIfRequired()` very handy in scripts that run repeatedly.
 
 To ask for 0.5 SOL, if the balance is below 1 SOL, use:
 
@@ -326,7 +326,7 @@ initializeKeypair(connection, options);
 
 Loads in a keypair from the filesystem, or environment and then airdrops to it if needed.
 
-How the keypair is initialized is dependant on the `initializeKeypairOptions`:
+How the keypair is initialized is dependent on the `initializeKeypairOptions`:
 
 ```typescript
 interface initializeKeypairOptions {
