@@ -12,14 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-
-      # From https://docs.solana.com/cli/install-solana-cli-tools
-      - name: Install Solana
-        run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-
-      - name: Add to PATH
-        run: echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - uses: actions/checkout@v4
+      - uses: metadaoproject/setup-solana@v1.0
+        with:
+          # Install Solana CLI (beta, required to fix 'ahash' issue)
+          solana-cli-version: "1.18.5"
 
       - name: Run Solana validator (and background it)
         run: solana-test-validator &
