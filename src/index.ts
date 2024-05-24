@@ -237,7 +237,7 @@ export const initializeKeypair = async (
     await addKeypairToEnvFile(keypair, envVariableName, envFileName);
   }
 
-  if (!!airdropAmount) {
+  if (airdropAmount) {
     await airdropIfRequired(
       connection,
       keypair.publicKey,
