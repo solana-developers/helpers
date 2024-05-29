@@ -70,6 +70,17 @@ describe(`getCustomErrorMessage`, () => {
     );
     assert.equal(errorMessage, "This token mint cannot freeze accounts");
   });
+
+  test("getCustomErrorMessage() keeps unknown messages intact", () => {
+    const customErrors = [
+      "Lamport balance below rent-exempt threshold",
+      "Insufficient funds",
+    ];
+
+    const originalError = "An error unrelated to token transfer";
+    const errorMessage = getCustomErrorMessage(customErrors, originalError);
+    assert.equal(errorMessage, originalError);
+  });
 });
 
 describe("getKeypairFromFile", () => {

@@ -69,18 +69,22 @@ export const keypairToSecretKeyJSON = (keypair: Keypair): string => {
 export const getCustomErrorMessage = (
   possibleProgramErrors: Array<string>,
   errorMessage: string,
-): string | null => {
+): string => {
   const customErrorExpression =
     /.*custom program error: 0x(?<errorNumber>[0-9abcdef]+)/;
 
   let match = customErrorExpression.exec(errorMessage);
   const errorNumberFound = match?.groups?.errorNumber;
   if (!errorNumberFound) {
-    return null;
+    return errorMessage;
   }
   // errorNumberFound is a base16 string
   const errorNumber = parseInt(errorNumberFound, 16);
-  return possibleProgramErrors[errorNumber] || null;
+  const customMessage = possibleProgramErrors[errorNumber];
+
+  return customMessage != undefined && customMessage != null
+    ? customMessage
+    : errorMessage;
 };
 
 const encodeURL = (baseUrl: string, searchParams: Record<string, string>) => {
