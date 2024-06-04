@@ -14,8 +14,6 @@ import {
   SimulatedTransactionResponse,
 } from "@solana/web3.js";
 import base58 from "bs58";
-import path from "path";
-import { readFile, appendFile } from "fs/promises";
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
@@ -122,6 +120,7 @@ export const getExplorerLink = (
 };
 
 export const getKeypairFromFile = async (filepath?: string) => {
+  const path = await import("path");
   // Work out correct file name
   if (!filepath) {
     filepath = DEFAULT_FILEPATH;
@@ -136,6 +135,7 @@ export const getKeypairFromFile = async (filepath?: string) => {
   // Get contents of file
   let fileContents: string;
   try {
+    const { readFile } = await import("fs/promises");
     const fileContentsBuffer = await readFile(filepath);
     fileContents = fileContentsBuffer.toString();
   } catch (error) {
@@ -192,6 +192,7 @@ export const addKeypairToEnvFile = async (
   variableName: string,
   envFileName?: string,
 ) => {
+  const { appendFile } = await import("fs/promises");
   if (!envFileName) {
     envFileName = ".env";
   }
