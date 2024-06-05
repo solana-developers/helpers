@@ -16,7 +16,7 @@ import {
 import base58 from "bs58";
 import BigNumber from "bn.js";
 import assert from "node:assert/strict";
-import { randomBytes } from "crypto";
+import { getRandomValues } from "node:crypto";
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
@@ -366,7 +366,8 @@ export const getSimulationComputeUnits = async (
 };
 
 export const getRandomBigNumber = (size: number = 8) => {
-  return new BigNumber(randomBytes(size));
+  const uintArray = new Uint8Array(size);
+  return new BigNumber(getRandomValues(uintArray));
 };
 
 export const assertBigNumberEqual = (
@@ -381,11 +382,4 @@ export const assertBigNumberEqual = (
   }
   // See https://github.com/indutny/bn.js/?tab=readme-ov-file#instructions
   assert(actual.cmp(expected) === 0);
-};
-
-export const assertPublicKeyEqual = (
-  actual: PublicKey,
-  expected: PublicKey,
-) => {
-  assert.equal(actual.toBase58(), expected.toBase58());
 };

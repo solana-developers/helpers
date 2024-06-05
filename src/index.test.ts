@@ -14,7 +14,6 @@ import {
   getSimulationComputeUnits,
   assertBigNumberEqual,
   getRandomBigNumber,
-  assertPublicKeyEqual,
 } from "./index";
 import {
   Connection,
@@ -531,13 +530,5 @@ describe("assertBigNumberEqual", () => {
         message: "false == true",
       },
     );
-  });
-});
-
-describe("assertPublicKeyEqual", () => {
-  test("assertPublicKeyEqual works", () => {
-    const one = Keypair.generate();
-    const alsoOne = Keypair.fromSecretKey(one.secretKey);
-    assert.ok(assertPublicKeyEqual(one.publicKey, alsoOne.publicKey));
   });
 });

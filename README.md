@@ -46,14 +46,6 @@ PRs are very much welcome! Read the [CONTRIBUTING guidelines for the Solana cour
 
 ## helpers for the browser and node.js
 
-### Assert whether two public keys have the same value
-
-Mainly helpful in unit testing. Will throw if the public keys don't have the same value.
-
-```typescript
-assertPublicKeyEqual(one.publicKey, two.publicKey);
-```
-
 ### Assert whether two BigNumbers (BNs) have the same value
 
 Mainly helpful in unit testing. Will throw if the BigNumbers don't have the same value.

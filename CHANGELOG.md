@@ -5,7 +5,6 @@ Improved browser support by only loading node-specific modules when they are nee
 Add the following, mainly to help unit testing:
 
 - Add `assertBigNumberEqual`
-- Add `assertPublicKeyEqual`
 - Add `getRandomBigNumber`
 
 ## 2.2
