@@ -1,3 +1,11 @@
+## 2.3
+
+Mainly changes to help unit testing:
+
+- Add `assertBigNumberEqual`
+- Add `assertPublicKeyEqual`
+- Add `getRandomBigNumber`
+
 ## 2.2
 
 - Add `getSimulationComputeUnits()`

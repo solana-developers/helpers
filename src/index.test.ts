@@ -12,6 +12,9 @@ import {
   initializeKeypair,
   getLogs,
   getSimulationComputeUnits,
+  assertBigNumberEqual,
+  getRandomBigNumber,
+  assertPublicKeyEqual,
 } from "./index";
 import {
   Connection,
@@ -28,6 +31,7 @@ import base58 from "bs58";
 import { exec as execNoPromises } from "child_process";
 import { promisify } from "util";
 import { writeFile, unlink as deleteFile } from "node:fs/promises";
+import BigNumber from "bn.js";
 import dotenv from "dotenv";
 
 const exec = promisify(execNoPromises);
@@ -497,5 +501,43 @@ describe("getSimulationComputeUnits", () => {
     // TODO: it would be useful to have a breakdown of exactly how 3888 CUs is calculated
     // also worth reviewing why memo program seems to use so many CUs.
     assert.equal(computeUnitsSendSolAndSayThanks, 3888);
+  });
+});
+
+describe("getRandomBigNumber", () => {
+  test("getRandomBigNumber works", () => {
+    const randomBigNumber = getRandomBigNumber();
+    assert.ok(randomBigNumber);
+  });
+});
+
+describe("assertBigNumberEqual", () => {
+  test("assertBigNumberEqual works", () => {
+    const one = new BigNumber(1);
+    const alsoOne = new BigNumber(1);
+    assertBigNumberEqual(one, alsoOne);
+  });
+
+  test("assertBigNumberEqual throws an error if the numbers are not equal", () => {
+    const one = new BigNumber(1);
+    const two = new BigNumber(2);
+
+    assert.throws(
+      () => {
+        assertBigNumberEqual(one, two);
+      },
+      {
+        name: "AssertionError",
+        message: "false == true",
+      },
+    );
+  });
+});
+
+describe("assertPublicKeyEqual", () => {
+  test("assertPublicKeyEqual works", () => {
+    const one = Keypair.generate();
+    const alsoOne = Keypair.fromSecretKey(one.secretKey);
+    assert.ok(assertPublicKeyEqual(one.publicKey, alsoOne.publicKey));
   });
 });

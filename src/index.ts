@@ -14,9 +14,13 @@ import {
   SimulatedTransactionResponse,
 } from "@solana/web3.js";
 import base58 from "bs58";
+import BigNumber from "bn.js";
+import assert from "node:assert/strict";
+import { randomBytes } from "crypto";
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
+
 const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
@@ -359,4 +363,29 @@ export const getSimulationComputeUnits = async (
 
   getErrorFromRPCResponse(rpcResponse);
   return rpcResponse.value.unitsConsumed || null;
+};
+
+export const getRandomBigNumber = (size: number = 8) => {
+  return new BigNumber(randomBytes(size));
+};
+
+export const assertBigNumberEqual = (
+  actual: BigNumber | string,
+  expected: BigNumber | string,
+) => {
+  if (typeof actual === "string") {
+    actual = new BigNumber(actual);
+  }
+  if (typeof expected === "string") {
+    expected = new BigNumber(expected);
+  }
+  // See https://github.com/indutny/bn.js/?tab=readme-ov-file#instructions
+  assert(actual.cmp(expected) === 0);
+};
+
+export const assertPublicKeyEqual = (
+  actual: PublicKey,
+  expected: PublicKey,
+) => {
+  assert.equal(actual.toBase58(), expected.toBase58());
 };

@@ -1,6 +1,6 @@
 {
   "name": "@solana-developers/helpers",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Solana helper functions",
   "main": "dist/index.js",
   "private": false,
@@ -33,11 +33,12 @@
   },
   "devDependencies": {
     "@digitak/esrun": "^3.2.24",
+    "@types/bn.js": "^5.1.5",
     "@types/node": "^20.5.7",
-    "tsup": "^7.2.0",
     "esrun": "^3.2.26",
-    "typescript": "^5.2.2",
-    "prettier": "^3.0.3"
+    "prettier": "^3.0.3",
+    "tsup": "^7.2.0",
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public",

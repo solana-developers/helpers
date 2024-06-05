@@ -6,6 +6,12 @@ Eventually, most of these will end up in `@solana/web3.js`.
 
 ## What can I do with this module?
 
+[Assert whether two public keys have the same value](#assert-whether-two-public-keys-have-the-same-value)
+
+[Assert whether two BigNumbers (BNs) have the same value](<#assert-whether-two-bignumbers-(bns)-have-the-same-value>)
+
+[Get a random BigNumber](#get-a-random-bignumber)
+
 [Make multiple keypairs at once](#make-multiple-keypairs-at-once)
 
 [Resolve a custom error message](#resolve-a-custom-error-message)
@@ -39,6 +45,38 @@ npm i @solana-developers/helpers
 PRs are very much welcome! Read the [CONTRIBUTING guidelines for the Solana course](https://github.com/Unboxed-Software/solana-course/blob/main/CONTRIBUTING.md#code) then send a PR!
 
 ## helpers for the browser and node.js
+
+### Assert whether two public keys have the same value
+
+Mainly helpful in unit testing. Will throw if the public keys don't have the same value.
+
+```typescript
+assertPublicKeyEqual(one.publicKey, two.publicKey);
+```
+
+### Assert whether two BigNumbers (BNs) have the same value
+
+Mainly helpful in unit testing. Will throw if the BigNumbers don't have the same value.
+
+You can provie this with either BNs / BigNumbers (from `bn.js`) or strings formatted using the same output as `bn.js` uses. They'll be compared as if they were BNs. This is handy for comparing fetch account values where these numbers are returned as strings.
+
+```typescript
+assertBigNumberEqual(one, alsoOne);
+```
+
+const one = new BigNumber(1);
+const alsoOne = new BigNumber(1);
+
+### Get a random BigNumber
+
+Mainly helpful in unit testing. Will throw if the Keypairs don't have the same value.
+
+An optional `size` can be given with a size in bytes. Default is `8`.
+
+```typescript
+const randomBigNumber = getRandomBigNumber();
+console.log(randomBigNumber);
+```
 
 ### Make multiple keypairs at once
 
