@@ -1,6 +1,8 @@
 ## 2.3
 
-Mainly changes to help unit testing:
+Improved browser support by only loading node-specific modules when they are needed. Thanks @piotr-layerzero!
+
+Add the following, mainly to help unit testing:
 
 - Add `assertBigNumberEqual`
 - Add `assertPublicKeyEqual`
