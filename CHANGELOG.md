@@ -1,3 +1,7 @@
+## 2.3
+
+Improved browser support by only loading node-specific modules when they are needed. Thanks @piotr-layerzero!
+
 ## 2.2
 
 - Add `getSimulationComputeUnits()`
