@@ -12,14 +12,33 @@ import {
   RpcResponseAndContext,
   SignatureResult,
   SimulatedTransactionResponse,
+  SystemProgram,
+  Signer,
+  TransactionConfirmationStrategy,
+  Commitment,
 } from "@solana/web3.js";
 import base58 from "bs58";
+import {
+  TOKEN_PROGRAM_ID,
+  MINT_SIZE,
+  createAssociatedTokenAccountIdempotentInstruction,
+  createInitializeMint2Instruction,
+  createMintToInstruction,
+  getAssociatedTokenAddressSync,
+  getMinimumBalanceForRentExemptMint,
+  TOKEN_2022_PROGRAM_ID,
+} from "@solana/spl-token";
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
 const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
+
+const log = console.log;
+
+const TOKEN_PROGRAM: typeof TOKEN_2022_PROGRAM_ID | typeof TOKEN_PROGRAM_ID =
+  TOKEN_2022_PROGRAM_ID;
 
 const getErrorFromRPCResponse = (
   rpcResponse: RpcResponseAndContext<
@@ -293,6 +312,7 @@ export const airdropIfRequired = async (
 export const confirmTransaction = async (
   connection: Connection,
   signature: string,
+  commitment: Commitment = "finalized",
 ): Promise<string> => {
   const block = await connection.getLatestBlockhash();
   const rpcResponse = await connection.confirmTransaction(
@@ -300,7 +320,7 @@ export const confirmTransaction = async (
       signature,
       ...block,
     },
-    "confirmed",
+    commitment,
   );
 
   getErrorFromRPCResponse(rpcResponse);
@@ -359,4 +379,165 @@ export const getSimulationComputeUnits = async (
 
   getErrorFromRPCResponse(rpcResponse);
   return rpcResponse.value.unitsConsumed || null;
+};
+
+// Just a non-exposed helper function to create all the instructions instructions
+// needed for creating a mint, creating an ATA, and minting tokens to the ATA
+// TODO: maybe we should expose this? To discuss.
+const makeMintInstructions = (
+  mintAddress: PublicKey,
+  ataAddress: PublicKey,
+  amount: number | bigint,
+  authority: PublicKey,
+  payer: PublicKey = authority,
+): Array<TransactionInstruction> => {
+  return [
+    // Initializes a new mint and optionally deposits all the newly minted tokens in an account.
+    createInitializeMint2Instruction(
+      mintAddress,
+      6,
+      authority,
+      null,
+      TOKEN_PROGRAM,
+    ),
+    // Create the ATA
+    createAssociatedTokenAccountIdempotentInstruction(
+      payer,
+      ataAddress,
+      authority,
+      mintAddress,
+      TOKEN_PROGRAM,
+    ),
+    // Mint some tokens to the ATA
+    createMintToInstruction(
+      mintAddress,
+      ataAddress,
+      authority,
+      amount,
+      [],
+      TOKEN_PROGRAM,
+    ),
+  ];
+};
+
+// Send a versioned transaction with less boilerplate
+// https://www.quicknode.com/guides/solana-development/transactions/how-to-use-versioned-transactions-on-solana
+// TODO: maybe we should expose this? To discuss.
+const makeAndSendAndConfirmTransaction = async (
+  connection: Connection,
+  instructions: Array<TransactionInstruction>,
+  signers: Array<Signer>,
+  payer: Keypair,
+) => {
+  const latestBlockhash = (await connection.getLatestBlockhash("max"))
+    .blockhash;
+
+  const messageV0 = new TransactionMessage({
+    payerKey: payer.publicKey,
+    recentBlockhash: latestBlockhash,
+    instructions,
+  }).compileToV0Message();
+  const transaction = new VersionedTransaction(messageV0);
+  transaction.sign(signers);
+
+  const signature = await connection.sendTransaction(transaction);
+
+  await confirmTransaction(connection, signature);
+};
+
+// Create users, mints, create ATAs and mint tokens.
+// TODO: we may actually want to split this into multiple transactions
+// to avoid the transaction size limit (or use lookup tables)
+// in the future. However it works for two transactions of the size
+// used in our unit tests.
+export const createAccountsMintsAndTokenAccounts = async (
+  usersAndTokenBalances: Array<Array<number>>,
+  lamports: number,
+  connection: Connection,
+  payer: Keypair,
+) => {
+  const userCount = usersAndTokenBalances.length;
+  // Set the variable mintCount to the largest array in the usersAndTokenBalances array
+  const mintCount = Math.max(
+    ...usersAndTokenBalances.map((mintBalances) => mintBalances.length),
+  );
+
+  const users = makeKeypairs(userCount);
+  const mints = makeKeypairs(mintCount);
+
+  // This will be returned
+  // [user index][mint index]address of token account
+  let tokenAccounts: Array<Array<PublicKey>>;
+
+  tokenAccounts = users.map((user) => {
+    return mints.map((mint) =>
+      getAssociatedTokenAddressSync(
+        mint.publicKey,
+        user.publicKey,
+        false,
+        TOKEN_PROGRAM,
+      ),
+    );
+  });
+
+  const sendSolInstructions: Array<TransactionInstruction> = users.map((user) =>
+    SystemProgram.transfer({
+      fromPubkey: payer.publicKey,
+      toPubkey: user.publicKey,
+      lamports,
+    }),
+  );
+
+  // Airdrops to user
+  const minimumLamports = await getMinimumBalanceForRentExemptMint(connection);
+
+  const createMintInstructions: Array<TransactionInstruction> = mints.map(
+    (mint) =>
+      SystemProgram.createAccount({
+        fromPubkey: payer.publicKey,
+        newAccountPubkey: mint.publicKey,
+        lamports: minimumLamports,
+        space: MINT_SIZE,
+        programId: TOKEN_PROGRAM,
+      }),
+  );
+
+  // Make tokenA and tokenB mints, mint tokens and create ATAs
+  const mintTokensInstructions: Array<TransactionInstruction> =
+    usersAndTokenBalances.flatMap((userTokenBalances, userIndex) => {
+      return userTokenBalances.flatMap((tokenBalance, mintIndex) => {
+        if (tokenBalance === 0) {
+          return [];
+        }
+        return makeMintInstructions(
+          mints[mintIndex].publicKey,
+          tokenAccounts[userIndex][mintIndex],
+          tokenBalance,
+          users[userIndex].publicKey,
+          payer.publicKey,
+        );
+      });
+    });
+
+  const instructions = [
+    ...sendSolInstructions,
+    ...createMintInstructions,
+    ...mintTokensInstructions,
+  ];
+
+  const signers = [...users, ...mints, payer];
+
+  // Finally, make the transaction and send it.
+  await makeAndSendAndConfirmTransaction(
+    connection,
+    instructions,
+    signers,
+    payer,
+  );
+
+  return {
+    users,
+    mints,
+    tokenAccounts,
+  };
 };
