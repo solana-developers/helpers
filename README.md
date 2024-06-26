@@ -8,6 +8,8 @@ Eventually, most of these will end up in `@solana/web3.js`.
 
 [Make multiple keypairs at once](#make-multiple-keypairs-at-once)
 
+[Create multiple accounts with balances of different tokens in a single step](#create-users-mints-and-token-accounts-in-a-single-step)
+
 [Resolve a custom error message](#resolve-a-custom-error-message)
 
 [Get an airdrop if your balance is below some amount](#get-an-airdrop-if-your-balance-is-below-some-amount)
@@ -48,11 +50,46 @@ Usage:
 makeKeypairs(amount);
 ```
 
-In some situations - like making tests for your on-chain programs - you might need to make lots of keypairs at once. You can use `makeKeypairs()` combined with JS destructuring to quickly create multiple variables with distinct keypairs.
+In some situations - like making tests for your onchain programs - you might need to make lots of keypairs at once. You can use `makeKeypairs()` combined with JS destructuring to quickly create multiple variables with distinct keypairs.
 
 ```typescript
 const [sender, recipient] = makeKeypairs(2);
 ```
+
+### Create users, mints and token accounts in a single step
+
+Frequently, tests for onchain programs need to make not just users with SOL, but also token mints and give each user some balance of each token. To save this boilerplate, `createAccountsMintsAndTokenAccounts()` handles making user keypairs, giving them SOL, making mints, creating associated token accounts, and minting tokens directly to the associated token accounts.
+
+Eg, to make two new users, and two tokens:
+
+- the first user with million of the first token, none of the second token, and 1 SOL
+- the second user with 1none of the first token, 1 million of the second token, and 1 SOL
+
+Just run:
+
+```typescript
+const usersMintsAndTokenAccounts = await createAccountsMintsAndTokenAccounts(
+  [
+    [1_000_000_000, 0], // User 0 has 1_000_000_000 of token A and 0 of token B
+    [0, 1_000_000_000], // User 1 has 0 of token A and 1_000_000_000 of token B
+  ],
+  1 * LAMPORTS_PER_SOL,
+  connection,
+  payer,
+);
+```
+
+The returned `usersMintsAndTokenAccounts` will be an object of the form:
+
+```
+{
+  users: <Array<Keypair>>
+  mints: <Array<Keypair>>,
+  tokenAccounts: <Array<Array><PublicKey>>>
+}
+```
+
+tokenAccounts are indexed by the user, then the mint. Eg, the ATA of `user[0]` for `mint[0]` is `tokenAccounts[0][0]`.
 
 ### Resolve a custom error message
 
