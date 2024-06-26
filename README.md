@@ -63,7 +63,7 @@ Frequently, tests for onchain programs need to make not just users with SOL, but
 Eg, to make two new users, and two tokens:
 
 - the first user with million of the first token, none of the second token, and 1 SOL
-- the second user with 1none of the first token, 1 million of the second token, and 1 SOL
+- the second user with none of the first token, 1 million of the second token, and 1 SOL
 
 Just run:
 
