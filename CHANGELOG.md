@@ -1,3 +1,7 @@
+## 2.4
+
+- Add `createAccountsMintsAndTokenAccounts()`
+
 ## 2.3
 
 Improved browser support by only loading node-specific modules when they are needed. Thanks @piotr-layerzero!
