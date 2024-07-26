@@ -14,7 +14,6 @@ import {
   SimulatedTransactionResponse,
   SystemProgram,
   Signer,
-  TransactionConfirmationStrategy,
   Commitment,
 } from "@solana/web3.js";
 import base58 from "bs58";

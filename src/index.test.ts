@@ -12,6 +12,7 @@ import {
   initializeKeypair,
   getLogs,
   getSimulationComputeUnits,
+  createAccountsMintsAndTokenAccounts,
 } from "./index";
 import {
   Connection,
@@ -29,7 +30,6 @@ import { exec as execNoPromises } from "child_process";
 import { promisify } from "util";
 import { writeFile, unlink as deleteFile } from "node:fs/promises";
 import dotenv from "dotenv";
-import { createAccountsMintsAndTokenAccounts } from "./index.js";
 
 const exec = promisify(execNoPromises);
 
