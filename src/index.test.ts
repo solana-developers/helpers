@@ -13,6 +13,7 @@ import {
   getLogs,
   getSimulationComputeUnits,
   createAccountsMintsAndTokenAccounts,
+  makeTokenMint,
 } from "./index";
 import {
   Connection,
@@ -498,6 +499,30 @@ describe("getSimulationComputeUnits", () => {
     // TODO: it would be useful to have a breakdown of exactly how 3888 CUs is calculated
     // also worth reviewing why memo program seems to use so many CUs.
     assert.equal(computeUnitsSendSolAndSayThanks, 3888);
+  });
+});
+
+describe("makeTokenMint", () => {
+  test("makeTokenMint works", async () => {
+    const mintAuthority = Keypair.generate();
+    const connection = new Connection(LOCALHOST);
+    await airdropIfRequired(
+      connection,
+      mintAuthority.publicKey,
+      100 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+
+    const signature = await makeTokenMint(
+      connection,
+      mintAuthority,
+      "Unit test token",
+      "TEST",
+      9,
+      "https://example.com",
+    );
+
+    assert.ok(signature);
   });
 });
 

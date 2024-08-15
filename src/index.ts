@@ -15,6 +15,8 @@ import {
   SystemProgram,
   Signer,
   Commitment,
+  Transaction,
+  sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import base58 from "bs58";
 import {
@@ -26,7 +28,15 @@ import {
   getAssociatedTokenAddressSync,
   getMinimumBalanceForRentExemptMint,
   TOKEN_2022_PROGRAM_ID,
+  createInitializeMetadataPointerInstruction,
+  createInitializeMintInstruction,
+  ExtensionType,
+  getMintLen,
+  LENGTH_SIZE,
+  TYPE_SIZE,
 } from "@solana/spl-token";
+import type { TokenMetadata } from "@solana/spl-token-metadata";
+import { createInitializeInstruction, pack } from "@solana/spl-token-metadata";
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
@@ -539,4 +549,78 @@ export const createAccountsMintsAndTokenAccounts = async (
     mints,
     tokenAccounts,
   };
+};
+
+export const makeTokenMint = async (
+  connection: Connection,
+  mintAuthority: Keypair,
+  name: string,
+  symbol: string,
+  decimals: number,
+  uri: string,
+  additionalMetadata: Array<[string, string]> = [],
+  updateAuthority: PublicKey = mintAuthority.publicKey,
+  freezeAuthority: PublicKey | null = null,
+) => {
+  const mint = Keypair.generate();
+
+  const metadata: TokenMetadata = {
+    mint: mint.publicKey,
+    name,
+    symbol,
+    uri,
+    additionalMetadata,
+  };
+
+  // Work out how much SOL we need to store our Token
+  const mintLength = getMintLen([ExtensionType.MetadataPointer]);
+  const metadataLength = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
+  const mintLamports = await connection.getMinimumBalanceForRentExemption(
+    mintLength + metadataLength,
+  );
+
+  const mintTransaction = new Transaction().add(
+    // Create Account
+    SystemProgram.createAccount({
+      fromPubkey: mintAuthority.publicKey,
+      newAccountPubkey: mint.publicKey,
+      space: mintLength,
+      lamports: mintLamports,
+      programId: TOKEN_2022_PROGRAM_ID,
+    }),
+    // Initialize metadata pointer (so the mint points to itself for metadata)
+    createInitializeMetadataPointerInstruction(
+      mint.publicKey,
+      mintAuthority.publicKey,
+      mint.publicKey,
+      TOKEN_2022_PROGRAM_ID,
+    ),
+    // Initialize mint
+    createInitializeMintInstruction(
+      mint.publicKey,
+      decimals,
+      mintAuthority.publicKey,
+      freezeAuthority,
+      TOKEN_2022_PROGRAM_ID,
+    ),
+    // Initialize
+    createInitializeInstruction({
+      programId: TOKEN_2022_PROGRAM_ID,
+      mint: mint.publicKey,
+      metadata: mint.publicKey,
+      name: metadata.name,
+      symbol: metadata.symbol,
+      uri: metadata.uri,
+      mintAuthority: mintAuthority.publicKey,
+      updateAuthority: updateAuthority,
+    }),
+  );
+
+  const signature = await sendAndConfirmTransaction(
+    connection,
+    mintTransaction,
+    [mintAuthority, mint],
+  );
+
+  return signature;
 };

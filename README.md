@@ -8,6 +8,8 @@ Eventually, most of these will end up in `@solana/web3.js`.
 
 [Make multiple keypairs at once](#make-multiple-keypairs-at-once)
 
+[Make a token mint with metadata](#make-a-token-with-metadata)
+
 [Create multiple accounts with balances of different tokens in a single step](#create-users-mints-and-token-accounts-in-a-single-step)
 
 [Resolve a custom error message](#resolve-a-custom-error-message)
@@ -54,6 +56,35 @@ In some situations - like making tests for your onchain programs - you might nee
 
 ```typescript
 const [sender, recipient] = makeKeypairs(2);
+```
+
+### Make a token mint with metadata
+
+The `makeTokenMint` makes a new token mint. A token mint is effectively the factory that produces token of a particular type. So if you want to make a new token, this is the right function for you!
+
+Unlike older tools, the function uses Token Extensions Metadata and Metadata Pointer to put all metadata into the Mint Account, without needing an external Metadata account. If you don't know what that means, just know that things are simpler than they used to be!
+
+Parameters
+
+- `connection`: Connection
+- `mintAuthority`: Keypair of the account that can make new tokens
+- `name`: string, name of the token
+- `symbol`: string, like a ticker symbol. Usually in all-caps.
+- `decimals`: number, how many decimal places the token has
+- `uri`: string, URI to an file containing
+- `additionalMetadata`: Array<[string, string]> (optional), an array of key/value pairs for additional metadata.
+- `updateAuthority`: PublicKey (optional) - public key of the account that can update the token.
+  `freezeAuthority`: PublicKey (optional) - public key of the freeze account, default to `null`
+
+```typescript
+const signature = await makeTokenMint(
+  connection,
+  mintAuthority,
+  "Unit test token",
+  "TEST",
+  9,
+  "https://raw.githubusercontent.com/solana-developers/professional-education/main/labs/sample-token-metadata.json",
+);
 ```
 
 ### Create users, mints and token accounts in a single step
