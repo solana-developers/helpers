@@ -513,7 +513,7 @@ describe("makeTokenMint", () => {
       1 * LAMPORTS_PER_SOL,
     );
 
-    const signature = await makeTokenMint(
+    const mintAddress = await makeTokenMint(
       connection,
       mintAuthority,
       "Unit test token",
@@ -522,7 +522,7 @@ describe("makeTokenMint", () => {
       "https://example.com",
     );
 
-    assert.ok(signature);
+    assert.ok(mintAddress);
   });
 });
 

@@ -622,5 +622,6 @@ export const makeTokenMint = async (
     [mintAuthority, mint],
   );
 
-  return signature;
+
+  return mint.publicKey;
 };
