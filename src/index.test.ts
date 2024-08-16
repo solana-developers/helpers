@@ -30,7 +30,9 @@ import base58 from "bs58";
 import { exec as execNoPromises } from "child_process";
 import { promisify } from "util";
 import { writeFile, unlink as deleteFile } from "node:fs/promises";
+import { TokenMetadata, unpack } from "@solana/spl-token-metadata";
 import dotenv from "dotenv";
+import { getTokenMetadata } from "@solana/spl-token";
 
 const exec = promisify(execNoPromises);
 
@@ -503,7 +505,7 @@ describe("getSimulationComputeUnits", () => {
 });
 
 describe("makeTokenMint", () => {
-  test("makeTokenMint works", async () => {
+  test("makeTokenMint makes a new mint with the specified metadata", async () => {
     const mintAuthority = Keypair.generate();
     const connection = new Connection(LOCALHOST);
     await airdropIfRequired(
@@ -523,6 +525,24 @@ describe("makeTokenMint", () => {
     );
 
     assert.ok(mintAddress);
+
+    const tokenMetadata = await getTokenMetadata(connection, mintAddress);
+
+    if (!tokenMetadata) {
+      throw new Error(
+        `Token metadata not found for mint address ${mintAddress}`,
+      );
+    }
+
+    assert.equal(tokenMetadata.mint.toBase58(), mintAddress.toBase58());
+    assert.equal(
+      tokenMetadata.updateAuthority?.toBase58(),
+      mintAuthority.publicKey.toBase58(),
+    );
+    assert.equal(tokenMetadata.name, "Unit test token");
+    assert.equal(tokenMetadata.symbol, "TEST");
+    assert.equal(tokenMetadata.uri, "https://example.com");
+    assert.deepEqual(tokenMetadata.additionalMetadata, []);
   });
 });
 
