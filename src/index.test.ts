@@ -515,13 +515,29 @@ describe("makeTokenMint", () => {
       1 * LAMPORTS_PER_SOL,
     );
 
+    const name = "Unit test token";
+    const symbol = "TEST";
+    const decimals = 9;
+    const uri = "https://example.com";
+    const additionalMetadata = {
+      shlerm: "frobular",
+      glerp: "flerpy",
+      gurperderp: "erpy",
+      nurmagerd: "flerpy",
+      zurp: "flerpy",
+      eruper: "flerpy",
+      zerperurperserp: "flerpy",
+      zherp: "flerpy",
+    };
+
     const mintAddress = await makeTokenMint(
       connection,
       mintAuthority,
-      "Unit test token",
-      "TEST",
-      9,
-      "https://example.com",
+      name,
+      symbol,
+      decimals,
+      uri,
+      additionalMetadata,
     );
 
     assert.ok(mintAddress);
@@ -539,10 +555,13 @@ describe("makeTokenMint", () => {
       tokenMetadata.updateAuthority?.toBase58(),
       mintAuthority.publicKey.toBase58(),
     );
-    assert.equal(tokenMetadata.name, "Unit test token");
-    assert.equal(tokenMetadata.symbol, "TEST");
-    assert.equal(tokenMetadata.uri, "https://example.com");
-    assert.deepEqual(tokenMetadata.additionalMetadata, []);
+    assert.equal(tokenMetadata.name, name);
+    assert.equal(tokenMetadata.symbol, symbol);
+    assert.equal(tokenMetadata.uri, uri);
+    assert.deepEqual(
+      tokenMetadata.additionalMetadata,
+      Object.entries(additionalMetadata),
+    );
   });
 });
 

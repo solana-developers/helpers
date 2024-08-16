@@ -1,3 +1,7 @@
+## 2.5
+
+- Add `makeTokenMint()`
+
 ## 2.4
 
 - Add `createAccountsMintsAndTokenAccounts()`

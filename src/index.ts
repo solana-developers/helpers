@@ -36,7 +36,11 @@ import {
   TYPE_SIZE,
 } from "@solana/spl-token";
 import type { TokenMetadata } from "@solana/spl-token-metadata";
-import { createInitializeInstruction, pack } from "@solana/spl-token-metadata";
+import {
+  createInitializeInstruction,
+  createUpdateFieldInstruction,
+  pack,
+} from "@solana/spl-token-metadata";
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
@@ -558,11 +562,27 @@ export const makeTokenMint = async (
   symbol: string,
   decimals: number,
   uri: string,
-  additionalMetadata: Array<[string, string]> = [],
+  additionalMetadata: Array<[string, string]> | Record<string, string> = [],
   updateAuthority: PublicKey = mintAuthority.publicKey,
   freezeAuthority: PublicKey | null = null,
 ) => {
   const mint = Keypair.generate();
+
+  if (!Array.isArray(additionalMetadata)) {
+    additionalMetadata = Object.entries(additionalMetadata);
+  }
+
+  const addMetadataInstructions = additionalMetadata.map(
+    (additionalMetadataItem) => {
+      return createUpdateFieldInstruction({
+        metadata: mint.publicKey,
+        updateAuthority: updateAuthority,
+        programId: TOKEN_2022_PROGRAM_ID,
+        field: additionalMetadataItem[0],
+        value: additionalMetadataItem[1],
+      });
+    },
+  );
 
   const metadata: TokenMetadata = {
     mint: mint.publicKey,
@@ -588,6 +608,7 @@ export const makeTokenMint = async (
       lamports: mintLamports,
       programId: TOKEN_2022_PROGRAM_ID,
     }),
+
     // Initialize metadata pointer (so the mint points to itself for metadata)
     createInitializeMetadataPointerInstruction(
       mint.publicKey,
@@ -595,6 +616,7 @@ export const makeTokenMint = async (
       mint.publicKey,
       TOKEN_2022_PROGRAM_ID,
     ),
+
     // Initialize mint
     createInitializeMintInstruction(
       mint.publicKey,
@@ -603,6 +625,7 @@ export const makeTokenMint = async (
       freezeAuthority,
       TOKEN_2022_PROGRAM_ID,
     ),
+
     // Initialize
     createInitializeInstruction({
       programId: TOKEN_2022_PROGRAM_ID,
@@ -614,6 +637,11 @@ export const makeTokenMint = async (
       mintAuthority: mintAuthority.publicKey,
       updateAuthority: updateAuthority,
     }),
+
+    // Update field (actually used to add a custom field)
+    // See https://github.com/solana-labs/solana-program-library/blob/master/token/js/examples/metadata.ts#L81C6-L81C6
+    // Must come last!
+    ...addMetadataInstructions,
   );
 
   const signature = await sendAndConfirmTransaction(
@@ -621,7 +649,6 @@ export const makeTokenMint = async (
     mintTransaction,
     [mintAuthority, mint],
   );
-
 
   return mint.publicKey;
 };

@@ -64,13 +64,13 @@ Unlike older tools, the function uses Token Extensions Metadata and Metadata Poi
 
 Parameters
 
-- `connection`: Connection
-- `mintAuthority`: Keypair of the account that can make new tokens
-- `name`: string, name of the token
+- `connection`: Connection.
+- `mintAuthority`: Keypair of the account that can make new tokens.
+- `name`: string, name of the token.
 - `symbol`: string, like a ticker symbol. Usually in all-caps.
-- `decimals`: number, how many decimal places the token has
-- `uri`: string, URI to an file containing
-- `additionalMetadata`: Array<[string, string]> (optional), an array of key/value pairs for additional metadata.
+- `decimals`: number, how many decimal places the new token will have.
+- `uri`: string, URI to a JSON file containing at minimum a value for `image`.
+- `additionalMetadata`: additional metadata as either `Record<string, string>` or `Array<[string, string]>`(optional).
 - `updateAuthority`: PublicKey (optional) - public key of the account that can update the token.
   `freezeAuthority`: PublicKey (optional) - public key of the freeze account, default to `null`
 
