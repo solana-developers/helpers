@@ -2,8 +2,6 @@
 
 The `helpers` package contains Solana helper functions, for use in the browser and/or node.js, [made by the Solana Foundation Developer Ecosystem team](https://youtu.be/zvQIa68ObK8?t=319) and our friends at [Anza](https://anza.xyz), [Turbin3](https://turbin3.com/), [Unboxed Software](https://beunboxed.com/), and [StarAtlas](https://staratlas.com/).
 
-Eventually, most of these will end up in `@solana/web3.js`.
-
 ## What can I do with this module?
 
 [Make multiple keypairs at once](#make-multiple-keypairs-at-once)
