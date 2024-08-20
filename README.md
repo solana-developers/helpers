@@ -6,7 +6,7 @@ The `helpers` package contains Solana helper functions, for use in the browser a
 
 [Make multiple keypairs at once](#make-multiple-keypairs-at-once)
 
-[Make a token mint with metadata](#make-a-token-with-metadata)
+[Make a token mint with metadata](#make-a-token-mint-with-metadata)
 
 [Create multiple accounts with balances of different tokens in a single step](#create-users-mints-and-token-accounts-in-a-single-step)
 
