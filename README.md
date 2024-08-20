@@ -75,7 +75,7 @@ Parameters
   `freezeAuthority`: PublicKey (optional) - public key of the freeze account, default to `null`
 
 ```typescript
-const signature = await makeTokenMint(
+const mintAddress = await makeTokenMint(
   connection,
   mintAuthority,
   "Unit test token",
