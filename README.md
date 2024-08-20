@@ -72,7 +72,7 @@ Parameters
 - `uri`: string, URI to a JSON file containing at minimum a value for `image`.
 - `additionalMetadata`: additional metadata as either `Record<string, string>` or `Array<[string, string]>`(optional).
 - `updateAuthority`: PublicKey (optional) - public key of the account that can update the token.
-  `freezeAuthority`: PublicKey (optional) - public key of the freeze account, default to `null`
+- `freezeAuthority`: PublicKey (optional) - public key of the freeze account, default to `null`
 
 ```typescript
 const mintAddress = await makeTokenMint(
