@@ -13,6 +13,7 @@ import {
   getLogs,
   getSimulationComputeUnits,
   createAccountsMintsAndTokenAccounts,
+  makeTokenMint,
 } from "./index";
 import {
   Connection,
@@ -29,7 +30,9 @@ import base58 from "bs58";
 import { exec as execNoPromises } from "child_process";
 import { promisify } from "util";
 import { writeFile, unlink as deleteFile } from "node:fs/promises";
+import { TokenMetadata, unpack } from "@solana/spl-token-metadata";
 import dotenv from "dotenv";
+import { getTokenMetadata } from "@solana/spl-token";
 
 const exec = promisify(execNoPromises);
 
@@ -498,6 +501,67 @@ describe("getSimulationComputeUnits", () => {
     // TODO: it would be useful to have a breakdown of exactly how 3888 CUs is calculated
     // also worth reviewing why memo program seems to use so many CUs.
     assert.equal(computeUnitsSendSolAndSayThanks, 3888);
+  });
+});
+
+describe("makeTokenMint", () => {
+  test("makeTokenMint makes a new mint with the specified metadata", async () => {
+    const mintAuthority = Keypair.generate();
+    const connection = new Connection(LOCALHOST);
+    await airdropIfRequired(
+      connection,
+      mintAuthority.publicKey,
+      100 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+
+    const name = "Unit test token";
+    const symbol = "TEST";
+    const decimals = 9;
+    const uri = "https://example.com";
+    const additionalMetadata = {
+      shlerm: "frobular",
+      glerp: "flerpy",
+      gurperderp: "erpy",
+      nurmagerd: "flerpy",
+      zurp: "flerpy",
+      eruper: "flerpy",
+      zerperurperserp: "flerpy",
+      zherp: "flerpy",
+    };
+
+    const mintAddress = await makeTokenMint(
+      connection,
+      mintAuthority,
+      name,
+      symbol,
+      decimals,
+      uri,
+      additionalMetadata,
+    );
+
+    assert.ok(mintAddress);
+
+    const tokenMetadata = await getTokenMetadata(connection, mintAddress);
+
+    if (!tokenMetadata) {
+      throw new Error(
+        `Token metadata not found for mint address ${mintAddress}`,
+      );
+    }
+
+    assert.equal(tokenMetadata.mint.toBase58(), mintAddress.toBase58());
+    assert.equal(
+      tokenMetadata.updateAuthority?.toBase58(),
+      mintAuthority.publicKey.toBase58(),
+    );
+    assert.equal(tokenMetadata.name, name);
+    assert.equal(tokenMetadata.symbol, symbol);
+    assert.equal(tokenMetadata.uri, uri);
+    assert.deepEqual(
+      tokenMetadata.additionalMetadata,
+      Object.entries(additionalMetadata),
+    );
   });
 });
 
