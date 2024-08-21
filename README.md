@@ -30,6 +30,8 @@ The `helpers` package contains Solana helper functions, for use in the browser a
 
 [Load or create a keypair and airdrop to it if needed](#load-or-create-a-keypair-and-airdrop-to-it-if-needed)
 
+[Get connection object for anchor-bankrun](#get-connection-object-for-anchor-bankrun)
+
 ## Installation
 
 ```bash
@@ -439,6 +441,17 @@ The default options are as follows:
 const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
+```
+
+### Get Connection object for anchor-bankrun
+
+[Anchor bankrun](https://github.com/kevinheavey/anchor-bankrun) when used with `provider.connection` doesn't have functions like `sendTransaction` and `getSignatureStatus` that are available in the `@solana/web3.js` connection object.
+This helper function allows you to get the connection object for anchor-bankrun.
+
+connection object can be created using this way.
+```
+const bankrunContextWrapper = new BankrunContextWrapper(context);
+const connection = bankrunContextWrapper.connection.toConnection();
 ```
 
 ## Secret key format
