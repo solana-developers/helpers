@@ -37,14 +37,14 @@
     "bn.js": "^5.2.1",
     "bs58": "^6.0.0",
     "dotenv": "^16.4.5",
-    "solana-bankrun": "^0.3.0"
+    "solana-bankrun": "^0.2.0"
   },
   "devDependencies": {
     "@digitak/esrun": "^3.2.24",
     "@types/node": "^20.5.7",
     "esrun": "^3.2.26",
     "prettier": "^3.0.3",
-    "tsup": "^7.2.0",
+    "tsup": "^8.2.4",
     "typescript": "^5.2.2"
   },
   "publishConfig": {
