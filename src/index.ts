@@ -41,6 +41,7 @@ import {
   createUpdateFieldInstruction,
   pack,
 } from "@solana/spl-token-metadata";
+import { BankrunContextWrapper } from "./bankrun-context.js";
 
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
@@ -651,4 +652,9 @@ export const makeTokenMint = async (
   );
 
   return mint.publicKey;
+};
+
+// this adds missing connection functions to anchor-bankrun or solana-bankrun
+export {
+  BankrunContextWrapper,
 };

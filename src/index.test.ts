@@ -30,9 +30,10 @@ import base58 from "bs58";
 import { exec as execNoPromises } from "child_process";
 import { promisify } from "util";
 import { writeFile, unlink as deleteFile } from "node:fs/promises";
-import { TokenMetadata, unpack } from "@solana/spl-token-metadata";
 import dotenv from "dotenv";
 import { getTokenMetadata } from "@solana/spl-token";
+import { startAnchor } from "solana-bankrun";
+import { BankrunContextWrapper } from "./bankrun-context.js";
 
 const exec = promisify(execNoPromises);
 
@@ -619,3 +620,16 @@ describe("createAccountsMintsAndTokenAccounts", () => {
     assert(Number(secondUserSecondTokenBalance.value.amount) === 1_000_000_000);
   });
 });
+
+describe("use bankrun context connection wrapper", async () => {
+  const context = await startAnchor(
+    '',
+    [],
+    []
+  );
+  const bankrunContextWrapper = new BankrunContextWrapper(context);
+  const connection = bankrunContextWrapper.connection.toConnection();
+  test("sendTransaction is defined", async () => {
+    assert(typeof connection.sendTransaction === 'function');
+  })
+})
