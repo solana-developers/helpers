@@ -293,7 +293,7 @@ export class BankrunConnection {
 
   async confirmTransaction(
     signature: TransactionSignature
-  ): Promise<{ value: { err: null | string; confirmationStatus: string } }> {
+  ): Promise<{ value: { err: null | string; confirmationStatus: string | null } }> {
     const status = await this._banksClient.getTransactionStatus(signature);
 
     if (status === null) {

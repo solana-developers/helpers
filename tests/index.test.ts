@@ -32,8 +32,6 @@ import { promisify } from "util";
 import { writeFile, unlink as deleteFile } from "node:fs/promises";
 import dotenv from "dotenv";
 import { getTokenMetadata } from "@solana/spl-token";
-import { startAnchor } from "solana-bankrun";
-import { BankrunContextWrapper } from "../src/bankrun-context";
 
 const exec = promisify(execNoPromises);
 
