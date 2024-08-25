@@ -1,12 +1,12 @@
 {
   "name": "@solana-developers/helpers",
-  "version": "2.5.0",
+  "version": "2.5.2",
   "description": "Solana helper functions",
   "main": "dist/index.js",
   "type": "module",
   "private": false,
   "scripts": {
-    "build": "tsup src/index.ts --dts",
+    "build": "tsc",
     "clean": "rm -rf dist",
     "test": "sh tests/tests.sh"
   },
