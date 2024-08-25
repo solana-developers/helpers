@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-set -o pipefail
 
 # Run ts-mocha tests
 pnpm esrun tests/index.test.ts
