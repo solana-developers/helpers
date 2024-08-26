@@ -16,6 +16,7 @@ jobs:
       - uses: heyayushh/setup-anchor@v4.3
         with:
           # Install Solana CLI (beta, required to fix 'ahash' issue)
+          node-version: "stable"
           solana-cli-version: "1.18.5"
           anchor-version: "0.30.1"
           use-avm: "false"
