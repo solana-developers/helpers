@@ -30,7 +30,7 @@ jobs:
       - name: Check Solana keygen is installed and Create a keypair
         run: |
           echo $PATH; which solana-keygen;
-          solana-keygen new
+          solana-keygen new --no-bip39-passphrase
         shell: bash
 
       - name: Run tests
