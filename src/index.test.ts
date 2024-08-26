@@ -26,11 +26,9 @@ import {
 } from "@solana/web3.js";
 import assert from "node:assert/strict";
 import base58 from "bs58";
-// See https://m.media-amazon.com/images/I/51TJeGHxyTL._SY445_SX342_.jpg
 import { exec as execNoPromises } from "child_process";
 import { promisify } from "util";
 import { writeFile, unlink as deleteFile } from "node:fs/promises";
-import { TokenMetadata, unpack } from "@solana/spl-token-metadata";
 import dotenv from "dotenv";
 import { getTokenMetadata } from "@solana/spl-token";
 
@@ -41,6 +39,7 @@ const MEMO_PROGRAM_ID = new PublicKey(
   "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
 );
 const TEMP_DIR = "src/temp";
+const connection = new Connection(LOCALHOST, "confirmed");
 
 describe(`getCustomErrorMessage`, () => {
   test(`we turn error messages with hex codes into error messages for the program`, () => {
@@ -194,7 +193,6 @@ describe("addKeypairToEnvFile", () => {
 });
 
 describe("initializeKeypair", () => {
-  const connection = new Connection(LOCALHOST);
   const keypairVariableName = "INITIALIZE_KEYPAIR_TEST";
 
   test("generates a new keypair and airdrops needed amount", async () => {
@@ -242,7 +240,6 @@ describe("initializeKeypair", () => {
 describe("airdropIfRequired", () => {
   test("Checking the balance after airdropIfRequired", async () => {
     const keypair = Keypair.generate();
-    const connection = new Connection(LOCALHOST);
     const originalBalance = await connection.getBalance(keypair.publicKey);
     assert.equal(originalBalance, 0);
     const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL;
@@ -273,7 +270,6 @@ describe("airdropIfRequired", () => {
 
   test("doesn't request unnecessary airdrops", async () => {
     const keypair = Keypair.generate();
-    const connection = new Connection(LOCALHOST);
     const originalBalance = await connection.getBalance(keypair.publicKey);
     assert.equal(originalBalance, 0);
     const lamportsToAirdrop = 1 * LAMPORTS_PER_SOL;
@@ -296,7 +292,6 @@ describe("airdropIfRequired", () => {
 
   test("airdropIfRequired does airdrop when necessary", async () => {
     const keypair = Keypair.generate();
-    const connection = new Connection(LOCALHOST);
     const originalBalance = await connection.getBalance(keypair.publicKey);
     assert.equal(originalBalance, 0);
     // Get 999_999_999 lamports if we have less than 500_000 lamports
@@ -401,7 +396,6 @@ describe("makeKeypairs", () => {
 
 describe("confirmTransaction", () => {
   test("confirmTransaction works for a successful transaction", async () => {
-    const connection = new Connection(LOCALHOST);
     const [sender, recipient] = [Keypair.generate(), Keypair.generate()];
     const lamportsToAirdrop = 2 * LAMPORTS_PER_SOL;
     await airdropIfRequired(
@@ -428,7 +422,6 @@ describe("confirmTransaction", () => {
 
 describe(`getLogs`, () => {
   test(`getLogs works`, async () => {
-    const connection = new Connection(LOCALHOST);
     const [sender, recipient] = [Keypair.generate(), Keypair.generate()];
     const lamportsToAirdrop = 2 * LAMPORTS_PER_SOL;
     await airdropIfRequired(
@@ -459,7 +452,6 @@ describe(`getLogs`, () => {
 
 describe("getSimulationComputeUnits", () => {
   test("getSimulationComputeUnits returns 300 CUs for a SOL transfer, and 3888 for a SOL transfer with a memo", async () => {
-    const connection = new Connection(LOCALHOST);
     const sender = Keypair.generate();
     await airdropIfRequired(
       connection,
@@ -507,7 +499,6 @@ describe("getSimulationComputeUnits", () => {
 describe("makeTokenMint", () => {
   test("makeTokenMint makes a new mint with the specified metadata", async () => {
     const mintAuthority = Keypair.generate();
-    const connection = new Connection(LOCALHOST);
     await airdropIfRequired(
       connection,
       mintAuthority.publicKey,
@@ -568,7 +559,6 @@ describe("makeTokenMint", () => {
 describe("createAccountsMintsAndTokenAccounts", () => {
   test("createAccountsMintsAndTokenAccounts works", async () => {
     const payer = Keypair.generate();
-    const connection = new Connection(LOCALHOST);
     await airdropIfRequired(
       connection,
       payer.publicKey,

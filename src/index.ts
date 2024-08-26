@@ -42,13 +42,15 @@ import {
   pack,
 } from "@solana/spl-token-metadata";
 
+export * from "./delegation";
+export * from "./stake";
+export * from "./rpc";
+
 // Default value from Solana CLI
 const DEFAULT_FILEPATH = "~/.config/solana/id.json";
 const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
-
-const log = console.log;
 
 const TOKEN_PROGRAM: typeof TOKEN_2022_PROGRAM_ID | typeof TOKEN_PROGRAM_ID =
   TOKEN_2022_PROGRAM_ID;
@@ -644,11 +646,10 @@ export const makeTokenMint = async (
     ...addMetadataInstructions,
   );
 
-  const signature = await sendAndConfirmTransaction(
-    connection,
-    mintTransaction,
-    [mintAuthority, mint],
-  );
+  await sendAndConfirmTransaction(connection, mintTransaction, [
+    mintAuthority,
+    mint,
+  ]);
 
   return mint.publicKey;
 };

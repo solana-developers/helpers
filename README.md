@@ -441,6 +441,18 @@ const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
 ```
 
+## How to use getStakeActivation
+
+Since getStakeActivation RPC function was [deprecated in Solana 2.0](https://github.com/anza-xyz/agave/wiki/Agave-v2.0-Transition-Guide) you can use the `getStakeActivation` helper function to get the stake activation status client side.
+
+```typescript
+const rpc = createSolanaRpc("https://api.testnet.solana.com");
+let stake = "25R5p1Qoe4BWW4ru7MQSNxxAzdiPN7zAunpCuF8q5iTz";
+let status = await getStakeActivation(rpc, stake as Address);
+console.log(status);
+// Should return something like: { status: 'active', active: 9997717120n, inactive: 0n }
+```
+
 ## Secret key format
 
 Secret keys can be read in either the more compact base58 format (`base58.encode(randomKeypair.secretKey);`), like:

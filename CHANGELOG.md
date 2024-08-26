@@ -1,3 +1,8 @@
+## 3.0
+
+- Add `getStakeActivation()`
+- Dependency to Solana Version 2.0 added
+
 ## 2.5
 
 - Add `makeTokenMint()`

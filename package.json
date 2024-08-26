@@ -1,6 +1,6 @@
 {
   "name": "@solana-developers/helpers",
-  "version": "2.5.2",
+  "version": "3.0.0",
   "description": "Solana helper functions",
   "main": "dist/index.js",
   "type": "module",
@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "test": "esrun src/index.test.ts"
+    "test": "esrun src/decode.test.ts && esrun src/delegation.test.ts && esrun src/index.test.ts"
   },
   "keywords": [
     "solana",
@@ -32,7 +32,12 @@
     "@solana/spl-token-metadata": "^0.1.4",
     "@solana/web3.js": "^1.95.2",
     "bs58": "^6.0.0",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "@solana/accounts": "^2.0.0-rc.0",
+    "@solana/addresses": "^2.0.0-rc.0",
+    "@solana/codecs": "^2.0.0-rc.0",
+    "@solana/rpc": "^2.0.0-rc.0",
+    "@solana/sysvars": "^2.0.0-rc.0"
   },
   "devDependencies": {
     "@digitak/esrun": "^3.2.24",
