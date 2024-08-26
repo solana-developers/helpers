@@ -27,8 +27,11 @@ jobs:
       - name: Install everything
         run: npm ci
 
-      - name: Check Solana keygen is installed
-        run: echo $PATH; which solana-keygen
+      - name: Check Solana keygen is installed and Create a keypair
+        run: |
+          echo $PATH; which solana-keygen;
+          solana-keygen new
+        shell: bash
 
       - name: Run tests
         run: npm test
