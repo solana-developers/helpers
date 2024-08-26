@@ -41,10 +41,11 @@
   },
   "devDependencies": {
     "@digitak/esrun": "^3.2.24",
-    "@types/node": "^20.5.7",
+    "@types/node": "^20.16.1",
     "prettier": "^3.0.3",
+    "ts-node": "^10.9.2",
     "tsup": "^8.2.4",
-    "typescript": "^5.2.2"
+    "typescript": "^5.5.4"
   },
   "publishConfig": {
     "access": "public",
