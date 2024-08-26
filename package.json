@@ -27,8 +27,8 @@
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "clean": "rm -rf dist",
     "test": "npm run test:ts && npm run test:anchor",
-    "test:anchor": "cd tests/bankrun_test && anchor test",
-    "test:ts": "jest --config jest.config.js",
+    "test:anchor": "cd tests/bankrun_test && anchor test --skip-local-validator",
+    "test:ts": "jest --config jest.config.js --verbose",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
