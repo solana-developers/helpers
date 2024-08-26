@@ -25,7 +25,12 @@ jobs:
         run: solana-test-validator &
 
       - name: Install everything
-        run: npm ci
+        run: |
+          npm ci
+          # Install deps for bankrun test
+          cd tests/bankrun_test && npm ci
+          cd - > /dev/null
+        shell: bash
 
       - name: Check Solana keygen is installed and Create a keypair
         run: |
