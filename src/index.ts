@@ -655,6 +655,4 @@ export const makeTokenMint = async (
 };
 
 // this adds missing connection functions to anchor-bankrun or solana-bankrun
-export {
-  BankrunContextWrapper,
-};
+export { BankrunContextWrapper };

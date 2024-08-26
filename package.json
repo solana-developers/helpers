@@ -42,7 +42,6 @@
   "devDependencies": {
     "@digitak/esrun": "^3.2.24",
     "@types/node": "^20.5.7",
-    "esrun": "^3.2.26",
     "prettier": "^3.0.3",
     "tsup": "^8.2.4",
     "typescript": "^5.2.2"
