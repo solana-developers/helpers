@@ -1,5 +1,6 @@
-src/temp
+tests/temp
 dist
 node_modules
 test-ledger
 .env*
+coverage

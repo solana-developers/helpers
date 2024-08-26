@@ -2,13 +2,34 @@
   "name": "@solana-developers/helpers",
   "version": "2.5.2",
   "description": "Solana helper functions",
-  "main": "dist/index.js",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "type": "module",
   "private": false,
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./node": {
+      "import": "./dist/esm/node.js",
+      "require": "./dist/cjs/node.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:esm && npm run build:cjs",
+    "build:esm": "tsc",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
     "clean": "rm -rf dist",
-    "test": "sh tests/tests.sh"
+    "test": "npm run test:ts && npm run test:anchor",
+    "test:anchor": "cd tests/bankrun_test && anchor test",
+    "test:ts": "jest --config jest.config.js",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "solana",
@@ -24,7 +45,8 @@
     "Nick Frostbutter",
     "John Liu",
     "Steven Luscher",
-    "Christian Krueger"
+    "Christian Krueger",
+    "Ayush Chauhan"
   ],
   "license": "MIT",
   "dependencies": {
@@ -40,9 +62,12 @@
     "solana-bankrun": "^0.2.0"
   },
   "devDependencies": {
-    "@digitak/esrun": "^3.2.24",
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.16.1",
+    "c8": "^10.1.2",
+    "esrun": "^3.2.26",
     "prettier": "^3.0.3",
+    "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "tsup": "^8.2.4",
     "typescript": "^5.5.4"

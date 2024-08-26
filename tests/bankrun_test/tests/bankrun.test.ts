@@ -9,9 +9,8 @@ import {
   sendAndConfirmTransaction,
   Transaction,
 } from "@solana/web3.js";
-import { BankrunContextWrapper } from "../../../src/bankrun-context";
+import { BankrunContextWrapper } from "../../../src/lib/bankrun-context";
 import assert from "node:assert";
-import { describe, it } from "node:test";
 
 const IDL = require("../target/idl/bankrun_test.json");
 const PROGRAM_ID = new PublicKey(IDL.address);
@@ -33,6 +32,6 @@ describe("bankrun_test", async () => {
     const tx = new Transaction().add(ix);
     const { blockhash, _height } = await connection.getLatestBlockhash();
     const sig = await sendAndConfirmTransaction(connection, tx);
-    assert(sig);
+    assert.ok(sig);
   });
 });

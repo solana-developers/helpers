@@ -20,8 +20,6 @@ import {
   type TransactionReturnData,
   type TransactionError,
   type SignatureResultCallback,
-  // @ts-ignore
-  type ClientSubscriptionId,
   type Connection as SolanaConnection,
   SystemProgram,
   type Blockhash,
@@ -30,6 +28,7 @@ import {
   type AccountChangeCallback,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
+type ClientSubscriptionId = number;
 import {
   type ProgramTestContext,
   type BanksClient,
