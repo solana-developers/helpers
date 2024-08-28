@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "test": "esrun src/index.test.ts"
+    "test": "npm run test:ts",
+    "test:ts": "jest --config jest.config.js --verbose"
   },
   "keywords": [
     "solana",
@@ -24,7 +25,8 @@
     "Nick Frostbutter",
     "John Liu",
     "Steven Luscher",
-    "Christian Krueger"
+    "Christian Krueger",
+    "Ayush Chauhan"
   ],
   "license": "MIT",
   "dependencies": {
@@ -35,12 +37,14 @@
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "@digitak/esrun": "^3.2.24",
-    "@types/node": "^20.5.7",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.16.1",
+    "c8": "^10.1.2",
     "esrun": "^3.2.26",
     "prettier": "^3.0.3",
-    "tsup": "^7.2.0",
-    "typescript": "^5.2.2"
+    "ts-jest": "^29.2.5",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4"
   },
   "publishConfig": {
     "access": "public",
