@@ -2,12 +2,12 @@ import {
   assertAccountExists,
   decodeAccount,
   fetchEncodedAccount,
-} from '@solana/accounts';
-import { Address } from '@solana/addresses';
-import { Rpc, SolanaRpcApi } from '@solana/rpc';
-import { SYSVAR_STAKE_HISTORY_ADDRESS } from '@solana/sysvars';
-import { stakeAccountCodec, stakeHistoryCodec } from './stake';
-import { getStakeActivatingAndDeactivating } from './delegation';
+} from "@solana/accounts";
+import { Address } from "@solana/addresses";
+import { Rpc, SolanaRpcApi } from "@solana/rpc";
+import { SYSVAR_STAKE_HISTORY_ADDRESS } from "@solana/sysvars";
+import { stakeAccountCodec, stakeHistoryCodec } from "./stake";
+import { getStakeActivatingAndDeactivating } from "./delegation";
 
 export interface StakeActivation {
   status: string;
@@ -17,48 +17,62 @@ export interface StakeActivation {
 
 export async function getStakeActivation(
   rpc: Rpc<SolanaRpcApi>,
-  stakeAddress: Address
+  stakeAddress: Address,
 ): Promise<StakeActivation> {
-  const stakeAccount = await fetchEncodedAccount(rpc, stakeAddress);
-  assertAccountExists(stakeAccount);
-  const stake = decodeAccount(stakeAccount, stakeAccountCodec);
-  if (stake.data.discriminant === 0) {
-    throw new Error('');
-  }
-  const rentExemptReserve = stake.data.meta.rentExemptReserve;
-  if (stake.data.discriminant === 1) {
+  const [epochInfo, stakeAccount, stakeHistory] = await Promise.all([
+    rpc.getEpochInfo().send(),
+    (async () => {
+      const stakeAccountEncoded = await fetchEncodedAccount(rpc, stakeAddress);
+      assertAccountExists(stakeAccountEncoded);
+      const stakeAccount = decodeAccount(
+        stakeAccountEncoded,
+        stakeAccountCodec,
+      );
+      if (stakeAccount.data.discriminant === 0) {
+        throw new Error("");
+      }
+      return stakeAccount;
+    })(),
+    (async () => {
+      const stakeHistoryAccountEncoded = await fetchEncodedAccount(
+        rpc,
+        SYSVAR_STAKE_HISTORY_ADDRESS,
+      );
+      assertAccountExists(stakeHistoryAccountEncoded);
+      const stakeHistory = decodeAccount(
+        stakeHistoryAccountEncoded,
+        stakeHistoryCodec,
+      );
+      return stakeHistory;
+    })(),
+  ]);
+
+  const rentExemptReserve = stakeAccount.data.meta.rentExemptReserve;
+  if (stakeAccount.data.discriminant === 1) {
     return {
-      status: 'inactive',
+      status: "inactive",
       active: BigInt(0),
-      inactive: stake.lamports - rentExemptReserve,
+      inactive: stakeAccount.lamports - rentExemptReserve,
     };
   }
-
-  const stakeHistoryAccount = await fetchEncodedAccount(
-    rpc,
-    SYSVAR_STAKE_HISTORY_ADDRESS
-  );
-  assertAccountExists(stakeHistoryAccount);
-  const epochInfo = await rpc.getEpochInfo().send();
-  const stakeHistory = decodeAccount(stakeHistoryAccount, stakeHistoryCodec);
 
   // THE HARD PART
   const { effective, activating, deactivating } =
     getStakeActivatingAndDeactivating(
-      stake.data.stake.delegation,
+      stakeAccount.data.stake.delegation,
       epochInfo.epoch,
-      stakeHistory.data
+      stakeHistory.data,
     );
 
   let status;
   if (deactivating > 0) {
-    status = 'deactivating';
+    status = "deactivating";
   } else if (activating > 0) {
-    status = 'activating';
+    status = "activating";
   } else if (effective > 0) {
-    status = 'active';
+    status = "active";
   } else {
-    status = 'inactive';
+    status = "inactive";
   }
   const inactive = stakeAccount.lamports - effective - rentExemptReserve;
 
