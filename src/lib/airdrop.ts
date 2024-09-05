@@ -1,16 +1,19 @@
-import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { InitializeKeypairOptions } from "../types";
+import { type Connection, Keypair, LAMPORTS_PER_SOL, type PublicKey } from "@solana/web3.js";
+import type { InitializeKeypairOptions } from "../types";
 import { addKeypairToEnvFile, getKeypairFromEnvironment, getKeypairFromFile } from "./keypair";
 
 const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
 
+// TODO: honestly initializeKeypair is a bit vague
+// we can probably give this a better name,
+// just not sure what yet
 export const initializeKeypair = async (
   connection: Connection,
   options?: InitializeKeypairOptions,
 ): Promise<Keypair> => {
-  let {
+  const {
     keypairPath,
     envFileName,
     envVariableName = DEFAULT_ENV_KEYPAIR_VARIABLE_NAME,

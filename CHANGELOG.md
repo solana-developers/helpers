@@ -1,6 +1,7 @@
 ## 2.5
 
 - Add `makeTokenMint()`
+- 2.5.4 includes a few fixes to build system and TS types that were missing in earlier 2.5.x releases
 
 ## 2.4
 

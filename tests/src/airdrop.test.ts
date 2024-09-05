@@ -18,19 +18,17 @@ describe("initializeKeypair", () => {
 
   test("generates a new keypair and airdrops needed amount", async () => {
     // We need to use a specific file name to avoid conflicts with other tests
-    const envFileName = ".env-unittest-initkeypair";
+    const envFileName = "../.env-unittest-initkeypair";
     const options: InitializeKeypairOptions = {
       envFileName,
       envVariableName: keypairVariableName,
     };
 
-    const signerFirstLoad = await initializeKeypair(connection, options);
+    const userBefore = await initializeKeypair(connection, options);
 
     // Check balance
-    const firstBalanceLoad = await connection.getBalance(
-      signerFirstLoad.publicKey,
-    );
-    assert.ok(firstBalanceLoad > 0);
+    const balanceBefore = await connection.getBalance(userBefore.publicKey);
+    assert.ok(balanceBefore > 0);
 
     // Check that the environment variable was created
     dotenv.config({ path: envFileName });
@@ -40,19 +38,17 @@ describe("initializeKeypair", () => {
     }
 
     // Now reload the environment and check it matches our test keypair
-    const signerSecondLoad = await initializeKeypair(connection, options);
+    const userAfter = await initializeKeypair(connection, options);
 
     // Check the keypair is the same
-    assert.ok(signerFirstLoad.publicKey.equals(signerSecondLoad.publicKey));
+    assert.ok(userBefore.publicKey.equals(userAfter.publicKey));
 
     // Check balance has not changed
-    const secondBalanceLoad = await connection.getBalance(
-      signerSecondLoad.publicKey,
-    );
-    assert.equal(firstBalanceLoad, secondBalanceLoad);
+    const balanceAfter = await connection.getBalance(userAfter.publicKey);
+    assert.equal(balanceBefore, balanceAfter);
 
     // Check there is a secret key
-    assert.ok(signerSecondLoad.secretKey);
+    assert.ok(userAfter.secretKey);
 
     await deleteFile(envFileName);
   });
