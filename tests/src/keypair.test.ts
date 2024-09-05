@@ -26,7 +26,7 @@ describe("addKeypairToEnvFile", () => {
 
   test("generates new keypair and writes to env if variable doesn't exist", async () => {
     // We need to use a specific file name to avoid conflicts with other tests
-    const envFileName = "../temp/env-unittest-addkeypairtoenvfile";
+    const envFileName = ".env-unittest-addkeypairtoenvfile";
     await addKeypairToEnvFile(testKeypair, "TEMP_KEYPAIR", envFileName);
 
     // Now reload the environment and check it matches our test keypair
