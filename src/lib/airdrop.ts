@@ -6,6 +6,9 @@ const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
 
+// TODO: honestly initializeKeypair is a bit vague
+// we can probably give this a better name,
+// just not sure what yet
 export const initializeKeypair = async (
   connection: Connection,
   options?: InitializeKeypairOptions,
