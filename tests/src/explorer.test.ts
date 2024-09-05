@@ -1,4 +1,5 @@
-import { getExplorerLink } from "../src";
+import { getExplorerLink } from "../../src/index.js";
+import { describe, test } from "node:test";
 import assert from "node:assert";
 
 describe("getExplorerLink", () => {

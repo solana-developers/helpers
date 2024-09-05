@@ -23,11 +23,11 @@
   "sideEffects": false,
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
-    "build:esm": "tsc",
+    "build:esm": "tsc -p tsconfig.json",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "clean": "rm -rf dist",
-    "test": "esrun src/index.test.ts",
-    "typecheck": "tsc --noEmit"
+    "test": "cd tests && npm run test",
+    "test:ci": "cd tests && npm run test:ci"
   },
   "keywords": [
     "solana",
@@ -48,17 +48,22 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
     "@solana/spl-token": "^0.4.8",
     "@solana/spl-token-metadata": "^0.1.4",
     "@solana/web3.js": "^1.95.2",
+    "anchor-bankrun": "^0.4.0",
+    "bn.js": "^5.2.1",
     "bs58": "^6.0.0",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
+    "@types/bn.js": "^5.1.5",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.16.1",
     "c8": "^10.1.2",
-    "esrun": "^3.2.26",
+    "esbuild": "^0.23.1",
+    "esbuild-register": "^3.6.0",
     "prettier": "^3.0.3",
     "ts-jest": "^29.2.5",
     "tsup": "^8.2.4",

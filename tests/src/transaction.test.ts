@@ -1,7 +1,8 @@
+import { describe, test } from "node:test";
 import { Keypair } from "@solana/web3.js";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
-import { airdropIfRequired, confirmTransaction, getSimulationComputeUnits } from "../src";
+import { airdropIfRequired, confirmTransaction, getSimulationComputeUnits } from "../../src";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 import { Transaction } from "@solana/web3.js";
 import { SystemProgram } from "@solana/web3.js";

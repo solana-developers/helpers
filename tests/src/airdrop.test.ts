@@ -1,5 +1,6 @@
+import { describe, test } from "node:test";
 import { Connection } from "@solana/web3.js";
-import { airdropIfRequired, initializeKeypair, InitializeKeypairOptions } from "../src";
+import { airdropIfRequired, initializeKeypair, type InitializeKeypairOptions } from "../../src";
 import assert from "node:assert";
 import dotenv from "dotenv";
 import { unlink as deleteFile } from "node:fs/promises"

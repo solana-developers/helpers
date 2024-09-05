@@ -1,21 +1,22 @@
+import { describe, test, before } from "node:test";
 import assert from "node:assert";
-import { addKeypairToEnvFile, getKeypairFromEnvironment, getKeypairFromFile, makeKeypairs } from "../src";
+import { addKeypairToEnvFile, getKeypairFromEnvironment, getKeypairFromFile, makeKeypairs } from "../../src";
 import { Keypair } from "@solana/web3.js";
 import base58 from "bs58";
 // See https://m.media-amazon.com/images/I/51TJeGHxyTL._SY445_SX342_.jpg
-import { exec as execNoPromises } from "child_process";
+import { exec as execNoPromises } from "node:child_process";
 import { promisify } from "node:util";
 import { writeFile, unlink as deleteFile } from "node:fs/promises";
 import dotenv from "dotenv";
 
 const exec = promisify(execNoPromises);
-const TEMP_DIR = "tests/temp";
+const TEMP_DIR = "temp";
 
 describe("addKeypairToEnvFile", () => {
-  let TEST_ENV_VAR_ARRAY_OF_NUMBERS = "TEST_ENV_VAR_ARRAY_OF_NUMBERS";
+  const TEST_ENV_VAR_ARRAY_OF_NUMBERS = "TEST_ENV_VAR_ARRAY_OF_NUMBERS";
   let testKeypair: Keypair;
 
-  beforeAll(async () => {
+  before(async () => {
     testKeypair = Keypair.generate();
 
     process.env[TEST_ENV_VAR_ARRAY_OF_NUMBERS] = JSON.stringify(
@@ -32,7 +33,7 @@ describe("addKeypairToEnvFile", () => {
     dotenv.config({ path: envFileName });
 
     // Get the secret from the .env file
-    const secretKeyString = process.env["TEMP_KEYPAIR"];
+    const secretKeyString = process.env.TEMP_KEYPAIR;
 
     if (!secretKeyString) {
       throw new Error("TEMP_KEYPAIR not found in environment");
@@ -72,10 +73,10 @@ describe("makeKeypairs", () => {
 });
 
 describe("getKeypairFromFile", () => {
-  let TEST_FILE_NAME = `${TEMP_DIR}/test-keyfile-do-not-use.json`;
-  let MISSING_FILE_NAME = "THIS FILE DOES NOT EXIST";
-  let CORRUPT_TEST_FILE_NAME = `${TEMP_DIR}/corrupt-keyfile-do-not-use.json`;
-  beforeAll(async () => {
+  const TEST_FILE_NAME = `${TEMP_DIR}/test-keyfile-do-not-use.json`;
+  const MISSING_FILE_NAME = "THIS FILE DOES NOT EXIST";
+  const CORRUPT_TEST_FILE_NAME = `${TEMP_DIR}/corrupt-keyfile-do-not-use.json`;
+  before(async () => {
     const { stdout } = await exec(
       `solana-keygen new --force --no-bip39-passphrase -o ${TEST_FILE_NAME}`,
     );
@@ -102,11 +103,11 @@ describe("getKeypairFromFile", () => {
 });
 
 describe("getKeypairFromEnvironment", () => {
-  let TEST_ENV_VAR_ARRAY_OF_NUMBERS = "TEST_ENV_VAR_ARRAY_OF_NUMBERS";
-  let TEST_ENV_VAR_BASE58 = "TEST_ENV_VAR_BASE58";
-  let TEST_ENV_VAR_WITH_BAD_VALUE = "TEST_ENV_VAR_WITH_BAD_VALUE";
+  const TEST_ENV_VAR_ARRAY_OF_NUMBERS = "TEST_ENV_VAR_ARRAY_OF_NUMBERS";
+  const TEST_ENV_VAR_BASE58 = "TEST_ENV_VAR_BASE58";
+  const TEST_ENV_VAR_WITH_BAD_VALUE = "TEST_ENV_VAR_WITH_BAD_VALUE";
 
-  beforeAll(async () => {
+  before(async () => {
     const randomKeypair = Keypair.generate();
 
     process.env[TEST_ENV_VAR_ARRAY_OF_NUMBERS] = JSON.stringify(

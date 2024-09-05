@@ -1,5 +1,6 @@
+import { describe, test } from "node:test";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { airdropIfRequired, createAccountsMintsAndTokenAccounts, makeTokenMint } from "../src";
+import { airdropIfRequired, createAccountsMintsAndTokenAccounts, makeTokenMint } from "../../src";
 import { Connection } from "@solana/web3.js";
 import { Keypair } from "@solana/web3.js";
 import { getTokenMetadata } from "@solana/spl-token";

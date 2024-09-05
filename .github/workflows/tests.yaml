@@ -28,4 +28,4 @@ jobs:
         run: echo $PATH; which solana-keygen
 
       - name: Run tests
-        run: npm test
+        run: npm run test:ci
