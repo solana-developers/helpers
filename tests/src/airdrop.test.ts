@@ -18,7 +18,7 @@ describe("initializeKeypair", () => {
 
   test("generates a new keypair and airdrops needed amount", async () => {
     // We need to use a specific file name to avoid conflicts with other tests
-    const envFileName = "./tests/.env-unittest-initkeypair";
+    const envFileName = "../temp/.env-unittest-initkeypair";
     const options: InitializeKeypairOptions = {
       envFileName,
       envVariableName: keypairVariableName,
