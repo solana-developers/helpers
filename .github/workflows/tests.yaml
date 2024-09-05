@@ -18,6 +18,11 @@ jobs:
           # Install Solana CLI (beta, required to fix 'ahash' issue)
           solana-cli-version: "1.18.5"
 
+      - name: Setup Node.js version 
+        uses: actions/setup-node@v4
+        with:
+          node-version: 21.x
+
       - name: Run Solana validator (and background it)
         run: solana-test-validator &
 
