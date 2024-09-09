@@ -9,7 +9,7 @@ export const keypairToSecretKeyJSON = (keypair: Keypair): string => {
 };
 
 export const getKeypairFromFile = async (filepath?: string) => {
-  const path = await import("path");
+  const path = await import("node:path");
   // Work out correct file name
   if (!filepath) {
     filepath = DEFAULT_FILEPATH;
@@ -24,7 +24,7 @@ export const getKeypairFromFile = async (filepath?: string) => {
   // Get contents of file
   let fileContents: string;
   try {
-    const { readFile } = await import("fs/promises");
+    const { readFile } = await import("node:fs/promises");
     const fileContentsBuffer = await readFile(filepath);
     fileContents = fileContentsBuffer.toString();
   } catch (error) {
@@ -81,7 +81,7 @@ export const addKeypairToEnvFile = async (
   variableName: string,
   envFileName?: string,
 ) => {
-  const { appendFile } = await import("fs/promises");
+  const { appendFile } = await import("node:fs/promises");
   if (!envFileName) {
     envFileName = ".env";
   }

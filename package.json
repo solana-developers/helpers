@@ -23,11 +23,11 @@
   "sideEffects": false,
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
-    "build:esm": "tsc",
+    "build:esm": "tsc -p tsconfig.json",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "clean": "rm -rf dist",
-    "test": "esrun src/index.test.ts",
-    "typecheck": "tsc --noEmit"
+    "test": "cd tests && npm run test",
+    "test:ci": "cd tests && npm run test:ci"
   },
   "keywords": [
     "solana",
@@ -55,12 +55,11 @@
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "@digitak/esrun": "^3.2.24",
-    "@types/node": "^20.5.7",
-    "esrun": "^3.2.26",
+    "@types/node": "^20.16.1",
+    "esbuild": "^0.23.1",
+    "esbuild-register": "^3.6.0",
     "prettier": "^3.0.3",
-    "tsup": "^7.2.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.5.4"
   },
   "publishConfig": {
     "access": "public",
