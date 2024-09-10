@@ -5,3 +5,4 @@ export * from './lib/airdrop';
 export * from './lib/token';
 export * from './lib/logs';
 export * from './types';
+export * from './lib/bankrun-context';
