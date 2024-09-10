@@ -2,7 +2,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "test": "npm run test:esm",
-    "test:bankrun" : "cd bankrun_test && anchor test",
+    "test:bankrun" : "cd bankrun_test && anchor test --skip-local-validator",
     "test:ci": "npm run test:cjs && npm run test:esm && npm run test:bankrun",
     "pretest:cjs": "npm run clean && tsc -p tsconfig.test.json",
     "test:cjs": "node --test dist/tests/src/**/*.test.js",
