@@ -1,3 +1,9 @@
+// In some cases, where you have { type: module } in package.json at the root
+// We will workaround builds manually, since we aren't using any bundler
+// tsc is missing extensions with esm exports
+// and tsc doesn't export .cjs hence, index.js won't be read as cjs in cjs distribution
+// See https://github.com/microsoft/TypeScript/issues/54593
+
 import { promises as fs } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
