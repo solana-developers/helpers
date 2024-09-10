@@ -41,4 +41,4 @@ jobs:
         shell: bash
 
       - name: Run tests
-        run: cd tests && npm test:ci
+        run: cd tests && npm run test:ci
