@@ -1,19 +1,20 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CJS_DIR = path.join(__dirname, 'dist', 'cjs');
-const ESM_DIR = path.join(__dirname, 'dist', 'esm');
+const CJS_DIR = join(__dirname, 'dist', 'cjs');
+const ESM_DIR = join(__dirname, 'dist', 'esm');
 
 async function createPackageJson(dir, type) {
   const content = JSON.stringify({ type }, null, 2);
-  await fs.writeFile(path.join(dir, 'package.json'), content);
+  await fs.writeFile(join(dir, 'package.json'), content);
   console.log(`Created package.json in ${dir}`);
 }
 
 async function renameIndexFile() {
-  const oldPath = path.join(CJS_DIR, 'index.js');
-  const newPath = path.join(CJS_DIR, 'index.cjs');
+  const oldPath = join(CJS_DIR, 'index.js');
+  const newPath = join(CJS_DIR, 'index.cjs');
   await fs.rename(oldPath, newPath);
   console.log('Renamed CJS index file to index.cjs');
 }
@@ -21,7 +22,7 @@ async function renameIndexFile() {
 async function processEsmFiles(dir) {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
+      const fullPath = join(dir, entry.name);
       if (entry.isDirectory()) {
         await processEsmFiles(fullPath);
       } else if (entry.isFile() && entry.name.endsWith('.js')) {
