@@ -345,6 +345,9 @@ export class BankrunConnection {
 		const blockhashAndBlockheight = await this._banksClient.getLatestBlockhash(
 			commitment
 		);
+		if (!blockhashAndBlockheight) {
+			throw new Error('Failed to fetch blockhash and blockheight');
+		}
 		return {
 			blockhash: blockhashAndBlockheight[0],
 			lastValidBlockHeight: Number(blockhashAndBlockheight[1]),
