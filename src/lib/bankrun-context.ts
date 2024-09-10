@@ -297,6 +297,26 @@ export class BankrunConnection {
 		return signature;
 	}
 
+  async confirmTransaction(
+    signature: TransactionSignature,
+    _commitment?: Commitment
+  ): Promise<RpcResponseAndContext<SignatureStatus | null>> {
+    const status = await this.getSignatureStatus(signature);
+
+    if (status.value === null) {
+      throw new Error('Transaction not found');
+    }
+
+    // In bankrun, if the transaction exists, it's always "finalized"
+    return {
+      context: status.context,
+      value: {
+        ...status.value,
+        confirmationStatus: 'finalized',
+      },
+    };
+  }
+
 	private async updateSlotAndClock() {
 		const currentSlot = await this.getSlot();
 		const nextSlot = currentSlot + BigInt(1);

@@ -22,19 +22,23 @@ describe("bankrun_test", async () => {
     []
   );
   const provider = new BankrunProvider(context);
-  const wallet = provider.wallet as anchor.Wallet;
   const bankrunContextWrapper = new BankrunContextWrapper(context);
   const connection = bankrunContextWrapper.connection.toConnection();
   const program = new anchor.Program<BankrunTest>(IDL, {
     ...provider,
     connection: connection,
   });
+  const wallet = provider.wallet;
   const client = context.banksClient;
 
   it("Is initialized!", async () => {
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
     const ix = await program.methods.initialize().instruction();
     const tx = new Transaction().add(ix);
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = wallet.payer.publicKey;
+    tx.sign(wallet.payer);
+    
     const sig = await sendAndConfirmTransaction(connection, tx, [wallet.payer]);
     const status = await client.getTransactionStatus(sig);
 
