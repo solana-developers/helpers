@@ -41,4 +41,7 @@ jobs:
         shell: bash
 
       - name: Run tests
-        run: cd tests && npm run test:ci
+        run: |
+          cd tests && npm run test:ci
+          killall solana-test-validator
+          npm run test:bankrun
