@@ -1,4 +1,4 @@
-// Thanks to @crispheaney for this snippet
+// Thanks to @crispheaney for this implementation
 // https://github.com/drift-labs/protocol-v2/blob/a5be8aae86c13840242bbff3e95682f41840bddd/sdk/src/bankrun/bankrunConnection.ts#L52
 
 import {
@@ -20,7 +20,6 @@ import {
   type TransactionReturnData,
   type TransactionError,
   type SignatureResultCallback,
-  type Connection as SolanaConnection,
   SystemProgram,
   type Blockhash,
   type LogsFilter,
@@ -37,11 +36,12 @@ import {
 } from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
 import bs58 from "bs58";
-import type { Wallet } from "@coral-xyz/anchor";
+import type { Wallet, web3 } from "@coral-xyz/anchor";
 import BN from "bn.js";
 import { type Account, unpackAccount } from "@solana/spl-token";
 
-export type Connection = SolanaConnection | BankrunConnection;
+export type Connection = web3.Connection | BankrunConnection;
+export type SolanaConnection = web3.Connection;
 
 type BankrunTransactionMetaNormalized = {
   logMessages: string[];
@@ -502,7 +502,6 @@ export class BankrunConnection {
   onAccountChange(
     publicKey: PublicKey,
     callback: AccountChangeCallback,
-    // @ts-ignore
     _commitment?: Commitment,
   ): ClientSubscriptionId {
     const subscriptId = this.nextClientSubscriptionId;

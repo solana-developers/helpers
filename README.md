@@ -452,7 +452,13 @@ connection object can be created using this way.
 ```
 const bankrunContextWrapper = new BankrunContextWrapper(context);
 const connection = bankrunContextWrapper.connection.toConnection();
+const program = new anchor.Program<BankrunTest>(IDL, {
+  ...provider,
+  connection: connection,
+});
 ```
+
+now you can pass connection object as args or directly use program.methods.
 
 ## Secret key format
 
@@ -491,7 +497,7 @@ The tests use the [node native test runner](https://blog.logrocket.com/exploring
 If you'd like to run a single test, use:
 
 ```bash
-esrun --node-test-name-pattern="getCustomErrorMessage" src/index.test.ts
+node --require esbuild-register --test --test-name-pattern="getCustomErrorMessage" src/logs.test.ts
 ```
 
 To just run tests matching the name `getCustomErrorMessage`.
