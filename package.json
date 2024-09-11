@@ -2,29 +2,33 @@
   "name": "@solana-developers/helpers",
   "version": "2.5.4",
   "description": "Solana helper functions",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/esm/index.d.ts",
   "type": "module",
-  "private": false,
+  "main": "./dist/esm/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
-    },
-    "./node": {
-      "import": "./dist/esm/node.js",
-      "require": "./dist/cjs/node.js"
+      "import": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs"
+      }
     }
   },
+  "private": false,
+  "sideEffects": false,
   "files": [
     "dist"
   ],
-  "sideEffects": false,
   "scripts": {
-    "build": "npm run build:esm && npm run build:cjs",
-    "build:esm": "tsc -p tsconfig.json",
+    "prebuild": "npm run clean",
+    "build": "npm run build:esm && npm run build:cjs && npm run build:types",
+    "build:esm": "tsc -p tsconfig.esm.json",
     "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:types": "tsc -p tsconfig.types.json",
+    "postbuild": "node post-build.mjs",
     "clean": "rm -rf dist",
     "test": "cd tests && npm run test",
     "test:ci": "cd tests && npm run test:ci"

@@ -3,17 +3,13 @@
     "target": "ES2018",
     "lib": ["ES2018", "DOM"],
     "moduleResolution": "node",
-    "outDir": "./dist/esm",
-    "rootDir": "./src",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "module": "ESNext",
-    "isolatedModules": true
+    "isolatedModules": true,
+    "preserveConstEnums": true,
+    "rootDir": "./src"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
