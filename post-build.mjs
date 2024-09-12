@@ -33,12 +33,12 @@ async function processEsmFiles(dir) {
         await processEsmFiles(fullPath);
       } else if (entry.isFile() && entry.name.endsWith('.js')) {
         let content = await fs.readFile(fullPath, 'utf8');
-        
+       
         // Add .js extension to import statements
-        content = content.replace(/from\s+['"](\.[^'"]+)['"]/g, "from '$1.js'");
+        content = content.replace(/from\s['"](.(?!.js))+['"]$/g, "from '$1.js'");
         
         // Add .js extension to export statements
-        content = content.replace(/export\s+\*\s+from\s+['"](\.[^'"]+)['"]/g, "export * from '$1.js'");
+        content = content.replace(/export\s['"](.(?!.js))+['"]$/g, "export * from '$1.js'");
         
         await fs.writeFile(fullPath, content);
         console.log(`Processed ESM file: ${fullPath}`);
