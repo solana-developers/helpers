@@ -2,6 +2,7 @@
 
 - Add `makeTokenMint()`
 - 2.5.4 includes a few fixes to build system and TS types that were missing in earlier 2.5.x releases
+- 2.5.6 includes a fix for esm module post-build script
 
 ## 2.4
 
