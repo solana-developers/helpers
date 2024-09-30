@@ -30,6 +30,8 @@ The `helpers` package contains Solana helper functions, for use in the browser a
 
 [Load or create a keypair and airdrop to it if needed](#load-or-create-a-keypair-and-airdrop-to-it-if-needed)
 
+[Get connection object for anchor-bankrun](#get-connection-object-for-anchor-bankrun)
+
 ## Installation
 
 ```bash
@@ -441,6 +443,23 @@ const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
 const DEFAULT_ENV_KEYPAIR_VARIABLE_NAME = "PRIVATE_KEY";
 ```
 
+### Get Connection object for anchor-bankrun
+
+[Anchor bankrun](https://github.com/kevinheavey/anchor-bankrun) when used with `provider.connection` doesn't have functions like `sendTransaction` and `getSignatureStatus` that are available in the `@solana/web3.js` connection object.
+This helper function allows you to get the connection object for anchor-bankrun.
+
+connection object can be created using this way.
+```
+const bankrunContextWrapper = new BankrunContextWrapper(context);
+const connection = bankrunContextWrapper.connection.toConnection();
+const program = new anchor.Program<BankrunTest>(IDL, {
+  ...provider,
+  connection: connection,
+});
+```
+
+now you can pass connection object as args or directly use program.methods.
+
 ## Secret key format
 
 Secret keys can be read in either the more compact base58 format (`base58.encode(randomKeypair.secretKey);`), like:
@@ -478,7 +497,7 @@ The tests use the [node native test runner](https://blog.logrocket.com/exploring
 If you'd like to run a single test, use:
 
 ```bash
-esrun --node-test-name-pattern="getCustomErrorMessage" src/index.test.ts
+node --require esbuild-register --test --test-name-pattern="getCustomErrorMessage" src/logs.test.ts
 ```
 
 To just run tests matching the name `getCustomErrorMessage`.
