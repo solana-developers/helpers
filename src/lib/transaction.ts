@@ -55,3 +55,22 @@ export const getSimulationComputeUnits = async (
   getErrorFromRPCResponse(rpcResponse);
   return rpcResponse.value.unitsConsumed || null;
 };
+
+export async function getComputeUnitPrice(connection: Connection, ignoreZeroMembers = 1 / 2) {
+  let prioritizationFees = await connection.getRecentPrioritizationFees();
+  let length = prioritizationFees.length;
+  let prioritizationZeros = 0, prioritizationTotal = 0;
+  for (let i = 0; i < length; i++) {
+    if (prioritizationFees[i].prioritizationFee === 0) {
+      prioritizationZeros++;
+    } else {
+      prioritizationTotal += prioritizationFees[i].prioritizationFee;
+    }
+  }
+  if (prioritizationZeros >= length * ignoreZeroMembers) {
+    return 0;
+  }
+  return Math.ceil(
+    prioritizationTotal / (length - prioritizationZeros),
+  );
+}
