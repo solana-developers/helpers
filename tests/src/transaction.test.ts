@@ -1,8 +1,13 @@
 import { describe, test } from "node:test";
-import { Keypair } from "@solana/web3.js";
+import { Keypair, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
-import { airdropIfRequired, confirmTransaction, getSimulationComputeUnits } from "../../src";
+import {
+  airdropIfRequired,
+  confirmTransaction,
+  getSimulationComputeUnits,
+  isVersionedTransaction,
+} from "../../src";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 import { Transaction } from "@solana/web3.js";
 import { SystemProgram } from "@solana/web3.js";
@@ -86,5 +91,41 @@ describe("getSimulationComputeUnits", () => {
     // TODO: it would be useful to have a breakdown of exactly how 3888 CUs is calculated
     // also worth reviewing why memo program seems to use so many CUs.
     assert.equal(computeUnitsSendSolAndSayThanks, 3888);
+  });
+});
+
+describe("isVersionedTx", () => {
+  test("isVersionedTx returns true for a VersionedTransaction", async () => {
+    const payer = Keypair.generate();
+    const toAccount = Keypair.generate();
+
+    // connect to the cluster and get the minimum rent for rent exempt status
+    const connection = new Connection(LOCALHOST);
+    let minRent = await connection.getMinimumBalanceForRentExemption(0);
+    let blockhash = await connection
+      .getLatestBlockhash()
+      .then((res) => res.blockhash);
+
+    const instructions = [
+      SystemProgram.transfer({
+        fromPubkey: payer.publicKey,
+        toPubkey: toAccount.publicKey,
+        lamports: minRent,
+      }),
+    ];
+
+    const messageV0 = new TransactionMessage({
+      payerKey: payer.publicKey,
+      recentBlockhash: blockhash,
+      instructions,
+    }).compileToV0Message();
+
+    const transaction = new VersionedTransaction(messageV0);
+    // sign your transaction with the required `Signers`
+    transaction.sign([payer]);
+    
+    const result = isVersionedTransaction(transaction);
+
+    assert.equal(result, true);
   });
 });
