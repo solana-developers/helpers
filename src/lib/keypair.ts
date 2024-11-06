@@ -9,6 +9,8 @@ export const keypairToSecretKeyJSON = (keypair: Keypair): string => {
 };
 
 export const getKeypairFromFile = async (filepath?: string) => {
+  // Node-specific imports
+  // @ts-expect-error TODO: fix the warning rather than disabling it when we have time
   const path = await import("node:path");
   // Work out correct file name
   if (!filepath) {
@@ -24,6 +26,8 @@ export const getKeypairFromFile = async (filepath?: string) => {
   // Get contents of file
   let fileContents: string;
   try {
+    // Node-specific imports
+    // @ts-expect-error TODO: fix the warning rather than disabling it when we have time
     const { readFile } = await import("node:fs/promises");
     const fileContentsBuffer = await readFile(filepath);
     fileContents = fileContentsBuffer.toString();
@@ -81,6 +85,8 @@ export const addKeypairToEnvFile = async (
   variableName: string,
   envFileName?: string,
 ) => {
+  // Node-specific imports
+  // @ts-expect-error TODO: fix the warning rather than disabling it when we have time
   const { appendFile } = await import("node:fs/promises");
   if (!envFileName) {
     envFileName = ".env";
