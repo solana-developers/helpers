@@ -8,6 +8,38 @@ export const keypairToSecretKeyJSON = (keypair: Keypair): string => {
   return JSON.stringify(Array.from(keypair.secretKey));
 };
 
+export const grindKeypairWithPrefix = async (
+  prefix: string,
+): Promise<Keypair> => {
+  // Check if the prefix contains characters outside the base58 alphabet
+  if (
+    prefix.match(
+      /[^123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]/,
+    )
+  ) {
+    throw new Error(
+      "Prefix contains invalid characters. Solana public keys may only include base58 characters, ie 123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+    );
+  }
+  if (prefix.length > 3) {
+    console.warn("Prefix longer than 3 characters may take a long time.");
+  }
+  let keypair: Keypair;
+
+  while (true) {
+    keypair = Keypair.generate();
+    const publicKey = keypair.publicKey.toBase58();
+
+    if (publicKey.startsWith(prefix)) {
+      break;
+    }
+  }
+
+  return keypair;
+};
+
+// const keypair = await grindKeypairWithPrefix(desiredPrefix);
+
 export const getKeypairFromFile = async (filepath?: string) => {
   // Node-specific imports
   // @ts-expect-error TODO: fix the warning rather than disabling it when we have time
