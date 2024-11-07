@@ -20,7 +20,7 @@ export const getErrorFromRPCResponse = (
 ) => {
   // Note: `confirmTransaction` does not throw an error if the confirmation does not succeed,
   // but rather a `TransactionError` object. so we handle that here
-  // See https://solana-labs.github.io/solana-web3.js/classes/Connection.html#confirmTransaction.confirmTransaction-1
+  // See https://solana-labs.github.io/solana-web3.js/v1.x/classes/Connection.html#confirmTransaction.confirmTransaction-1
 
   const error = rpcResponse.value.err;
   if (error) {
