@@ -331,7 +331,7 @@ Gets a keypair from a file - the format must be the same as [Solana CLI](https:/
 To load the default keypair `~/.config/solana/id.json`, just run:
 
 ```typescript
-const keyPair = await getKeypairFromFile(file);
+const keyPair = await getKeypairFromFile();
 ```
 
 or to load a specific file:
