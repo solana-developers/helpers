@@ -1,4 +1,14 @@
-import { AddressLookupTableAccount, Commitment, ComputeBudgetProgram, Connection, PublicKey, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import {
+  AddressLookupTableAccount,
+  Commitment,
+  ComputeBudgetProgram,
+  Connection,
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { getErrorFromRPCResponse } from "./logs";
 
 export const confirmTransaction = async (
@@ -54,4 +64,14 @@ export const getSimulationComputeUnits = async (
 
   getErrorFromRPCResponse(rpcResponse);
   return rpcResponse.value.unitsConsumed || null;
+};
+
+export const isVersionedTransaction = (
+  tx: Transaction | VersionedTransaction,
+): boolean => {
+  const version = (tx as VersionedTransaction)?.version;
+  const isVersionedTx =
+    tx instanceof VersionedTransaction || version !== undefined;
+
+  return isVersionedTx;
 };
