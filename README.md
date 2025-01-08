@@ -482,3 +482,77 @@ esrun --node-test-name-pattern="getCustomErrorMessage" src/index.test.ts
 ```
 
 To just run tests matching the name `getCustomErrorMessage`.
+
+### Transaction Utilities
+
+#### `sendTransactionWithRetry`
+
+Sends a transaction with automatic retries and status updates. This function implements a robust retry mechanism that:
+
+1. Signs the transaction (if signers are provided)
+2. Sends the transaction only once
+3. Monitors the transaction status until confirmation
+4. Retries on failure with a fixed delay
+5. Provides detailed status updates through a callback
+
+```typescript
+const signature = await sendTransactionWithRetry(
+  connection,
+  transaction,
+  signers,
+  {
+    commitment: "confirmed",
+    onStatusUpdate: (status) => console.log(status),
+    maxRetries: 30,
+    initialDelayMs: 2000,
+  },
+);
+```
+
+Best combined with `prepareTransactionWithCompute` to ensure the transaction requests the minimum compute units and sets priority fees.
+
+````typescript
+// This could be really nice if RPC providers would all have the same API...
+    // Please fall back to the fee api of your favourite RPC provider to get a good value.
+    const priorityFee = 1000;
+
+    await prepareTransactionWithCompute(
+      connection,
+      tx,
+      keyPair.publicKey,
+      priorityFee
+    );
+
+    // can either sign the transaction here, or in the sendTransactionWithRetry function
+    tx.sign(keyPair);
+
+    var signature = await sendTransactionWithRetry(connection, tx, [], {
+      onStatusUpdate: (status) => {
+        console.log("Transaction status:", status);
+      },
+    });
+
+```
+
+#### `prepareTransactionWithCompute`
+
+Prepares a transaction with compute unit calculations and limits. This function:
+
+1. Simulates the transaction to determine required compute units
+2. Adds compute budget instructions for both price and unit limit
+3. Supports buffer settings to add safety margins (This is useful when inteacting with defi for examples where the price or route may change during the transaction)
+
+```typescript
+await prepareTransactionWithCompute(
+  connection,
+  transaction,
+  payer.publicKey,
+  1000, // priority fee in microLamports
+  {
+    multiplier: 1.1, // add 10% buffer
+    fixed: 100, // add fixed amount of CUs
+  },
+);
+````
+
+Both functions help with common transaction handling tasks in Solana, making it easier to send reliable transactions with appropriate compute unit settings.
