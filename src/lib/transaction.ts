@@ -12,7 +12,6 @@ import {
   VersionedTransaction,
   Message,
   MessageV0,
-  MessageInstruction,
   MessageCompiledInstruction,
 } from "@solana/web3.js";
 import { getErrorFromRPCResponse } from "./logs";
@@ -498,9 +497,9 @@ export async function decodeAnchorTransaction(
 
   for (const ix of instructions) {
     const programId = accountKeys.get(
-      'programIdIndex' in ix 
+      "programIdIndex" in ix
         ? (ix as MessageCompiledInstruction).programIdIndex
-        : (ix as MessageInstruction).programId
+        : (ix as any).programId,
     );
 
     if (!programId) continue;
@@ -516,6 +515,7 @@ export async function decodeAnchorTransaction(
           const accounts: InvolvedAccount[] = await Promise.all(
             accountIndices.map(async (index, i) => {
               const pubkey = accountKeys.get(index);
+              if (!pubkey) return null;
               const accountMeta = ixType?.accounts[i];
               const accountInfo =
                 await provider.connection.getAccountInfo(pubkey);
@@ -543,9 +543,8 @@ export async function decodeAnchorTransaction(
                 name: accountMeta?.name || `account_${i}`,
                 pubkey: pubkey.toString(),
                 isSigner:
-                  transaction.signatures?.some((s) =>
-                    s.publicKey.equals(pubkey),
-                  ) || false,
+                  message.staticAccountKeys.findIndex((k) => k.equals(pubkey)) <
+                    message.header.numRequiredSignatures || false,
                 isWritable: message.isAccountWritable(index),
                 ...(accountData && { data: accountData }),
               };
@@ -586,7 +585,7 @@ export async function decodeAnchorTransaction(
 
   return {
     instructions: decodedInstructions,
-    toString: function () {
+    toString: function (this: DecodedTransaction) {
       let output = "\n=== Decoded Transaction ===\n";
       this.instructions.forEach((ix, index) => {
         output += `\nInstruction ${index + 1}:${ix.toString()}`;
