@@ -496,6 +496,8 @@ const accountData = await getIdlParsedAccountData(
   accountAddress,
   connection,
 );
+
+// Decoded Data: { count: <BN: 2> }
 ```
 
 Fetches and parses an account's data using an Anchor IDL file. This is useful when you need to decode account data from Anchor programs.
