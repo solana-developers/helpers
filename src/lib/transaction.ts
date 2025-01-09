@@ -20,13 +20,12 @@ import {
   Idl,
   AnchorProvider,
   EventParser,
-  EventData,
   BorshAccountsCoder,
   BorshInstructionCoder,
+  BN,
 } from "@coral-xyz/anchor";
 import * as fs from "fs";
 import * as path from "path";
-import BN from "bn.js";
 
 export const confirmTransaction = async (
   connection: Connection,
