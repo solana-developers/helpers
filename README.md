@@ -6,28 +6,39 @@ The `helpers` package contains Solana helper functions, for use in the browser a
 
 Account & Keypair Management:
 [Make multiple keypairs at once](#make-multiple-keypairs-at-once)
+
 [Get a keypair from a keypair file](#get-a-keypair-from-a-keypair-file)
+
 [Get a keypair from an environment variable](#get-a-keypair-from-an-environment-variable)
+
 [Add a new keypair to an env file](#add-a-new-keypair-to-an-env-file)
+
 [Load or create a keypair and airdrop to it if needed](#load-or-create-a-keypair-and-airdrop-to-it-if-needed)
 
 Token Operations:
 [Make a token mint with metadata](#make-a-token-mint-with-metadata)
+
 [Create multiple accounts with balances of different tokens in a single step](#create-users-mints-and-token-accounts-in-a-single-step)
 
 Transaction & Compute Management:
 [Confirm a transaction](#confirm-a-transaction)
+
 [Get the logs for a transaction](#get-the-logs-for-a-transaction)
+
 [Get simulated compute units (CUs) for transaction instructions](#get-simulated-compute-units-cus-for-transaction-instructions)
+
 [Get an airdrop if your balance is below some amount](#get-an-airdrop-if-your-balance-is-below-some-amount)
 
 Error Handling & Utilities:
 [Resolve a custom error message](#resolve-a-custom-error-message)
+
 [Get a Solana Explorer link for a transaction, address, or block](#get-a-solana-explorer-link-for-a-transaction-address-or-block)
 
 Anchor Program Interaction:
 [Parse account data with IDL](#parse-account-data-with-idl)
+
 [Parse transaction events](#parse-transaction-events)
+
 [Decode Anchor transaction](#decode-anchor-transaction)
 
 ## Installation
