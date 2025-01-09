@@ -12,6 +12,8 @@ import {
   VersionedTransaction,
   Message,
   MessageV0,
+  MessageInstruction,
+  MessageCompiledInstruction,
 } from "@solana/web3.js";
 import { getErrorFromRPCResponse } from "./logs";
 import {
@@ -25,6 +27,7 @@ import {
 } from "@coral-xyz/anchor";
 import * as fs from "fs";
 import * as path from "path";
+import BN from "bn.js";
 
 export const confirmTransaction = async (
   connection: Connection,
@@ -426,30 +429,43 @@ export async function parseAnchorTransactionEvents(
 }
 
 /**
- * Decoded instruction or account data with type information
+ * Account involved in an instruction
  */
-type DecodedAnchorData = {
+type InvolvedAccount = {
   name: string;
-  type: string;
-  data: Record<string, any>;
+  pubkey: string;
+  isSigner: boolean;
+  isWritable: boolean;
+  data?: Record<string, any>; // Decoded account data if it's a program account
 };
 
 /**
- * Decodes all Anchor instructions and accounts in a transaction
- *
- * @param idlPath - Path to the IDL JSON file
- * @param signature - Transaction signature to decode
- * @param connection - Optional connection object (uses default provider if not specified)
- * @returns Object containing decoded instructions and accounts
+ * Decoded Anchor instruction with all involved accounts
+ */
+export type DecodedAnchorInstruction = {
+  name: string;
+  type: string;
+  data: Record<string, any>;
+  accounts: InvolvedAccount[];
+  toString: () => string;
+};
+
+/**
+ * Decoded Anchor transaction containing all instructions and their accounts
+ */
+export type DecodedTransaction = {
+  instructions: DecodedAnchorInstruction[];
+  toString: () => string;
+};
+
+/**
+ * Decodes all Anchor instructions and their involved accounts in a transaction
  */
 export async function decodeAnchorTransaction(
   idlPath: string,
   signature: string,
   connection?: Connection,
-): Promise<{
-  instructions: DecodedAnchorData[];
-  accounts: DecodedAnchorData[];
-}> {
+): Promise<DecodedTransaction> {
   const idlFile = fs.readFileSync(path.resolve(idlPath), "utf8");
   const idl = JSON.parse(idlFile) as Idl;
 
@@ -470,75 +486,128 @@ export async function decodeAnchorTransaction(
     throw new Error(`Transaction ${signature} not found`);
   }
 
-  const decodedInstructions: DecodedAnchorData[] = [];
-  const decodedAccounts: DecodedAnchorData[] = [];
+  const decodedInstructions: DecodedAnchorInstruction[] = [];
 
   // Decode instructions
   const message = transaction.transaction.message;
   const instructions =
     "version" in message
-      ? (message as MessageV0).compiledInstructions
+      ? message.compiledInstructions
       : (message as Message).instructions;
+  const accountKeys = message.getAccountKeys();
 
-  instructions.forEach((ix) => {
-    const programId = (
-      "programId" in ix
-        ? ix.programId
-        : message.staticAccountKeys[ix.programIdIndex]
-    ) as PublicKey;
+  for (const ix of instructions) {
+    const programId = accountKeys.get(
+      'programIdIndex' in ix 
+        ? (ix as MessageCompiledInstruction).programIdIndex
+        : (ix as MessageInstruction).programId
+    );
 
+    if (!programId) continue;
     if (programId.equals(program.programId)) {
       try {
         const decoded = instructionCoder.decode(Buffer.from(ix.data));
         if (decoded) {
           const ixType = idl.instructions.find((i) => i.name === decoded.name);
+          const accountIndices =
+            "accounts" in ix ? ix.accounts : ix.accountKeyIndexes;
+
+          // Get all accounts involved in this instruction
+          const accounts: InvolvedAccount[] = await Promise.all(
+            accountIndices.map(async (index, i) => {
+              const pubkey = accountKeys.get(index);
+              const accountMeta = ixType?.accounts[i];
+              const accountInfo =
+                await provider.connection.getAccountInfo(pubkey);
+
+              let accountData;
+              if (accountInfo?.owner.equals(program.programId)) {
+                try {
+                  const accountType = idl.accounts?.find((acc) =>
+                    accountInfo.data
+                      .slice(0, 8)
+                      .equals(accountsCoder.accountDiscriminator(acc.name)),
+                  );
+                  if (accountType) {
+                    accountData = accountsCoder.decode(
+                      accountType.name,
+                      accountInfo.data,
+                    );
+                  }
+                } catch (e) {
+                  console.log(`Failed to decode account data: ${e}`);
+                }
+              }
+
+              return {
+                name: accountMeta?.name || `account_${i}`,
+                pubkey: pubkey.toString(),
+                isSigner:
+                  transaction.signatures?.some((s) =>
+                    s.publicKey.equals(pubkey),
+                  ) || false,
+                isWritable: message.isAccountWritable(index),
+                ...(accountData && { data: accountData }),
+              };
+            }),
+          );
+
           decodedInstructions.push({
             name: decoded.name,
             type: ixType ? JSON.stringify(ixType.args) : "unknown",
             data: decoded.data,
+            accounts,
+            toString: function () {
+              let output = `\nInstruction: ${this.name}\n`;
+              output += `├─ Arguments: ${JSON.stringify(
+                formatData(this.data),
+              )}\n`;
+              output += `└─ Accounts:\n`;
+              this.accounts.forEach((acc) => {
+                output += `   ├─ ${acc.name}:\n`;
+                output += `   │  ├─ Address: ${acc.pubkey}\n`;
+                output += `   │  ├─ Signer: ${acc.isSigner}\n`;
+                output += `   │  ├─ Writable: ${acc.isWritable}\n`;
+                if (acc.data) {
+                  output += `   │  └─ Data: ${JSON.stringify(
+                    formatData(acc.data),
+                  )}\n`;
+                }
+              });
+              return output;
+            },
           });
         }
       } catch (e) {
         console.log(`Failed to decode instruction: ${e}`);
       }
     }
-  });
-
-  // Decode account changes
-  if (transaction.meta?.postTokenBalances) {
-    const accountKeys = message.getAccountKeys();
-
-    for (const accountKey of accountKeys.keySegments().flat()) {
-      const accountInfo = await provider.connection.getAccountInfo(accountKey);
-      if (accountInfo?.data && accountInfo.owner.equals(program.programId)) {
-        try {
-          // Find matching account type by discriminator
-          const accountType = idl.accounts?.find((acc) =>
-            accountInfo.data
-              .slice(0, 8)
-              .equals(accountsCoder.accountDiscriminator(acc.name)),
-          );
-
-          if (accountType) {
-            const decoded = accountsCoder.decode(
-              accountType.name,
-              accountInfo.data,
-            );
-            decodedAccounts.push({
-              name: accountType.name,
-              type: JSON.stringify(accountType),
-              data: decoded,
-            });
-          }
-        } catch (e) {
-          console.log(`Failed to decode account: ${e}`);
-        }
-      }
-    }
   }
 
   return {
     instructions: decodedInstructions,
-    accounts: decodedAccounts,
+    toString: function () {
+      let output = "\n=== Decoded Transaction ===\n";
+      this.instructions.forEach((ix, index) => {
+        output += `\nInstruction ${index + 1}:${ix.toString()}`;
+      });
+      return output;
+    },
   };
+}
+
+// Helper function to format data
+function formatData(data: any): any {
+  if (data instanceof BN) {
+    return `<BN: ${data.toString()}>`;
+  }
+  if (Array.isArray(data)) {
+    return data.map(formatData);
+  }
+  if (typeof data === "object" && data !== null) {
+    return Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [k, formatData(v)]),
+    );
+  }
+  return data;
 }
