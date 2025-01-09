@@ -1,5 +1,30 @@
-import { AddressLookupTableAccount, Commitment, ComputeBudgetProgram, Connection, PublicKey, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import {
+  AddressLookupTableAccount,
+  Commitment,
+  ComputeBudgetProgram,
+  Connection,
+  Keypair,
+  PublicKey,
+  SignatureStatus,
+  Transaction,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+  Message,
+  MessageV0,
+} from "@solana/web3.js";
 import { getErrorFromRPCResponse } from "./logs";
+import {
+  Program,
+  Idl,
+  AnchorProvider,
+  EventParser,
+  EventData,
+  BorshAccountsCoder,
+  BorshInstructionCoder,
+} from "@coral-xyz/anchor";
+import * as fs from "fs";
+import * as path from "path";
 
 export const confirmTransaction = async (
   connection: Connection,
@@ -52,6 +77,468 @@ export const getSimulationComputeUnits = async (
     sigVerify: false,
   });
 
-  getErrorFromRPCResponse(rpcResponse);
+  if (rpcResponse?.value?.err) {
+    const logs = rpcResponse.value.logs?.join("\n  • ") || "No logs available";
+    throw new Error(`Transaction simulation failed:\n  •${logs}`);
+  }
+
   return rpcResponse.value.unitsConsumed || null;
 };
+
+/**
+ * Constants for transaction retry configuration
+ */
+export const RETRY_INTERVAL_MS = 2000;
+export const MAX_RETRIES = 30;
+
+/**
+ * Represents the different states of a transaction during its lifecycle
+ * @property status - The current status of the transaction
+ * @property signature - The transaction signature (only present when status is "sent")
+ * @property result - The signature status (only present when status is "confirmed")
+ */
+export type TxStatusUpdate =
+  | { status: "created" }
+  | { status: "signed" }
+  | { status: "sent"; signature: string }
+  | { status: "confirmed"; result: SignatureStatus };
+
+/**
+ * Configuration options for transaction retry mechanism
+ * @property maxRetries - Maximum number of retry attempts
+ * @property initialDelayMs - Delay between retries in milliseconds
+ * @property commitment - Desired commitment level for the transaction
+ * @property skipPreflight - Whether to skip transaction simulation
+ * @property onStatusUpdate - Callback function to receive transaction status updates
+ */
+export type SendTransactionOptions = Partial<{
+  maxRetries: number;
+  initialDelayMs: number;
+  commitment: Commitment;
+  onStatusUpdate: (status: TxStatusUpdate) => void;
+  skipPreflight: boolean;
+}>;
+
+/**
+ * Configuration for compute unit buffer calculation
+ * @property multiplier - Multiply simulated units by this value (e.g., 1.1 adds 10%)
+ * @property fixed - Add this fixed amount of compute units
+ */
+export type ComputeUnitBuffer = {
+  multiplier?: number;
+  fixed?: number;
+};
+
+/**
+ * Default configuration values for transaction sending
+ */
+export const DEFAULT_SEND_OPTIONS: Required<
+  Omit<SendTransactionOptions, "onStatusUpdate">
+> = {
+  maxRetries: MAX_RETRIES,
+  initialDelayMs: RETRY_INTERVAL_MS,
+  commitment: "confirmed",
+  skipPreflight: true,
+};
+
+/**
+ * Sends a transaction with automatic retries and status updates
+ *
+ * @param connection - The Solana connection object
+ * @param transaction - The transaction to send
+ * @param signers - Array of signers needed for the transaction
+ * @param options - Optional configuration for the retry mechanism
+ *
+ * @returns Promise that resolves to the transaction signature
+ *
+ * @remarks
+ * This function implements a robust retry mechanism that:
+ * 1. Signs the transaction (if signers are provided)
+ * 2. Sends the transaction only once
+ * 3. Monitors the transaction status until confirmation
+ * 4. Retries on failure with a fixed delay
+ * 5. Provides detailed status updates through the callback
+ *
+ * The function uses default values that can be partially overridden through the options parameter.
+ * Default values are defined in DEFAULT_SEND_OPTIONS.
+ *
+ * Status updates include:
+ * - "created": Initial transaction state
+ * - "signed": Transaction has been signed
+ * - "sent": Transaction has been sent (includes signature)
+ * - "confirmed": Transaction is confirmed or finalized
+ *
+ * @throws Error if the transaction fails after all retry attempts
+ *
+ * @example
+ * ```typescript
+ * const signature = await sendTransactionWithRetry(
+ *   connection,
+ *   transaction,
+ *   signers,
+ *   {
+ *     onStatusUpdate: (status) => console.log(status),
+ *     commitment: "confirmed"
+ *   }
+ * );
+ * ```
+ */
+export async function sendTransactionWithRetry(
+  connection: Connection,
+  transaction: Transaction,
+  signers: Keypair[],
+  {
+    maxRetries = DEFAULT_SEND_OPTIONS.maxRetries,
+    initialDelayMs = DEFAULT_SEND_OPTIONS.initialDelayMs,
+    commitment = DEFAULT_SEND_OPTIONS.commitment,
+    skipPreflight = DEFAULT_SEND_OPTIONS.skipPreflight,
+    onStatusUpdate = () => {},
+  }: SendTransactionOptions = {},
+): Promise<string> {
+  onStatusUpdate?.({ status: "created" });
+
+  // Sign the transaction
+  if (signers.length > 0) {
+    transaction.sign(...signers);
+  }
+
+  onStatusUpdate?.({ status: "signed" });
+
+  let signature: string | null = null;
+  let status: SignatureStatus | null = null;
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    try {
+      // Send transaction if not sent yet
+      if (!signature) {
+        signature = await connection.sendRawTransaction(
+          transaction.serialize(),
+          {
+            skipPreflight,
+            preflightCommitment: commitment,
+            maxRetries: 0,
+          },
+        );
+        onStatusUpdate?.({ status: "sent", signature });
+      }
+
+      // Check status
+      const response = await connection.getSignatureStatus(signature);
+      if (response?.value) {
+        status = response.value;
+
+        if (
+          status.confirmationStatus === "confirmed" ||
+          status.confirmationStatus === "finalized"
+        ) {
+          onStatusUpdate?.({ status: "confirmed", result: status });
+          return signature;
+        }
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.log(`Attempt ${retries + 1} failed:`, error.message);
+      } else {
+        console.log(`Attempt ${retries + 1} failed:`, error);
+      }
+    }
+
+    retries++;
+    if (retries < maxRetries) {
+      await new Promise((resolve) => setTimeout(resolve, initialDelayMs));
+    }
+  }
+
+  throw new Error(`Transaction failed after ${maxRetries} attempts`);
+}
+
+/**
+ * Prepares a transaction by adding compute budget instructions
+ *
+ * @param connection - The Solana connection object
+ * @param tx - The transaction to prepare
+ * @param payer - The public key of the transaction payer
+ * @param priorityFee - Priority fee in microLamports (default: 1000)
+ * @param computeUnitBuffer - Optional buffer to add to simulated compute units
+ *
+ * @remarks
+ * This function:
+ * 1. Adds a compute unit price instruction with the specified priority fee
+ * 2. Simulates the transaction to determine required compute units
+ * 3. Applies any specified compute unit buffers
+ * 4. Adds a compute unit limit instruction based on the simulation
+ *
+ * The compute unit buffer can be specified as:
+ * - A multiplier (e.g., 1.1 adds 10% to simulated units)
+ * - A fixed value (e.g., 1000 adds 1000 compute units)
+ * - Both (multiplier is applied first, then fixed value is added)
+ *
+ * Priority Fees:
+ * To find an appropriate priority fee, refer to your RPC provider's documentation:
+ * - Helius: https://docs.helius.dev/solana-apis/priority-fee-api
+ * - Triton: https://docs.triton.one/chains/solana/improved-priority-fees-api
+ * - Quicknode: https://www.quicknode.com/docs/solana/qn_estimatePriorityFees
+ *
+ * @throws If the transaction simulation fails
+ *
+ * @example
+ * ```typescript
+ * // Add 10% buffer plus 1000 fixed compute units
+ * await prepareTransactionWithCompute(
+ *   connection,
+ *   transaction,
+ *   payer.publicKey,
+ *   1000,
+ *   { multiplier: 1.1, fixed: 1000 }
+ * );
+ * ```
+ */
+export async function prepareTransactionWithCompute(
+  connection: Connection,
+  tx: Transaction,
+  payer: PublicKey,
+  priorityFee: number = 1000,
+  computeUnitBuffer: ComputeUnitBuffer = {},
+): Promise<void> {
+  tx.add(
+    ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: priorityFee,
+    }),
+  );
+
+  const simulatedCompute = await getSimulationComputeUnits(
+    connection,
+    tx.instructions,
+    payer,
+    [],
+  );
+
+  if (simulatedCompute === null) {
+    throw new Error("Failed to simulate compute units");
+  }
+
+  console.log("Simulated compute units", simulatedCompute);
+
+  // Apply buffer to compute units
+  let finalComputeUnits = simulatedCompute;
+  if (computeUnitBuffer.multiplier) {
+    finalComputeUnits = Math.floor(
+      finalComputeUnits * computeUnitBuffer.multiplier,
+    );
+  }
+  if (computeUnitBuffer.fixed) {
+    finalComputeUnits += computeUnitBuffer.fixed;
+  }
+
+  console.log("Final compute units (with buffer)", finalComputeUnits);
+
+  tx.add(
+    ComputeBudgetProgram.setComputeUnitLimit({
+      units: finalComputeUnits,
+    }),
+  );
+}
+
+/**
+ * Fetches and parses an account's data using an Anchor IDL file
+ *
+ * @param idlPath - Path to the IDL JSON file
+ * @param accountName - The name of the account as defined in the IDL
+ * @param accountAddress - The public key of the account to fetch
+ * @param connection - Optional connection object (uses default provider if not specified)
+ * @returns The decoded account data
+ *
+ * @throws If the IDL file doesn't exist or account cannot be decoded
+ */
+export async function getIdlParsedAccountData<T = any>(
+  idlPath: string,
+  accountName: string,
+  accountAddress: PublicKey,
+  connection?: Connection,
+): Promise<T> {
+  // Load and parse IDL file
+  const idlFile = fs.readFileSync(path.resolve(idlPath), "utf8");
+  const idl = JSON.parse(idlFile) as Idl;
+
+  // Get or create provider
+  const provider = connection
+    ? new AnchorProvider(connection, AnchorProvider.env().wallet, {})
+    : AnchorProvider.env();
+
+  // Create program
+  const program = new Program(idl, provider);
+
+  const accountInfo = await provider.connection.getAccountInfo(accountAddress);
+
+  if (!accountInfo) {
+    throw new Error(`Account ${accountAddress.toString()} not found`);
+  }
+
+  return program.coder.accounts.decode(accountName, accountInfo.data) as T;
+}
+
+/**
+ * Parses Anchor events from a transaction
+ *
+ * @param idlPath - Path to the IDL JSON file
+ * @param signature - Transaction signature to parse events from
+ * @param connection - Optional connection object (uses default provider if not specified)
+ * @returns Array of parsed events with their name and data
+ */
+export async function parseAnchorTransactionEvents(
+  idlPath: string,
+  signature: string,
+  connection?: Connection,
+): Promise<
+  Array<{
+    name: string;
+    data: any;
+  }>
+> {
+  const idlFile = fs.readFileSync(path.resolve(idlPath), "utf8");
+  const idl = JSON.parse(idlFile) as Idl;
+
+  const provider = connection
+    ? new AnchorProvider(connection, AnchorProvider.env().wallet, {})
+    : AnchorProvider.env();
+
+  const program = new Program(idl, provider);
+  const parser = new EventParser(program.programId, program.coder);
+
+  const transaction = await provider.connection.getTransaction(signature, {
+    commitment: "confirmed",
+  });
+
+  if (!transaction?.meta?.logMessages) {
+    return [];
+  }
+
+  const events: Array<{ name: string; data: any }> = [];
+  for (const event of parser.parseLogs(transaction.meta.logMessages)) {
+    events.push({
+      name: event.name,
+      data: event.data,
+    });
+  }
+
+  return events;
+}
+
+/**
+ * Decoded instruction or account data with type information
+ */
+type DecodedAnchorData = {
+  name: string;
+  type: string;
+  data: Record<string, any>;
+};
+
+/**
+ * Decodes all Anchor instructions and accounts in a transaction
+ *
+ * @param idlPath - Path to the IDL JSON file
+ * @param signature - Transaction signature to decode
+ * @param connection - Optional connection object (uses default provider if not specified)
+ * @returns Object containing decoded instructions and accounts
+ */
+export async function decodeAnchorTransaction(
+  idlPath: string,
+  signature: string,
+  connection?: Connection,
+): Promise<{
+  instructions: DecodedAnchorData[];
+  accounts: DecodedAnchorData[];
+}> {
+  const idlFile = fs.readFileSync(path.resolve(idlPath), "utf8");
+  const idl = JSON.parse(idlFile) as Idl;
+
+  const provider = connection
+    ? new AnchorProvider(connection, AnchorProvider.env().wallet, {})
+    : AnchorProvider.env();
+
+  const program = new Program(idl, provider);
+  const accountsCoder = new BorshAccountsCoder(idl);
+  const instructionCoder = new BorshInstructionCoder(idl);
+
+  const transaction = await provider.connection.getTransaction(signature, {
+    commitment: "confirmed",
+    maxSupportedTransactionVersion: 0,
+  });
+
+  if (!transaction) {
+    throw new Error(`Transaction ${signature} not found`);
+  }
+
+  const decodedInstructions: DecodedAnchorData[] = [];
+  const decodedAccounts: DecodedAnchorData[] = [];
+
+  // Decode instructions
+  const message = transaction.transaction.message;
+  const instructions =
+    "version" in message
+      ? (message as MessageV0).compiledInstructions
+      : (message as Message).instructions;
+
+  instructions.forEach((ix) => {
+    const programId = (
+      "programId" in ix
+        ? ix.programId
+        : message.staticAccountKeys[ix.programIdIndex]
+    ) as PublicKey;
+
+    if (programId.equals(program.programId)) {
+      try {
+        const decoded = instructionCoder.decode(Buffer.from(ix.data));
+        if (decoded) {
+          const ixType = idl.instructions.find((i) => i.name === decoded.name);
+          decodedInstructions.push({
+            name: decoded.name,
+            type: ixType ? JSON.stringify(ixType.args) : "unknown",
+            data: decoded.data,
+          });
+        }
+      } catch (e) {
+        console.log(`Failed to decode instruction: ${e}`);
+      }
+    }
+  });
+
+  // Decode account changes
+  if (transaction.meta?.postTokenBalances) {
+    const accountKeys = message.getAccountKeys();
+
+    for (const accountKey of accountKeys.keySegments().flat()) {
+      const accountInfo = await provider.connection.getAccountInfo(accountKey);
+      if (accountInfo?.data && accountInfo.owner.equals(program.programId)) {
+        try {
+          // Find matching account type by discriminator
+          const accountType = idl.accounts?.find((acc) =>
+            accountInfo.data
+              .slice(0, 8)
+              .equals(accountsCoder.accountDiscriminator(acc.name)),
+          );
+
+          if (accountType) {
+            const decoded = accountsCoder.decode(
+              accountType.name,
+              accountInfo.data,
+            );
+            decodedAccounts.push({
+              name: accountType.name,
+              type: JSON.stringify(accountType),
+              data: decoded,
+            });
+          }
+        } catch (e) {
+          console.log(`Failed to decode account: ${e}`);
+        }
+      }
+    }
+  }
+
+  return {
+    instructions: decodedInstructions,
+    accounts: decodedAccounts,
+  };
+}
