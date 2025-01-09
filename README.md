@@ -30,6 +30,72 @@ The `helpers` package contains Solana helper functions, for use in the browser a
 
 [Load or create a keypair and airdrop to it if needed](#load-or-create-a-keypair-and-airdrop-to-it-if-needed)
 
+## Anchor IDL Utilities
+
+### Parse Account Data with IDL
+
+Usage:
+
+```typescript
+const accountData = await getIdlParsedAccountData(
+  "./idl/program.json",
+  "counter",
+  accountAddress,
+  connection,
+);
+```
+
+Fetches and parses an account's data using an Anchor IDL file. This is useful when you need to decode account data from Anchor programs.
+
+### Parse Transaction Events
+
+Usage:
+
+```typescript
+const events = await parseAnchorTransactionEvents(
+  "./idl/program.json",
+  signature,
+  connection,
+);
+
+// Events will be an array of:
+// {
+//   name: "GameCreated",
+//   data: { gameId: "123", player: "..." }
+// }
+```
+
+Parses all Anchor events emitted in a transaction. This helps you track and verify program events after transaction execution.
+
+### Decode Anchor Transaction
+
+Usage:
+
+```typescript
+const decoded = await decodeAnchorTransaction(
+  "./idl/program.json",
+  signature,
+  connection,
+);
+
+// Print human-readable format
+console.log(decoded.toString());
+
+// Access specific instruction data
+decoded.instructions.forEach((ix) => {
+  console.log(`Instruction: ${ix.name}`);
+  console.log(`Arguments: ${JSON.stringify(ix.data)}`);
+  console.log(`Accounts: ${ix.accounts.map((acc) => acc.name).join(", ")}`);
+});
+```
+
+Provides detailed decoding of all Anchor instructions in a transaction, including:
+
+- Instruction names and arguments
+- All involved accounts with their roles (signer/writable)
+- Account data for program-owned accounts
+- Human-readable string representation
+
 ## Installation
 
 ```bash
