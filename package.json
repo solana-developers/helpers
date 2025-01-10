@@ -50,6 +50,14 @@
     "Christian Krueger",
     "Ayush Chauhan"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/solana-developers/helpers.git"
+  },
+  "homepage": "https://github.com/solana-developers/helpers",
+  "bugs": {
+    "url": "https://github.com/solana-developers/helpers/issues"
+  },
   "license": "MIT",
   "dependencies": {
     "@solana/spl-token": "^0.4.8",
