@@ -511,26 +511,26 @@ const signature = await sendTransactionWithRetry(
 
 Best combined with `prepareTransactionWithCompute` to ensure the transaction requests the minimum compute units and sets priority fees.
 
-````typescript
+```typescript
 // This could be really nice if RPC providers would all have the same API...
-    // Please fall back to the fee api of your favourite RPC provider to get a good value.
-    const priorityFee = 1000;
+// Please fall back to the fee api of your favourite RPC provider to get a good value.
+const priorityFee = 1000;
 
-    await prepareTransactionWithCompute(
-      connection,
-      tx,
-      keyPair.publicKey,
-      priorityFee
-    );
+await prepareTransactionWithCompute(
+  connection,
+  tx,
+  keyPair.publicKey,
+  priorityFee
+);
 
-    // can either sign the transaction here, or in the sendTransactionWithRetry function
-    tx.sign(keyPair);
+// can either sign the transaction here, or in the sendTransactionWithRetry function
+tx.sign(keyPair);
 
-    var signature = await sendTransactionWithRetry(connection, tx, [], {
-      onStatusUpdate: (status) => {
-        console.log("Transaction status:", status);
-      },
-    });
+var signature = await sendTransactionWithRetry(connection, tx, [], {
+  onStatusUpdate: (status) => {
+    console.log("Transaction status:", status);
+  },
+});
 
 ```
 
@@ -553,6 +553,6 @@ await prepareTransactionWithCompute(
     fixed: 100, // add fixed amount of CUs
   },
 );
-````
+```
 
 Both functions help with common transaction handling tasks in Solana, making it easier to send reliable transactions with appropriate compute unit settings.
