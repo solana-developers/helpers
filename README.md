@@ -4,23 +4,8 @@ The `helpers` package contains Solana helper functions, for use in the browser a
 
 ## What can I do with this module?
 
+Account & Keypair Management:
 [Make multiple keypairs at once](#make-multiple-keypairs-at-once)
-
-[Make a token mint with metadata](#make-a-token-mint-with-metadata)
-
-[Create multiple accounts with balances of different tokens in a single step](#create-users-mints-and-token-accounts-in-a-single-step)
-
-[Resolve a custom error message](#resolve-a-custom-error-message)
-
-[Get an airdrop if your balance is below some amount](#get-an-airdrop-if-your-balance-is-below-some-amount)
-
-[Get a Solana Explorer link for a transaction, address, or block](#get-a-solana-explorer-link-for-a-transaction-address-or-block)
-
-[Confirm a transaction](#confirm-a-transaction)
-
-[Get the logs for a transaction](#get-the-logs-for-a-transaction)
-
-[Get simulated compute units (CUs) for transaction instructions](#get-simulated-compute-units-cus-for-transaction-instructions)
 
 [Get a keypair from a keypair file](#get-a-keypair-from-a-keypair-file)
 
@@ -29,6 +14,32 @@ The `helpers` package contains Solana helper functions, for use in the browser a
 [Add a new keypair to an env file](#add-a-new-keypair-to-an-env-file)
 
 [Load or create a keypair and airdrop to it if needed](#load-or-create-a-keypair-and-airdrop-to-it-if-needed)
+
+Token Operations:
+[Make a token mint with metadata](#make-a-token-mint-with-metadata)
+
+[Create multiple accounts with balances of different tokens in a single step](#create-users-mints-and-token-accounts-in-a-single-step)
+
+Transaction & Compute Management:
+[Confirm a transaction](#confirm-a-transaction)
+
+[Get the logs for a transaction](#get-the-logs-for-a-transaction)
+
+[Get simulated compute units (CUs) for transaction instructions](#get-simulated-compute-units-cus-for-transaction-instructions)
+
+[Get an airdrop if your balance is below some amount](#get-an-airdrop-if-your-balance-is-below-some-amount)
+
+Error Handling & Utilities:
+[Resolve a custom error message](#resolve-a-custom-error-message)
+
+[Get a Solana Explorer link for a transaction, address, or block](#get-a-solana-explorer-link-for-a-transaction-address-or-block)
+
+Anchor Program Interaction:
+[Parse account data with IDL](#parse-account-data-with-idl)
+
+[Parse transaction events](#parse-transaction-events)
+
+[Decode Anchor transaction](#decode-anchor-transaction)
 
 ## Installation
 
@@ -556,3 +567,71 @@ await prepareTransactionWithCompute(
 ```
 
 Both functions help with common transaction handling tasks in Solana, making it easier to send reliable transactions with appropriate compute unit settings.
+
+## Anchor IDL Utilities
+
+### Parse Account Data with IDL
+
+Usage:
+
+```typescript
+const accountData = await getIdlParsedAccountData(
+  "./idl/program.json",
+  "counter",
+  accountAddress,
+  connection,
+);
+
+// Decoded Data: { count: <BN: 2> }
+```
+
+Fetches and parses an account's data using an Anchor IDL file. This is useful when you need to decode account data from Anchor programs.
+
+### Parse Transaction Events
+
+Usage:
+
+```typescript
+const events = await parseAnchorTransactionEvents(
+  "./idl/program.json",
+  signature,
+  connection,
+);
+
+// Events will be an array of:
+// {
+//   name: "GameCreated",
+//   data: { gameId: "123", player: "..." }
+// }
+```
+
+Parses all Anchor events emitted in a transaction. This helps you track and verify program events after transaction execution.
+
+### Decode Anchor Transaction
+
+Usage:
+
+```typescript
+const decoded = await decodeAnchorTransaction(
+  "./idl/program.json",
+  signature,
+  connection,
+);
+
+// Print human-readable format
+console.log(decoded.toString());
+
+// Access specific instruction data
+decoded.instructions.forEach((ix) => {
+  console.log(`Instruction: ${ix.name}`);
+  console.log(`Arguments: ${JSON.stringify(ix.data)}`);
+  console.log(`Accounts: ${ix.accounts.map((acc) => acc.name).join(", ")}`);
+});
+```
+
+Provides detailed decoding of all Anchor instructions in a transaction, including:
+
+- Instruction names and arguments
+- All involved accounts with their roles (signer/writable)
+- Account data for program-owned accounts
+- Human-readable string representation
