@@ -50,11 +50,19 @@
     "Christian Krueger",
     "Ayush Chauhan"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/solana-developers/helpers.git"
+  },
+  "homepage": "https://github.com/solana-developers/helpers",
+  "bugs": {
+    "url": "https://github.com/solana-developers/helpers/issues"
+  },
   "license": "MIT",
   "dependencies": {
     "@solana/spl-token": "^0.4.8",
     "@solana/spl-token-metadata": "^0.1.4",
-    "@solana/web3.js": "^1.95.2",
+    "@solana/web3.js": "^1.98.0",
     "bs58": "^6.0.0",
     "dotenv": "^16.4.5",
     "@coral-xyz/anchor": "^0.30.1"

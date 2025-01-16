@@ -83,6 +83,11 @@ export const getSimulationComputeUnits = async (
     throw new Error(`Transaction simulation failed:\n  •${logs}`);
   }
 
+  if (rpcResponse?.value?.err) {
+    const logs = rpcResponse.value.logs?.join("\n  • ") || "No logs available";
+    throw new Error(`Transaction simulation failed:\n  •${logs}`);
+  }
+
   return rpcResponse.value.unitsConsumed || null;
 };
 
