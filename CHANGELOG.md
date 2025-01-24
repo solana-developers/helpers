@@ -1,8 +1,3 @@
-## 2.6
-
-- Added Transaction send helpers. `prepareTransactionWithCompute()` and `sendTransactionWithRetry()`
-- Removed `createAccountsMintsAndTokenAccounts()` because its not a useful helper function and does not work
-
 ## 2.5
 
 - Add `makeTokenMint()`
