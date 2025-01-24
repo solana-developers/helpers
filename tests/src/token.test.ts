@@ -1,10 +1,13 @@
 import { describe, test } from "node:test";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { airdropIfRequired, createAccountsMintsAndTokenAccounts, makeTokenMint } from "../../src";
+import {
+  airdropIfRequired,
+  makeTokenMint,
+} from "../../src";
 import { Connection } from "@solana/web3.js";
 import { Keypair } from "@solana/web3.js";
 import { getTokenMetadata } from "@solana/spl-token";
-import assert from 'node:assert';
+import assert from "node:assert";
 
 const LOCALHOST = "http://127.0.0.1:8899";
 
@@ -69,57 +72,3 @@ describe("makeTokenMint", () => {
   });
 });
 
-describe("createAccountsMintsAndTokenAccounts", () => {
-  test("createAccountsMintsAndTokenAccounts works", async () => {
-    const payer = Keypair.generate();
-    const connection = new Connection(LOCALHOST);
-    await airdropIfRequired(
-      connection,
-      payer.publicKey,
-      100 * LAMPORTS_PER_SOL,
-      1 * LAMPORTS_PER_SOL,
-    );
-
-    const SOL_BALANCE = 10 * LAMPORTS_PER_SOL;
-
-    const usersMintsAndTokenAccounts =
-      await createAccountsMintsAndTokenAccounts(
-        [
-          [1_000_000_000, 0], // User 0 has 1_000_000_000 of token A and 0 of token B
-          [0, 1_000_000_000], // User 1 has 0 of token A and 1_000_000_000 of token B
-        ],
-        SOL_BALANCE,
-        connection,
-        payer,
-      );
-
-    // Check all users have been created and have some SOL
-    const users = usersMintsAndTokenAccounts.users;
-    assert.equal(users.length, 2);
-    await Promise.all(
-      users.map(async (user) => {
-        const balance = await connection.getBalance(user.publicKey);
-        assert(balance === SOL_BALANCE);
-      }),
-    );
-
-    // Check the mints
-    assert.equal(usersMintsAndTokenAccounts.mints.length, 2);
-
-    // Check the token accounts
-    const tokenAccounts = usersMintsAndTokenAccounts.tokenAccounts;
-
-    // Get the balances of the token accounts for the first user
-    // (note there is no tokenAccountB balance yet)
-    const firstUserFirstTokenBalance = await connection.getTokenAccountBalance(
-      tokenAccounts[0][0], // First user, first token mint
-    );
-    assert(Number(firstUserFirstTokenBalance.value.amount) === 1_000_000_000);
-
-    // // Get the balances of the token accounts for the second user
-    // // (note there is no tokenAccountA account yet)
-    const secondUserSecondTokenBalance =
-      await connection.getTokenAccountBalance(tokenAccounts[1][1]); // Second user, second token mint
-    assert(Number(secondUserSecondTokenBalance.value.amount) === 1_000_000_000);
-  });
-});
