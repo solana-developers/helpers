@@ -1,3 +1,10 @@
+## 2.6
+
+- Added Transaction send helpers. `prepareTransactionWithCompute()` and `sendTransactionWithRetry()`
+- Added Transaction Parser helper functions `getIdlParsedAccountData()`, `parseAnchorTransactionEvents()` and `getIdlParsedInstructionData()`
+- Fixed `createAccountsMintsAndTokenAccounts()` function to use correct commitment and not `max` blockhash
+- Fixed `confirmTransaction()` to not use correct commitment
+
 ## 2.5
 
 - Add `makeTokenMint()`

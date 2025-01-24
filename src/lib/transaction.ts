@@ -32,7 +32,7 @@ export const confirmTransaction = async (
   signature: string,
   commitment: Commitment = "confirmed",
 ): Promise<string> => {
-  const block = await connection.getLatestBlockhash();
+  const block = await connection.getLatestBlockhash(commitment);
   const rpcResponse = await connection.confirmTransaction(
     {
       signature,
@@ -213,7 +213,7 @@ export async function sendTransactionWithRetry(
   let status: SignatureStatus | null = null;
   let retries = 0;
   // Setting a minimum to decrease spam and for the confirmation to work
-  let delayBetweenRetries = Math.max(initialDelayMs, 500); 
+  let delayBetweenRetries = Math.max(initialDelayMs, 500);
 
   while (retries < maxRetries) {
     try {
