@@ -99,7 +99,7 @@ describe("getSimulationComputeUnits", () => {
 });
 
 describe("Transaction utilities", () => {
-  test.only("sendTransactionWithRetry should send and confirm a transaction", async () => {
+  test("sendTransactionWithRetry should send and confirm a transaction", async () => {
     const connection = new Connection(LOCALHOST);
     const sender = Keypair.generate();
     await airdropIfRequired(
@@ -129,8 +129,10 @@ describe("Transaction utilities", () => {
       transaction,
       [sender],
       {
-        commitment: "confirmed",
-        onStatusUpdate: (status) => statusUpdates.push(status),
+        onStatusUpdate: (status) => {
+          statusUpdates.push(status);
+          console.log("status", status);
+        },
       },
     );
 
@@ -141,9 +143,10 @@ describe("Transaction utilities", () => {
     );
   });
 
-  test.only("prepareTransactionWithCompute should add compute budget instructions", async () => {
+  test("prepareTransactionWithCompute should add compute budget instructions", async () => {
     const connection = new Connection(LOCALHOST);
     const sender = Keypair.generate();
+
     await airdropIfRequired(
       connection,
       sender.publicKey,

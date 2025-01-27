@@ -72,7 +72,7 @@ describe("makeTokenMint", () => {
 describe("createAccountsMintsAndTokenAccounts", () => {
   test("createAccountsMintsAndTokenAccounts works", async () => {
     const payer = Keypair.generate();
-    const connection = new Connection(LOCALHOST);
+    const connection = new Connection(LOCALHOST, "confirmed");
     await airdropIfRequired(
       connection,
       payer.publicKey,

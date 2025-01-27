@@ -250,12 +250,11 @@ const makeAndSendAndConfirmTransaction = async (
   signers: Array<Signer>,
   payer: Keypair,
 ) => {
-  const latestBlockhash = (await connection.getLatestBlockhash("max"))
-    .blockhash;
+  const latestBlockhash = await connection.getLatestBlockhash("confirmed");
 
   const messageV0 = new TransactionMessage({
     payerKey: payer.publicKey,
-    recentBlockhash: latestBlockhash,
+    recentBlockhash: latestBlockhash.blockhash,
     instructions,
   }).compileToV0Message();
   const transaction = new VersionedTransaction(messageV0);

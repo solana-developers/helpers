@@ -30,9 +30,9 @@ import * as path from "path";
 export const confirmTransaction = async (
   connection: Connection,
   signature: string,
-  commitment: Commitment = "finalized",
+  commitment: Commitment = "confirmed",
 ): Promise<string> => {
-  const block = await connection.getLatestBlockhash();
+  const block = await connection.getLatestBlockhash(commitment);
   const rpcResponse = await connection.confirmTransaction(
     {
       signature,
@@ -54,6 +54,7 @@ export const getSimulationComputeUnits = async (
   instructions: Array<TransactionInstruction>,
   payer: PublicKey,
   lookupTables: Array<AddressLookupTableAccount> | [],
+  commitment: Commitment = "confirmed",
 ): Promise<number | null> => {
   const testInstructions = [
     // Set an arbitrarily high number in simulation
@@ -76,6 +77,7 @@ export const getSimulationComputeUnits = async (
   const rpcResponse = await connection.simulateTransaction(testTransaction, {
     replaceRecentBlockhash: true,
     sigVerify: false,
+    commitment,
   });
 
   if (rpcResponse?.value?.err) {
@@ -90,7 +92,8 @@ export const getSimulationComputeUnits = async (
  * Constants for transaction retry configuration
  */
 export const RETRY_INTERVAL_MS = 2000;
-export const MAX_RETRIES = 30;
+export const RETRY_INTERVAL_INCREASE = 200;
+export const MAX_RETRIES = 15;
 
 /**
  * Represents the different states of a transaction during its lifecycle
@@ -102,6 +105,7 @@ export type TxStatusUpdate =
   | { status: "created" }
   | { status: "signed" }
   | { status: "sent"; signature: string }
+  | { status: "retry"; signature: string | null }
   | { status: "confirmed"; result: SignatureStatus };
 
 /**
@@ -193,7 +197,7 @@ export async function sendTransactionWithRetry(
     initialDelayMs = DEFAULT_SEND_OPTIONS.initialDelayMs,
     commitment = DEFAULT_SEND_OPTIONS.commitment,
     skipPreflight = DEFAULT_SEND_OPTIONS.skipPreflight,
-    onStatusUpdate = () => {},
+    onStatusUpdate = (status) => console.log("Transaction status:", status),
   }: SendTransactionOptions = {},
 ): Promise<string> {
   onStatusUpdate?.({ status: "created" });
@@ -208,34 +212,41 @@ export async function sendTransactionWithRetry(
   let signature: string | null = null;
   let status: SignatureStatus | null = null;
   let retries = 0;
+  // Setting a minimum to decrease spam and for the confirmation to work
+  let delayBetweenRetries = Math.max(initialDelayMs, 500);
 
   while (retries < maxRetries) {
     try {
+      const isFirstSend = signature === null;
+
       // Send transaction if not sent yet
-      if (!signature) {
-        signature = await connection.sendRawTransaction(
-          transaction.serialize(),
-          {
-            skipPreflight,
-            preflightCommitment: commitment,
-            maxRetries: 0,
-          },
-        );
+      signature = await connection.sendRawTransaction(transaction.serialize(), {
+        skipPreflight,
+        preflightCommitment: commitment,
+        maxRetries: 0,
+      });
+
+      if (isFirstSend) {
         onStatusUpdate?.({ status: "sent", signature });
       }
 
-      // Check status
-      const response = await connection.getSignatureStatus(signature);
-      if (response?.value) {
-        status = response.value;
-
-        if (
-          status.confirmationStatus === "confirmed" ||
-          status.confirmationStatus === "finalized"
-        ) {
-          onStatusUpdate?.({ status: "confirmed", result: status });
-          return signature;
+      // Poll for confirmation
+      let pollTimeout = delayBetweenRetries;
+      const timeBetweenPolls = 500;
+      while (pollTimeout > 0) {
+        await new Promise((resolve) => setTimeout(resolve, timeBetweenPolls));
+        const response = await connection.getSignatureStatus(signature);
+        if (response?.value) {
+          status = response.value;
+          if (
+            status.confirmationStatus === "confirmed" ||
+            status.confirmationStatus === "finalized"
+          ) {
+            onStatusUpdate?.({ status: "confirmed", result: status });
+            return signature;
+          }
         }
+        pollTimeout -= timeBetweenPolls;
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -246,8 +257,10 @@ export async function sendTransactionWithRetry(
     }
 
     retries++;
+
     if (retries < maxRetries) {
-      await new Promise((resolve) => setTimeout(resolve, initialDelayMs));
+      onStatusUpdate?.({ status: "retry", signature: signature ?? null });
+      delayBetweenRetries += RETRY_INTERVAL_INCREASE;
     }
   }
 
@@ -260,7 +273,7 @@ export async function sendTransactionWithRetry(
  * @param connection - The Solana connection object
  * @param tx - The transaction to prepare
  * @param payer - The public key of the transaction payer
- * @param priorityFee - Priority fee in microLamports (default: 1000)
+ * @param priorityFee - Priority fee in microLamports (default: 10000 which is the minimum required for helius to see a transaction as priority)
  * @param computeUnitBuffer - Optional buffer to add to simulated compute units
  *
  * @remarks
@@ -299,8 +312,9 @@ export async function prepareTransactionWithCompute(
   connection: Connection,
   tx: Transaction,
   payer: PublicKey,
-  priorityFee: number = 1000,
+  priorityFee: number = 10000,
   computeUnitBuffer: ComputeUnitBuffer = {},
+  commitment: Commitment = "confirmed",
 ): Promise<void> {
   tx.add(
     ComputeBudgetProgram.setComputeUnitPrice({
@@ -313,6 +327,7 @@ export async function prepareTransactionWithCompute(
     tx.instructions,
     payer,
     [],
+    commitment,
   );
 
   if (simulatedCompute === null) {
