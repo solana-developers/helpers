@@ -11,7 +11,6 @@ import {
   TransactionMessage,
   VersionedTransaction,
   Message,
-  MessageV0,
   MessageCompiledInstruction,
 } from "@solana/web3.js";
 import { getErrorFromRPCResponse } from "./logs";
@@ -22,8 +21,8 @@ import {
   EventParser,
   BorshAccountsCoder,
   BorshInstructionCoder,
-  BN,
 } from "@coral-xyz/anchor";
+import BN from "bn.js";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -703,12 +702,14 @@ export async function sendTransaction(
     });
   }
 
-  const hasComputeInstructions = transaction.instructions.some(ix => 
-    ix.programId.equals(ComputeBudgetProgram.programId)
+  const hasComputeInstructions = transaction.instructions.some((ix) =>
+    ix.programId.equals(ComputeBudgetProgram.programId),
   );
 
   if (hasComputeInstructions) {
-    console.log("Transaction already has compute instructions, skipping compute preparation"); 
+    console.log(
+      "Transaction already has compute instructions, skipping compute preparation",
+    );
     return sendTransactionWithRetry(connection, transaction, signers, {
       commitment,
       ...sendOptions,
