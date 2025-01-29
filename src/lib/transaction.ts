@@ -207,6 +207,18 @@ export async function sendTransactionWithRetry(
     transaction.sign(...signers);
   }
 
+  if (transaction.recentBlockhash === undefined) {
+    console.log("No blockhash provided. Setting recent blockhash");
+    const { blockhash } = await connection.getLatestBlockhash(commitment);
+    transaction.recentBlockhash = blockhash;
+  }
+  if (transaction.feePayer === undefined) {
+    if (signers.length === 0) {
+      throw new Error("No signers or fee payer provided");
+    }
+    transaction.feePayer = signers[0].publicKey;
+  }
+
   onStatusUpdate?.({ status: "signed" });
 
   let signature: string | null = null;
@@ -623,4 +635,73 @@ function formatData(data: any): any {
     );
   }
   return data;
+}
+
+/**
+ * Sends a transaction with compute unit optimization and automatic retries
+ *
+ * @param connection - The Solana connection object
+ * @param transaction - The transaction to send
+ * @param signers - Array of signers needed for the transaction
+ * @param priorityFee - Priority fee in microLamports
+ * @param options - Optional configuration for retry mechanism and compute units
+ * @returns Promise that resolves to the transaction signature
+ *
+ * @example
+ * ```typescript
+ * const signature = await sendTransactionWithRetryAndPriorityFees(
+ *   connection,
+ *   transaction,
+ *   [payer],
+ *   1000,
+ *   {
+ *     computeUnitBuffer: { multiplier: 1.1 },
+ *     onStatusUpdate: (status) => console.log(status),
+ *   }
+ * );
+ * ```
+ */
+export async function sendTransactionWithRetryAndPriorityFees(
+  connection: Connection,
+  transaction: Transaction,
+  signers: Keypair[],
+  priorityFee: number = 10000,
+  options: SendTransactionOptions & {
+    computeUnitBuffer?: ComputeUnitBuffer;
+  } = {},
+): Promise<string> {
+  const {
+    computeUnitBuffer: userComputeBuffer, // Rename to make clear it's user provided
+    commitment = "confirmed",
+    ...sendOptions
+  } = options;
+
+  // Use user provided buffer or default to 1.1 multiplier
+  const computeUnitBuffer = userComputeBuffer ?? { multiplier: 1.1 };
+
+  if (transaction.recentBlockhash === undefined) {
+    console.log("No blockhash provided. Setting recent blockhash");
+    const { blockhash } = await connection.getLatestBlockhash(commitment);
+    transaction.recentBlockhash = blockhash;
+  }
+  if (transaction.feePayer === undefined) {
+    if (signers.length === 0) {
+      throw new Error("No signers or fee payer provided");
+    }
+    transaction.feePayer = signers[0].publicKey;
+  }
+
+  await prepareTransactionWithCompute(
+    connection,
+    transaction,
+    transaction.feePayer,
+    priorityFee,
+    computeUnitBuffer,
+    commitment,
+  );
+
+  return sendTransactionWithRetry(connection, transaction, signers, {
+    commitment,
+    ...sendOptions,
+  });
 }

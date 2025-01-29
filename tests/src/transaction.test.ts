@@ -7,6 +7,7 @@ import {
   SystemProgram,
   TransactionInstruction,
   PublicKey,
+  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import {
   airdropIfRequired,
@@ -14,6 +15,7 @@ import {
   getSimulationComputeUnits,
   prepareTransactionWithCompute,
   sendTransactionWithRetry,
+  sendTransactionWithRetryAndPriorityFees,
 } from "../../src";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 import assert from "node:assert";
@@ -191,5 +193,53 @@ describe("Transaction utilities", () => {
         "ComputeBudget111111111111111111111111111111",
       );
     });
+  });
+
+  test("sendTransactionWithRetryAndPriorityFees should prepare and send a transaction", async () => {
+    const connection = new Connection(LOCALHOST);
+    const sender = Keypair.generate();
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      2 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+    const recipient = Keypair.generate();
+
+    const transaction = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: recipient.publicKey,
+        lamports: LAMPORTS_PER_SOL * 0.1,
+      }),
+    );
+
+    const statusUpdates: any[] = [];
+    const signature = await sendTransactionWithRetryAndPriorityFees(
+      connection,
+      transaction,
+      [sender],
+      1000,
+      {
+        computeUnitBuffer: { multiplier: 1.1 },
+        onStatusUpdate: (status) => {
+          statusUpdates.push(status);
+          console.log("status", status);
+        },
+      },
+    );
+
+    assert.ok(signature);
+    assert.deepEqual(
+      statusUpdates.map((s) => s.status),
+      ["created", "signed", "sent", "confirmed"],
+    );
+
+    // Verify compute budget instructions were added
+    assert.equal(transaction.instructions.length, 3); // transfer + 2 compute budget instructions
+    const computeInstructions = transaction.instructions.filter((ix) =>
+      ix.programId.equals(ComputeBudgetProgram.programId),
+    );
+    assert.equal(computeInstructions.length, 2);
   });
 });
