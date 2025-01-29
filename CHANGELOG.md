@@ -1,3 +1,8 @@
+## 2.7
+
+- Added `sendTransaction()` to send transactions with compute unit optimization and automatic retries.
+- Removed `sendTransactionWithRetry()` as sendTransaction() is more convenient.
+
 ## 2.6
 
 - Added Transaction send helpers. `prepareTransactionWithCompute()` and `sendTransactionWithRetry()`

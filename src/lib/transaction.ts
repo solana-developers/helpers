@@ -82,7 +82,10 @@ export const getSimulationComputeUnits = async (
 
   if (rpcResponse?.value?.err) {
     const logs = rpcResponse.value.logs?.join("\n  • ") || "No logs available";
-    throw new Error(`Transaction simulation failed:\n  •${logs}`);
+    throw new Error(
+      `Transaction simulation failed:\n  •${logs}` +
+        JSON.stringify(rpcResponse?.value?.err),
+    );
   }
 
   return rpcResponse.value.unitsConsumed || null;
@@ -188,7 +191,7 @@ export const DEFAULT_SEND_OPTIONS: Required<
  * );
  * ```
  */
-export async function sendTransactionWithRetry(
+async function sendTransactionWithRetry(
   connection: Connection,
   transaction: Transaction,
   signers: Keypair[],
@@ -643,17 +646,17 @@ function formatData(data: any): any {
  * @param connection - The Solana connection object
  * @param transaction - The transaction to send
  * @param signers - Array of signers needed for the transaction
- * @param priorityFee - Priority fee in microLamports
+ * @param priorityFee - Priority fee in microLamports (default: 10000 which is the minimum required for helius to see a transaction as priority)
  * @param options - Optional configuration for retry mechanism and compute units
  * @returns Promise that resolves to the transaction signature
  *
  * @example
  * ```typescript
- * const signature = await sendTransactionWithRetryAndPriorityFees(
+ * const signature = await sendTransaction(
  *   connection,
  *   transaction,
  *   [payer],
- *   1000,
+ *   10000,
  *   {
  *     computeUnitBuffer: { multiplier: 1.1 },
  *     onStatusUpdate: (status) => console.log(status),
@@ -661,7 +664,7 @@ function formatData(data: any): any {
  * );
  * ```
  */
-export async function sendTransactionWithRetryAndPriorityFees(
+export async function sendTransaction(
   connection: Connection,
   transaction: Transaction,
   signers: Keypair[],
@@ -691,6 +694,26 @@ export async function sendTransactionWithRetryAndPriorityFees(
     transaction.feePayer = signers[0].publicKey;
   }
 
+  // Skip compute preparation if transaction is already signed or has compute instructions
+  if (transaction.signatures.length > 0) {
+    console.log("Transaction already signed, skipping compute preparation");
+    return sendTransactionWithRetry(connection, transaction, signers, {
+      commitment,
+      ...sendOptions,
+    });
+  }
+
+  const hasComputeInstructions = transaction.instructions.some(ix => 
+    ix.programId.equals(ComputeBudgetProgram.programId)
+  );
+
+  if (hasComputeInstructions) {
+    console.log("Transaction already has compute instructions, skipping compute preparation"); 
+    return sendTransactionWithRetry(connection, transaction, signers, {
+      commitment,
+      ...sendOptions,
+    });
+  }
   await prepareTransactionWithCompute(
     connection,
     transaction,

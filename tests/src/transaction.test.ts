@@ -14,8 +14,7 @@ import {
   confirmTransaction,
   getSimulationComputeUnits,
   prepareTransactionWithCompute,
-  sendTransactionWithRetry,
-  sendTransactionWithRetryAndPriorityFees,
+  sendTransaction,
 } from "../../src";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 import assert from "node:assert";
@@ -101,7 +100,7 @@ describe("getSimulationComputeUnits", () => {
 });
 
 describe("Transaction utilities", () => {
-  test("sendTransactionWithRetry should send and confirm a transaction", async () => {
+  test("sendTransaction without priority fee should send and confirm a transaction", async () => {
     const connection = new Connection(LOCALHOST);
     const sender = Keypair.generate();
     await airdropIfRequired(
@@ -126,10 +125,11 @@ describe("Transaction utilities", () => {
     transaction.feePayer = sender.publicKey;
 
     const statusUpdates: any[] = [];
-    const signature = await sendTransactionWithRetry(
+    const signature = await sendTransaction(
       connection,
       transaction,
       [sender],
+      0,
       {
         onStatusUpdate: (status) => {
           statusUpdates.push(status);
@@ -195,7 +195,7 @@ describe("Transaction utilities", () => {
     });
   });
 
-  test("sendTransactionWithRetryAndPriorityFees should prepare and send a transaction", async () => {
+  test("sendTransaction should prepare and send a transaction and add priority fee instructions", async () => {
     const connection = new Connection(LOCALHOST);
     const sender = Keypair.generate();
     await airdropIfRequired(
@@ -215,7 +215,7 @@ describe("Transaction utilities", () => {
     );
 
     const statusUpdates: any[] = [];
-    const signature = await sendTransactionWithRetryAndPriorityFees(
+    const signature = await sendTransaction(
       connection,
       transaction,
       [sender],
