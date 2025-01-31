@@ -23,8 +23,6 @@ import {
   BorshInstructionCoder,
 } from "@coral-xyz/anchor";
 import BN from "bn.js";
-import * as fs from "fs";
-import * as path from "path";
 
 export const confirmTransaction = async (
   connection: Connection,
@@ -387,6 +385,9 @@ export async function getIdlParsedAccountData<T = any>(
   accountAddress: PublicKey,
   connection?: Connection,
 ): Promise<T> {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+
   // Load and parse IDL file
   const idlFile = fs.readFileSync(path.resolve(idlPath), "utf8");
   const idl = JSON.parse(idlFile) as Idl;
@@ -426,6 +427,9 @@ export async function parseAnchorTransactionEvents(
     data: any;
   }>
 > {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+
   const idlFile = fs.readFileSync(path.resolve(idlPath), "utf8");
   const idl = JSON.parse(idlFile) as Idl;
 
@@ -493,6 +497,9 @@ export async function decodeAnchorTransaction(
   signature: string,
   connection?: Connection,
 ): Promise<DecodedTransaction> {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+
   const idlFile = fs.readFileSync(path.resolve(idlPath), "utf8");
   const idl = JSON.parse(idlFile) as Idl;
 
