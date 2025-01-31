@@ -68,6 +68,7 @@
     "@coral-xyz/anchor": "^0.30.1"
   },
   "devDependencies": {
+    "@types/bn.js": "^5.1.6",
     "@types/node": "^20.16.1",
     "esbuild": "^0.23.1",
     "esbuild-register": "^3.6.0",

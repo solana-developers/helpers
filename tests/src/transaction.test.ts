@@ -7,13 +7,14 @@ import {
   SystemProgram,
   TransactionInstruction,
   PublicKey,
+  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import {
   airdropIfRequired,
   confirmTransaction,
   getSimulationComputeUnits,
   prepareTransactionWithCompute,
-  sendTransactionWithRetry,
+  sendTransaction,
 } from "../../src";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 import assert from "node:assert";
@@ -99,7 +100,7 @@ describe("getSimulationComputeUnits", () => {
 });
 
 describe("Transaction utilities", () => {
-  test("sendTransactionWithRetry should send and confirm a transaction", async () => {
+  test("sendTransaction without priority fee should send and confirm a transaction", async () => {
     const connection = new Connection(LOCALHOST);
     const sender = Keypair.generate();
     await airdropIfRequired(
@@ -124,10 +125,11 @@ describe("Transaction utilities", () => {
     transaction.feePayer = sender.publicKey;
 
     const statusUpdates: any[] = [];
-    const signature = await sendTransactionWithRetry(
+    const signature = await sendTransaction(
       connection,
       transaction,
       [sender],
+      0,
       {
         onStatusUpdate: (status) => {
           statusUpdates.push(status);
@@ -191,5 +193,53 @@ describe("Transaction utilities", () => {
         "ComputeBudget111111111111111111111111111111",
       );
     });
+  });
+
+  test("sendTransaction should prepare and send a transaction and add priority fee instructions", async () => {
+    const connection = new Connection(LOCALHOST);
+    const sender = Keypair.generate();
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      2 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+    const recipient = Keypair.generate();
+
+    const transaction = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: recipient.publicKey,
+        lamports: LAMPORTS_PER_SOL * 0.1,
+      }),
+    );
+
+    const statusUpdates: any[] = [];
+    const signature = await sendTransaction(
+      connection,
+      transaction,
+      [sender],
+      1000,
+      {
+        computeUnitBuffer: { multiplier: 1.1 },
+        onStatusUpdate: (status) => {
+          statusUpdates.push(status);
+          console.log("status", status);
+        },
+      },
+    );
+
+    assert.ok(signature);
+    assert.deepEqual(
+      statusUpdates.map((s) => s.status),
+      ["created", "signed", "sent", "confirmed"],
+    );
+
+    // Verify compute budget instructions were added
+    assert.equal(transaction.instructions.length, 3); // transfer + 2 compute budget instructions
+    const computeInstructions = transaction.instructions.filter((ix) =>
+      ix.programId.equals(ComputeBudgetProgram.programId),
+    );
+    assert.equal(computeInstructions.length, 2);
   });
 });

@@ -496,69 +496,61 @@ To just run tests matching the name `getCustomErrorMessage`.
 
 ### Transaction Utilities
 
-#### `sendTransactionWithRetry`
+#### `sendTransaction`
 
-Sends a transaction with automatic retries and status updates. This function implements a robust retry mechanism that:
+Sends a transaction with compute unit optimization and automatic retries. This function:
 
-1. Signs the transaction (if signers are provided)
-2. Sends the transaction only once
-3. Monitors the transaction status until confirmation
-4. Retries on failure with a fixed delay
-5. Provides detailed status updates through a callback
+1. Automatically sets compute units based on simulation
+2. Adds priority fees for faster processing
+3. Handles retries and confirmation
+4. Provides detailed status updates
 
 ```typescript
-const signature = await sendTransactionWithRetry(
+const signature = await sendTransaction(connection, transaction, [payer]);
+```
+
+The function is also customizable if you do not like the defaults:
+
+```typescript
+const signature = await sendTransaction(
   connection,
   transaction,
-  signers,
+  [payer],
+  10000, // priority fee in microLamports
   {
-    commitment: "confirmed",
+    computeUnitBuffer: { multiplier: 1.1 }, // add 10% buffer to compute units
     onStatusUpdate: (status) => console.log(status),
-    maxRetries: 30,
+    commitment: "confirmed",
+    maxRetries: 10,
     initialDelayMs: 2000,
   },
 );
 ```
 
-Best combined with `prepareTransactionWithCompute` to ensure the transaction requests the minimum compute units and sets priority fees.
+The function will:
 
-```typescript
-// This could be really nice if RPC providers would all have the same API...
-// Please fall back to the fee api of your favourite RPC provider to get a good value.
-const priorityFee = 1000;
+- Skip compute preparation if transaction is already signed
+- Skip compute preparation if transaction already has compute budget instructions
+- Add compute budget instructions if needed
+- Handle retries and confirmation automatically
+- Provide status updates: "created" → "signed" → "sent" → "confirmed"
 
-await prepareTransactionWithCompute(
-  connection,
-  tx,
-  keyPair.publicKey,
-  priorityFee
-);
+For RPC providers that support priority fees:
 
-// can either sign the transaction here, or in the sendTransactionWithRetry function
-tx.sign(keyPair);
-
-var signature = await sendTransactionWithRetry(connection, tx, [], {
-  onStatusUpdate: (status) => {
-    console.log("Transaction status:", status);
-  },
-});
-
-```
+- Helius: minimum 10000 microLamports
+- Triton: see their [priority fee API](https://docs.triton.one/chains/solana/improved-priority-fees-api)
+- Quicknode: see their [priority fee estimation](https://www.quicknode.com/docs/solana/qn_estimatePriorityFees)
 
 #### `prepareTransactionWithCompute`
 
-Prepares a transaction with compute unit calculations and limits. This function:
-
-1. Simulates the transaction to determine required compute units
-2. Adds compute budget instructions for both price and unit limit
-3. Supports buffer settings to add safety margins (This is useful when inteacting with defi for examples where the price or route may change during the transaction)
+If you need more control, you can prepare compute units separately:
 
 ```typescript
 await prepareTransactionWithCompute(
   connection,
   transaction,
   payer.publicKey,
-  1000, // priority fee in microLamports
+  10000, // priority fee
   {
     multiplier: 1.1, // add 10% buffer
     fixed: 100, // add fixed amount of CUs
@@ -566,7 +558,11 @@ await prepareTransactionWithCompute(
 );
 ```
 
-Both functions help with common transaction handling tasks in Solana, making it easier to send reliable transactions with appropriate compute unit settings.
+This will:
+
+1. Simulate the transaction to determine required compute units
+2. Add compute budget instructions for both price and unit limit
+3. Apply any specified compute unit buffers
 
 ## Anchor IDL Utilities
 
