@@ -1,6 +1,6 @@
 {
   "name": "@solana-developers/helpers",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Solana helper functions",
   "type": "module",
   "main": "./dist/esm/index.js",
