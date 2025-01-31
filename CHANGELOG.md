@@ -1,7 +1,8 @@
 ## 2.7
 
 - Added `sendTransaction()` to send transactions with compute unit optimization and automatic retries.
-- Removed `sendTransactionWithRetry()` as sendTransaction() is more convenient.
+- Removed `sendTransactionWithRetry()` as `sendTransaction()` is more convenient.
+- Fixed the node specific imports for the Anchor transaction helpers
 
 ## 2.6
 
