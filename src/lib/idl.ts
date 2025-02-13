@@ -25,10 +25,10 @@ import { formatIdl } from "./convertLegacyIdl";
  *
  * @example
  * ```typescript
- * const idl = await getIDlbyPath("./idl/program.json");
+ * const idl = await getIdlByPath("./idl/program.json");
  * ```
  */
-export async function getIDlbyPath<Idl>(idlPath: string): Promise<Idl> {
+export async function getIdlByPath<Idl>(idlPath: string): Promise<Idl> {
   const fs = await import("node:fs");
   const path = await import("node:path");
 
@@ -48,13 +48,13 @@ export async function getIDlbyPath<Idl>(idlPath: string): Promise<Idl> {
  *
  * @example
  * ```typescript
- * const idl = await getIDlByProgramId(
+ * const idl = await getIdlByProgramId(
  *   new PublicKey("Foo1111111111111111111111111111111111111"),
  *   connection
  * );
  * ```
  */
-export async function getIDlByProgramId<Idl>(
+export async function getIdlByProgramId<Idl>(
   programId: PublicKey,
   connection: Connection,
 ): Promise<Idl> {
@@ -73,7 +73,7 @@ export async function getIDlByProgramId<Idl>(
 /**
  * Fetches and parses an account's data using an Anchor IDL
  *
- * @param idl - The Anchor IDL (use getIDlByProgramId or getIDlbyPath to obtain)
+ * @param idl - The Anchor IDL (use getIdlByProgramId or getIdlByPath to obtain)
  * @param accountName - The name of the account as defined in the IDL
  * @param accountAddress - The public key of the account to fetch
  * @param connection - Optional connection object (uses default provider if not specified)
@@ -82,7 +82,7 @@ export async function getIDlByProgramId<Idl>(
  *
  * @example
  * ```typescript
- * const idl = await getIDlByProgramId(programId, connection);
+ * const idl = await getIdlByProgramId(programId, connection);
  * const data = await getIdlParsedAccountData(idl, "counter", accountAddress);
  * ```
  */
@@ -115,7 +115,7 @@ export async function getIdlParsedAccountData<T = any>(
 /**
  * Parses Anchor events from a transaction
  *
- * @param idl - The Anchor IDL (use getIDlByProgramId or getIDlbyPath to obtain)
+ * @param idl - The Anchor IDL (use getIdlByProgramId or getIdlByPath to obtain)
  * @param signature - Transaction signature to parse events from
  * @param connection - Connection object (uses default provider if not specified)
  * @param programId - Optional program ID needed for legacy IDLs
@@ -123,7 +123,7 @@ export async function getIdlParsedAccountData<T = any>(
  *
  * @example
  * ```typescript
- * const idl = await getIDlbyPath("./idl/program.json");
+ * const idl = await getIdlByPath("./idl/program.json");
  * const events = await parseAnchorTransactionEvents(idl, signature);
  * ```
  */
@@ -200,7 +200,7 @@ export type DecodedTransaction = {
 /**
  * Decodes all Anchor instructions and their involved accounts in a transaction
  *
- * @param idl - The Anchor IDL (use getIDlByProgramId or getIDlbyPath to obtain)
+ * @param idl - The Anchor IDL (use getIdlByProgramId or getIdlByPath to obtain)
  * @param signature - Transaction signature to decode
  * @param connection - Optional connection object (uses default provider if not specified)
  * @param programId - Optional program ID needed for legacy IDLs
@@ -208,7 +208,7 @@ export type DecodedTransaction = {
  *
  * @example
  * ```typescript
- * const idl = await getIDlByProgramId(programId, connection);
+ * const idl = await getIdlByProgramId(programId, connection);
  * const decoded = await decodeAnchorTransaction(idl, signature);
  * ```
  */
@@ -275,7 +275,11 @@ export async function decodeAnchorTransaction(
                   const accountType = idl.accounts?.find((acc) =>
                     accountInfo.data
                       .slice(0, 8)
-                      .equals(accountsCoder.accountDiscriminator(acc.name.toLowerCase())),
+                      .equals(
+                        accountsCoder.accountDiscriminator(
+                          acc.name.toLowerCase(),
+                        ),
+                      ),
                   );
                   if (accountType) {
                     accountData = accountsCoder.decode(

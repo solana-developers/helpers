@@ -2,7 +2,7 @@ import { describe, test } from "node:test";
 import { Connection, PublicKey } from "@solana/web3.js";
 import {
   decodeAnchorTransaction,
-  getIDlByProgramId,
+  getIdlByProgramId,
   getIdlParsedAccountData,
   parseAnchorTransactionEvents,
 } from "../../src";
@@ -15,7 +15,7 @@ const MAINNET = "https://api.mainnet-beta.solana.com";
 describe("confirmTransaction", () => {
   test("Parsing verify transaction contains two events", async () => {
     const connection = new Connection(MAINNET);
-    const idl: Idl = await getIDlByProgramId(
+    const idl: Idl = await getIdlByProgramId(
       new PublicKey("verifycLy8mB96wd9wqq3WDXQwM4oU6r42Th37Db9fC"),
       connection,
     );
@@ -36,7 +36,7 @@ describe("confirmTransaction", () => {
       "ancA4duevpt3eSgS5J7cD8oJntmfLKJDM59GhMtegES",
     );
 
-    const idl: Idl | null = await getIDlByProgramId(programId, connection);
+    const idl: Idl | null = await getIdlByProgramId(programId, connection);
     if (!idl)
       throw new Error(`IDL not found for program ${programId.toString()}`);
 
@@ -90,7 +90,7 @@ describe("confirmTransaction", () => {
       "ancA4duevpt3eSgS5J7cD8oJntmfLKJDM59GhMtegES",
     );
 
-    const idl: Idl | null = await getIDlByProgramId(programId, connection);
+    const idl: Idl | null = await getIdlByProgramId(programId, connection);
     if (!idl)
       throw new Error(`IDL not found for program ${programId.toString()}`);
 
@@ -134,7 +134,7 @@ describe("confirmTransaction", () => {
 
   test("Parsing verify account returns correct data", async () => {
     const connection = new Connection(MAINNET);
-    const idl: Idl = await getIDlByProgramId(
+    const idl: Idl = await getIdlByProgramId(
       new PublicKey("verifycLy8mB96wd9wqq3WDXQwM4oU6r42Th37Db9fC"),
       connection,
     );
@@ -172,6 +172,9 @@ describe("confirmTransaction", () => {
     );
     assert.ok(Array.isArray(buildParams.args), "Should have args array");
     assert.ok(buildParams.deploySlot, "Should have deploySlot");
-    assert.ok(typeof buildParams.bump === "number", "Should have bump of type number");
+    assert.ok(
+      typeof buildParams.bump === "number",
+      "Should have bump of type number",
+    );
   });
 });

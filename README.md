@@ -645,13 +645,13 @@ These utilities help with:
 Get an IDL from a local file:
 
 ```typescript
-const idl = await getIDlbyPath("./idl/program.json");
+const idl = await getIdlByPath("./idl/program.json");
 ```
 
 Or fetch it from the chain:
 
 ```typescript
-const idl = await getIDlByProgramId(
+const idl = await getIdlByProgramId(
   new PublicKey("verifycLy8mB96wd9wqq3WDXQwM4oU6r42Th37Db9fC"),
   connection,
 );
@@ -662,7 +662,7 @@ const idl = await getIDlByProgramId(
 Usage:
 
 ```typescript
-const idl = await getIDlByProgramId(programId, connection);
+const idl = await getIdlByProgramId(programId, connection);
 const data = await getIdlParsedAccountData(
   idl,
   "counter",
@@ -680,7 +680,7 @@ Fetches and parses an account's data using an Anchor IDL file. This is useful wh
 Usage:
 
 ```typescript
-const idl = await getIDlbyPath("./idl/program.json");
+const idl = await getIdlByPath("./idl/program.json");
 const events = await parseAnchorTransactionEvents(idl, signature, connection);
 
 // Events will be an array of:
@@ -697,7 +697,7 @@ Parses all Anchor events emitted in a transaction. This helps you track and veri
 Usage:
 
 ```typescript
-const idl = await getIDlByProgramId(programId, connection);
+const idl = await getIdlByProgramId(programId, connection);
 const decoded = await decodeAnchorTransaction(idl, signature, connection);
 
 // Print human-readable format
