@@ -1,3 +1,14 @@
+## 2.8
+
+- Added `sendVersionedTransaction()` to send a versioned transaction with lookup tables. Also adds priority fee support.
+- Added `createLookupTable()` to easily create a lookup table and extend it with additional addresses
+- Added `getIDlByProgramId()` to fetch an IDL from a program on-chain
+- Added `getIDlByIdlPath()` to parse an IDL from a local file path
+- Added `getIdlParsedAccountData()` to parse account data using an IDL
+- Added `parseAnchorTransactionEvents()` to parse anchor transaction events using an IDL
+- Added `decodeAnchorTransaction()` to decode a transaction completely using an IDL
+- Fixed account data parsing in `decodeAnchorTransaction()`
+
 ## 2.7
 
 - Added `sendTransaction()` to send transactions with compute unit optimization and automatic retries.

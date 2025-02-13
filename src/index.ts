@@ -4,4 +4,5 @@ export * from './lib/explorer';
 export * from './lib/airdrop';
 export * from './lib/token';
 export * from './lib/logs';
+export * from './lib/idl';
 export * from './types';

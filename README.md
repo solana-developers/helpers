@@ -564,15 +564,107 @@ This will:
 2. Add compute budget instructions for both price and unit limit
 3. Apply any specified compute unit buffers
 
+#### `sendVersionedTransaction`
+
+Sends a versioned transaction with compute unit optimization and automatic retries.
+
+```typescript
+async function sendVersionedTransaction(
+  connection: Connection,
+  instructions: Array<TransactionInstruction>,
+  signers: Keypair[],
+  priorityFee: number = 10000,
+  lookupTables?: Array<AddressLookupTableAccount> | [],
+  options?: SendTransactionOptions & {
+    computeUnitBuffer?: ComputeUnitBuffer;
+  },
+): Promise<string>;
+```
+
+Example:
+
+```typescript
+const signature = await sendVersionedTransaction(
+  connection,
+  instructions,
+  [payer],
+  10000,
+  lookupTables,
+  {
+    computeUnitBuffer: { multiplier: 1.1 },
+    onStatusUpdate: (status) => console.log(status),
+  },
+);
+```
+
+#### `CreateLookupTable`
+
+Creates a new address lookup table and extends it with additional addresses.
+
+```typescript
+async function CreateLookupTable(
+  connection: Connection,
+  sender: Keypair,
+  additionalAddresses: PublicKey[],
+  priorityFee: number = 10000,
+): Promise<[PublicKey, AddressLookupTableAccount]>;
+```
+
+Example:
+
+```typescript
+const [lookupTableAddress, lookupTableAccount] = await CreateLookupTable(
+  connection,
+  payer,
+  [account1.publicKey, account2.publicKey, account3.publicKey],
+);
+// Can either cache the lookup table address and lookup table account for reuse, or use them directly
+const signature = await sendVersionedTransaction(
+  connection,
+  instructions,
+  [payer],
+  10000,
+  [lookupTableAccount],
+  {
+    onStatusUpdate: (status) => console.log(status),
+  },
+);
+```
+
+These utilities help with:
+
+- Creating and sending versioned transactions
+- Managing compute units and priority fees
+- Using address lookup tables to fit more accounts in a single transaction
+- Automatic transaction retries and status updates
+
 ## Anchor IDL Utilities
 
-### Parse Account Data with IDL
+### Loading IDLs
+
+Get an IDL from a local file:
+
+```typescript
+const idl = await getIDlbyPath("./idl/program.json");
+```
+
+Or fetch it from the chain:
+
+```typescript
+const idl = await getIDlByProgramId(
+  new PublicKey("verifycLy8mB96wd9wqq3WDXQwM4oU6r42Th37Db9fC"),
+  connection,
+);
+```
+
+### Parse Account Data
 
 Usage:
 
 ```typescript
-const accountData = await getIdlParsedAccountData(
-  "./idl/program.json",
+const idl = await getIDlByProgramId(programId, connection);
+const data = await getIdlParsedAccountData(
+  idl,
   "counter",
   accountAddress,
   connection,
@@ -588,11 +680,8 @@ Fetches and parses an account's data using an Anchor IDL file. This is useful wh
 Usage:
 
 ```typescript
-const events = await parseAnchorTransactionEvents(
-  "./idl/program.json",
-  signature,
-  connection,
-);
+const idl = await getIDlbyPath("./idl/program.json");
+const events = await parseAnchorTransactionEvents(idl, signature, connection);
 
 // Events will be an array of:
 // {
@@ -608,11 +697,8 @@ Parses all Anchor events emitted in a transaction. This helps you track and veri
 Usage:
 
 ```typescript
-const decoded = await decodeAnchorTransaction(
-  "./idl/program.json",
-  signature,
-  connection,
-);
+const idl = await getIDlByProgramId(programId, connection);
+const decoded = await decodeAnchorTransaction(idl, signature, connection);
 
 // Print human-readable format
 console.log(decoded.toString());
