@@ -15,7 +15,7 @@ import {
 } from "@coral-xyz/anchor";
 import BN from "bn.js";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { convertLegacyIdl, formatIdl, LegacyIdl } from "./convertLegacyIdl";
+import { formatIdl } from "./convertLegacyIdl";
 
 /**
  * Loads an Anchor IDL from a local file path

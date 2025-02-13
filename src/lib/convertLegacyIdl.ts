@@ -20,7 +20,6 @@ import {
   IdlTypeDefTy,
 } from "@coral-xyz/anchor/dist/cjs/idl";
 import { sha256 } from "@noble/hashes/sha256";
-import { snakeCase, pascalCase } from "change-case";
 
 // Legacy types based on the Rust structs
 // Should be included in next minor release of anchor
@@ -148,7 +147,16 @@ type LegacyIdlDefinedTypeArg =
   | { value: string }
   | { type: LegacyIdlType };
 
-export function convertLegacyIdl(legacyIdl: LegacyIdl, programAddress?: string): Idl {
+// Replace static import with dynamic import function
+async function getSnakeCase(str: string): Promise<string> {
+  const { snakeCase } = await import("change-case");
+  return snakeCase(str);
+}
+
+export async function convertLegacyIdl(
+  legacyIdl: LegacyIdl,
+  programAddress?: string,
+): Promise<Idl> {
   const address: string | undefined =
     programAddress ?? legacyIdl.metadata?.address;
   if (!address) {
@@ -196,8 +204,8 @@ function traverseIdlFields(fields: IdlDefinedFields, refs: Set<string>) {
     typeof field === "string"
       ? traverseType(field, refs)
       : typeof field === "object" && "type" in field
-      ? traverseType(field.type, refs)
-      : traverseType(field, refs),
+        ? traverseType(field.type, refs)
+        : traverseType(field, refs),
   );
 }
 
@@ -258,7 +266,7 @@ function getDisc(prefix: string, name: string): number[] {
 }
 
 function convertInstruction(instruction: LegacyIdlInstruction): IdlInstruction {
-  const name = snakeCase(instruction.name);
+  const name = getSnakeCase(instruction.name);
   return {
     accounts: instruction.accounts.map(convertInstructionAccount),
     args: instruction.args.map(convertField),
@@ -304,7 +312,7 @@ function convertTypeDefTy(type: LegacyIdlTypeDefinitionTy): IdlTypeDef["type"] {
 
 function convertField(field: LegacyIdlField): IdlField {
   return {
-    name: snakeCase(field.name),
+    name: getSnakeCase(field.name),
     type: convertType(field.type),
   };
 }
@@ -362,7 +370,7 @@ function convertInstructionAccount(
   } else {
     return {
       docs: account.docs || [],
-      name: snakeCase(account.name),
+      name: getSnakeCase(account.name),
       optional: account.isOptional || false,
       pda: account.pda ? convertPda(account.pda) : undefined,
       relations: account.relations || [],
@@ -377,7 +385,7 @@ function convertInstructionAccounts(
 ): IdlInstructionAccounts {
   return {
     accounts: accounts.accounts.map(convertInstructionAccount),
-    name: snakeCase(accounts.name),
+    name: getSnakeCase(accounts.name),
   };
 }
 
@@ -409,7 +417,7 @@ function convertEventToTypeDef(event: LegacyIdlEvent): IdlTypeDef {
     name: event.name,
     type: {
       fields: event.fields.map((field) => ({
-        name: snakeCase(field.name),
+        name: getSnakeCase(field.name),
         type: convertType(field.type),
       })),
       kind: "struct",
