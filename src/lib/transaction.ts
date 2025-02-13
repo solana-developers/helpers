@@ -421,8 +421,9 @@ export async function sendTransaction(
     });
   }
 
-  const hasComputeInstructions = transaction.instructions.some((ix: TransactionInstruction) =>
-    ix.programId.equals(ComputeBudgetProgram.programId),
+  const hasComputeInstructions = transaction.instructions.some(
+    (ix: TransactionInstruction) =>
+      ix.programId.equals(ComputeBudgetProgram.programId),
   );
 
   if (hasComputeInstructions) {
@@ -765,6 +766,10 @@ export async function CreateLookupTable(
       commitment: "confirmed",
     })
   ).value;
+
+  if (!lookupTableAccount) {
+    throw new Error("Failed to get lookup table account");
+  }
 
   return [lookupTableAddress, lookupTableAccount];
 }
