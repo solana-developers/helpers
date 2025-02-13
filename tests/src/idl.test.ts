@@ -1,6 +1,7 @@
 import { describe, test } from "node:test";
 import { Connection, PublicKey } from "@solana/web3.js";
 import {
+  createProviderForConnection,
   decodeAnchorTransaction,
   getIdlByProgramId,
   getIdlParsedAccountData,
@@ -15,15 +16,16 @@ const MAINNET = "https://api.mainnet-beta.solana.com";
 describe("confirmTransaction", () => {
   test("Parsing verify transaction contains two events", async () => {
     const connection = new Connection(MAINNET);
+    const provider = createProviderForConnection(connection);
     const idl: Idl = await getIdlByProgramId(
       new PublicKey("verifycLy8mB96wd9wqq3WDXQwM4oU6r42Th37Db9fC"),
-      connection,
+      provider,
     );
 
     var events = await parseAnchorTransactionEvents(
       idl,
       "51f5WEqS7VSaeyg1o7qSY4oVqbuzxm4tCe7woSBKdSgxqkp9h1ebJLV5nKhaLHYohkSaV4Kaccs1ye8CexhBhgG6",
-      connection,
+      provider,
     );
     console.log("Events", JSON.stringify(events, null, 2));
     assert.equal(events.length, 1, "Should have two events");
@@ -32,18 +34,19 @@ describe("confirmTransaction", () => {
 
   test("Decoding transaction returns correct data", async () => {
     const connection = new Connection(DEVNET);
+    const provider = createProviderForConnection(connection);
     const programId = new PublicKey(
       "ancA4duevpt3eSgS5J7cD8oJntmfLKJDM59GhMtegES",
     );
 
-    const idl: Idl | null = await getIdlByProgramId(programId, connection);
+    const idl: Idl | null = await getIdlByProgramId(programId, provider);
     if (!idl)
       throw new Error(`IDL not found for program ${programId.toString()}`);
 
     var counterTransaction = await decodeAnchorTransaction(
       idl,
       "56nR9azAzpwTCNSJ5Qtnwz9DExogNav7uXQDKBpQ8oRcadYakngrT3QRp7ZLFSuiQxjbbFX6NCiQ2aSaPEugxiLf",
-      connection,
+      provider,
       programId,
     );
     console.log(
@@ -86,18 +89,19 @@ describe("confirmTransaction", () => {
 
   test("Decode versioned transaction", async () => {
     const connection = new Connection(DEVNET);
+    const provider = createProviderForConnection(connection);
     const programId = new PublicKey(
       "ancA4duevpt3eSgS5J7cD8oJntmfLKJDM59GhMtegES",
     );
 
-    const idl: Idl | null = await getIdlByProgramId(programId, connection);
+    const idl: Idl | null = await getIdlByProgramId(programId, provider);
     if (!idl)
       throw new Error(`IDL not found for program ${programId.toString()}`);
 
     var versionedTransactionDecoded = await decodeAnchorTransaction(
       idl,
       "4sh5VrmTpiQjNaaNgHiDtd6QCnEjQHKS5tcq4nobUoWnFeAEQVLUTqdTbVJYCbHNPHDPSjxiUeK7qXsQwFSTrSmg",
-      connection,
+      provider,
       programId,
     );
     console.log(
@@ -134,16 +138,17 @@ describe("confirmTransaction", () => {
 
   test("Parsing verify account returns correct data", async () => {
     const connection = new Connection(MAINNET);
+    const provider = createProviderForConnection(connection);
     const idl: Idl = await getIdlByProgramId(
       new PublicKey("verifycLy8mB96wd9wqq3WDXQwM4oU6r42Th37Db9fC"),
-      connection,
+      provider,
     );
 
     var accountData = await getIdlParsedAccountData(
       idl,
       "buildParams",
       new PublicKey("NRBNcTmfRkZWCLwnd6ygiz8CYerneu6m5Hcchx8RbFD"),
-      connection,
+      provider,
     );
     console.log("Account data", JSON.stringify(accountData, null, 2));
 

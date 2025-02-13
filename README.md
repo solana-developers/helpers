@@ -541,29 +541,6 @@ For RPC providers that support priority fees:
 - Triton: see their [priority fee API](https://docs.triton.one/chains/solana/improved-priority-fees-api)
 - Quicknode: see their [priority fee estimation](https://www.quicknode.com/docs/solana/qn_estimatePriorityFees)
 
-#### `prepareTransactionWithCompute`
-
-If you need more control, you can prepare compute units separately:
-
-```typescript
-await prepareTransactionWithCompute(
-  connection,
-  transaction,
-  payer.publicKey,
-  10000, // priority fee
-  {
-    multiplier: 1.1, // add 10% buffer
-    fixed: 100, // add fixed amount of CUs
-  },
-);
-```
-
-This will:
-
-1. Simulate the transaction to determine required compute units
-2. Add compute budget instructions for both price and unit limit
-3. Apply any specified compute unit buffers
-
 #### `sendVersionedTransaction`
 
 Sends a versioned transaction with compute unit optimization and automatic retries.

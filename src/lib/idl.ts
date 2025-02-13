@@ -4,6 +4,7 @@ import {
   MessageCompiledInstruction,
   Keypair,
   Message,
+  ConfirmOptions,
 } from "@solana/web3.js";
 import {
   Program,
@@ -42,7 +43,7 @@ export async function getIdlByPath<Idl>(idlPath: string): Promise<Idl> {
  * Fetches an Anchor IDL from a program on-chain
  *
  * @param programId - Public key of the program
- * @param connection - Solana connection object
+ * @param provider - Anchor Provider instance (you can use createProviderForConnection to create)
  * @returns The fetched IDL
  * @throws If IDL cannot be found for the program
  *
@@ -56,13 +57,8 @@ export async function getIdlByPath<Idl>(idlPath: string): Promise<Idl> {
  */
 export async function getIdlByProgramId<Idl>(
   programId: PublicKey,
-  connection: Connection,
+  provider: AnchorProvider,
 ): Promise<Idl> {
-  let wallet = new NodeWallet(new Keypair());
-  const provider = new AnchorProvider(connection, wallet, {
-    commitment: "confirmed",
-  });
-
   var idl = await Program.fetchIdl(programId, provider);
   if (!idl)
     throw new Error(`IDL not found for program ${programId.toString()}`);
@@ -71,12 +67,35 @@ export async function getIdlByProgramId<Idl>(
 }
 
 /**
+ * Creates an Anchor provider for a given connection
+ *
+ * @param connection - The Solana connection object
+ * @param keypair - Optional keypair to use for the provider (defaults to a new random keypair)
+ * @param options - Optional configuration options for the provider
+ * @returns An Anchor provider instance
+ *
+ * @example
+ * ```typescript
+ * const provider = createProviderForConnection(connection);
+ * ```
+ */
+export function createProviderForConnection(
+  connection: Connection,
+  keypair: Keypair = new Keypair(),
+  options: ConfirmOptions = {
+    commitment: "confirmed",
+  },
+): AnchorProvider {
+  return new AnchorProvider(connection, new NodeWallet(keypair), options);
+}
+
+/**
  * Fetches and parses an account's data using an Anchor IDL
  *
  * @param idl - The Anchor IDL (use getIdlByProgramId or getIdlByPath to obtain)
  * @param accountName - The name of the account as defined in the IDL
  * @param accountAddress - The public key of the account to fetch
- * @param connection - Optional connection object (uses default provider if not specified)
+ * @param provider - Anchor Provider instance (you can use createProviderForConnection to create)
  * @param programId - Optional program ID needed for legacy IDLs
  * @returns The decoded account data
  *
@@ -90,17 +109,9 @@ export async function getIdlParsedAccountData<T = any>(
   idl: Idl,
   accountName: string,
   accountAddress: PublicKey,
-  connection: Connection,
+  provider: AnchorProvider,
   programId?: PublicKey,
 ): Promise<T> {
-  // Get or create provider
-  let wallet = new NodeWallet(new Keypair());
-
-  const provider = new AnchorProvider(connection, wallet, {
-    commitment: "confirmed",
-  });
-
-  // Create program
   const program = new Program(formatIdl(idl, programId?.toString()), provider);
 
   const accountInfo = await provider.connection.getAccountInfo(accountAddress);
@@ -117,7 +128,7 @@ export async function getIdlParsedAccountData<T = any>(
  *
  * @param idl - The Anchor IDL (use getIdlByProgramId or getIdlByPath to obtain)
  * @param signature - Transaction signature to parse events from
- * @param connection - Connection object (uses default provider if not specified)
+ * @param provider - Anchor Provider instance (you can use createProviderForConnection to create)
  * @param programId - Optional program ID needed for legacy IDLs
  * @returns Array of parsed events with their name and data
  *
@@ -130,7 +141,7 @@ export async function getIdlParsedAccountData<T = any>(
 export async function parseAnchorTransactionEvents(
   idl: Idl,
   signature: string,
-  connection: Connection,
+  provider: AnchorProvider,
   programId?: PublicKey,
 ): Promise<
   Array<{
@@ -138,12 +149,6 @@ export async function parseAnchorTransactionEvents(
     data: any;
   }>
 > {
-  let wallet = new NodeWallet(new Keypair());
-
-  const provider = new AnchorProvider(connection, wallet, {
-    commitment: "confirmed",
-  });
-
   const program = new Program(formatIdl(idl, programId?.toString()), provider);
   const parser = new EventParser(program.programId, program.coder);
 
@@ -215,13 +220,9 @@ export type DecodedTransaction = {
 export async function decodeAnchorTransaction(
   idl: Idl,
   signature: string,
-  connection: Connection,
+  provider: AnchorProvider,
   programId?: PublicKey,
 ): Promise<DecodedTransaction> {
-  let wallet = new NodeWallet(new Keypair());
-  const provider = new AnchorProvider(connection, wallet, {
-    commitment: "confirmed",
-  });
   const program = new Program(formatIdl(idl, programId?.toString()), provider);
   const accountsCoder = new BorshAccountsCoder(program.idl);
   const instructionCoder = new BorshInstructionCoder(program.idl);
