@@ -327,6 +327,33 @@ const units = await getSimulationComputeUnits(
 
 You can then use `ComputeBudgetProgram.setComputeUnitLimit({ units })` as the first instruction in your transaction. See [How to Request Optimal Compute Budget](https://solana.com/developers/guides/advanced/how-to-request-optimal-compute) for more information on compute units.
 
+### `addComputeInstructions`
+
+Adds compute unit instructions for a transaction if they don't already exist:
+
+```typescript
+const updatedInstructions = await addComputeInstructions(
+  connection,
+  instructions,
+  lookupTables,
+  payer.publicKey,
+  10000, // priority fee default 10000 microLamports
+  { multiplier: 1.1 }, // compute unit buffer default adds 10%
+);
+
+// Returns instructions array with:
+// 1. setComputeUnitPrice instruction (if not present)
+// 2. setComputeUnitLimit instruction based on simulation (if not present)
+// The limit is calculated by simulating the transaction and adding the specified buffer
+```
+
+This function:
+
+1. Adds priority fee instruction if not present
+2. Simulates transaction to determine required compute units
+3. Adds compute unit limit instruction with buffer
+4. Returns the updated instructions array
+
 ## node.js specific helpers
 
 ### Get a keypair from a keypair file

@@ -353,7 +353,7 @@ export async function sendVersionedTransaction(
 }
 
 /**
- * Adds compute unit price and limit instructions to the transaction
+ * Adds compute unit price and limit instructions and returns the updated instructions
  *
  * @param connection - The Solana connection object
  * @param instructions - Array of instructions to which compute unit instructions will be added
