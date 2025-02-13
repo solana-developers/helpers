@@ -147,16 +147,18 @@ type LegacyIdlDefinedTypeArg =
   | { value: string }
   | { type: LegacyIdlType };
 
-// Replace static import with dynamic import function
-async function getSnakeCase(str: string): Promise<string> {
-  const { snakeCase } = await import("change-case");
-  return snakeCase(str);
+// Remove the dynamic import
+function getSnakeCase(str: string): string {
+  return str
+    .replace(/([A-Z])/g, "_$1")
+    .toLowerCase()
+    .replace(/^_/, "");
 }
 
-export async function convertLegacyIdl(
+export function convertLegacyIdl(
   legacyIdl: LegacyIdl,
   programAddress?: string,
-): Promise<Idl> {
+): Idl {
   const address: string | undefined =
     programAddress ?? legacyIdl.metadata?.address;
   if (!address) {
@@ -181,7 +183,7 @@ export async function convertLegacyIdl(
   };
 }
 
-function traverseType(type: IdlType, refs: Set<string>) {
+function traverseType(type: IdlType | string, refs: Set<string>) {
   if (typeof type === "string") {
     // skip
   } else if ("vec" in type) {
@@ -200,12 +202,12 @@ function traverseType(type: IdlType, refs: Set<string>) {
 }
 
 function traverseIdlFields(fields: IdlDefinedFields, refs: Set<string>) {
-  fields.forEach((field) =>
+  fields.forEach((field: IdlField | IdlType | string) =>
     typeof field === "string"
       ? traverseType(field, refs)
       : typeof field === "object" && "type" in field
-        ? traverseType(field.type, refs)
-        : traverseType(field, refs),
+      ? traverseType(field.type, refs)
+      : traverseType(field, refs),
   );
 }
 
@@ -215,7 +217,7 @@ function traverseTypeDef(type: IdlTypeDefTy, refs: Set<string>) {
       traverseIdlFields(type.fields ?? [], refs);
       return;
     case "enum":
-      type.variants.forEach((variant) =>
+      type.variants.forEach((variant: any) =>
         traverseIdlFields(variant.fields ?? [], refs),
       );
       return;
@@ -227,12 +229,12 @@ function traverseTypeDef(type: IdlTypeDefTy, refs: Set<string>) {
 
 function getTypeReferences(idl: Idl): Set<string> {
   const refs = new Set<string>();
-  idl.constants?.forEach((constant) => traverseType(constant.type, refs));
-  idl.accounts?.forEach((account) => refs.add(account.name));
-  idl.instructions?.forEach((instruction) =>
-    instruction.args.forEach((arg) => traverseType(arg.type, refs)),
+  idl.constants?.forEach((constant: any) => traverseType(constant.type, refs));
+  idl.accounts?.forEach((account: any) => refs.add(account.name));
+  idl.instructions?.forEach((instruction: any) =>
+    instruction.args.forEach((arg: any) => traverseType(arg.type, refs)),
   );
-  idl.events?.forEach((event) => refs.add(event.name));
+  idl.events?.forEach((event: any) => refs.add(event.name));
 
   // Build up recursive type references in breadth-first manner.
   // Very inefficient since we traverse same types multiple times.
@@ -256,7 +258,9 @@ function removeUnusedTypes(idl: Idl): Idl {
   const usedElsewhere = getTypeReferences(idl);
   return {
     ...idl,
-    types: (idl.types ?? []).filter((type) => usedElsewhere.has(type.name)),
+    types: (idl.types ?? []).filter((type: any) =>
+      usedElsewhere.has(type.name),
+    ),
   };
 }
 
