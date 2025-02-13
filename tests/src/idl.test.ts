@@ -13,7 +13,7 @@ const DEVNET = "https://api.devnet.solana.com";
 const MAINNET = "https://api.mainnet-beta.solana.com";
 
 describe("confirmTransaction", () => {
-  test("Parsing verify transaction containts two events", async () => {
+  test("Parsing verify transaction contains two events", async () => {
     const connection = new Connection(MAINNET);
     const idl: Idl = await getIDlByProgramId(
       new PublicKey("verifycLy8mB96wd9wqq3WDXQwM4oU6r42Th37Db9fC"),
@@ -40,7 +40,7 @@ describe("confirmTransaction", () => {
     if (!idl)
       throw new Error(`IDL not found for program ${programId.toString()}`);
 
-    var counterTranscation = await decodeAnchorTransaction(
+    var counterTransaction = await decodeAnchorTransaction(
       idl,
       "56nR9azAzpwTCNSJ5Qtnwz9DExogNav7uXQDKBpQ8oRcadYakngrT3QRp7ZLFSuiQxjbbFX6NCiQ2aSaPEugxiLf",
       connection,
@@ -48,17 +48,17 @@ describe("confirmTransaction", () => {
     );
     console.log(
       "Counter increase transaction",
-      JSON.stringify(counterTranscation, null, 2),
+      JSON.stringify(counterTransaction, null, 2),
     );
 
     // Assert transaction structure
     assert.equal(
-      counterTranscation.instructions.length,
+      counterTransaction.instructions.length,
       1,
       "Should have one instruction",
     );
 
-    const instruction = counterTranscation.instructions[0];
+    const instruction = counterTransaction.instructions[0];
     assert.equal(
       instruction.name,
       "increment",

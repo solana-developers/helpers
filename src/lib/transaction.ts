@@ -229,7 +229,7 @@ async function sendTransactionWithRetry(
       });
 
       if (isFirstSend) {
-        onStatusUpdate?.({ status: "sent", signature });
+        onStatusUpdate?.({ status: "sent", signature: signature ?? "" });
       }
 
       // Poll for confirmation
@@ -245,7 +245,7 @@ async function sendTransactionWithRetry(
             status.confirmationStatus === "finalized"
           ) {
             onStatusUpdate?.({ status: "confirmed", result: status });
-            return signature;
+            return signature ?? "";
           }
         }
         pollTimeout -= timeBetweenPolls;
@@ -421,7 +421,7 @@ export async function sendTransaction(
     });
   }
 
-  const hasComputeInstructions = transaction.instructions.some((ix) =>
+  const hasComputeInstructions = transaction.instructions.some((ix: TransactionInstruction) =>
     ix.programId.equals(ComputeBudgetProgram.programId),
   );
 
@@ -494,7 +494,7 @@ export async function sendVersionedTransaction(
   instructions: Array<TransactionInstruction>,
   signers: Keypair[],
   priorityFee: number = 10000,
-  lookupTables?: Array<AddressLookupTableAccount> | [],
+  lookupTables?: Array<AddressLookupTableAccount>,
   options: SendTransactionOptions & {
     computeUnitBuffer?: ComputeUnitBuffer;
   } = {},
@@ -514,7 +514,7 @@ export async function sendVersionedTransaction(
     instructions = await addComputeInstructions(
       connection,
       instructions,
-      lookupTables,
+      lookupTables ?? [],
       signers[0].publicKey,
       priorityFee,
       computeUnitBuffer,
@@ -555,7 +555,7 @@ export async function sendVersionedTransaction(
 async function addComputeInstructions(
   connection: Connection,
   instructions: Array<TransactionInstruction>,
-  lookupTables: Array<AddressLookupTableAccount> | [],
+  lookupTables: Array<AddressLookupTableAccount>,
   payer: PublicKey,
   priorityFee: number = 10000,
   computeUnitBuffer: ComputeUnitBuffer = {},
@@ -669,7 +669,7 @@ async function sendVersionedTransactionWithRetry(
       });
 
       if (isFirstSend) {
-        onStatusUpdate?.({ status: "sent", signature });
+        onStatusUpdate?.({ status: "sent", signature: signature ?? "" });
       }
 
       // Poll for confirmation
@@ -685,7 +685,7 @@ async function sendVersionedTransactionWithRetry(
             status.confirmationStatus === "finalized"
           ) {
             onStatusUpdate?.({ status: "confirmed", result: status });
-            return signature;
+            return signature ?? "";
           }
         }
         pollTimeout -= timeBetweenPolls;
