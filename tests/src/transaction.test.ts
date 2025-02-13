@@ -13,7 +13,7 @@ import {
 import {
   airdropIfRequired,
   confirmTransaction,
-  CreateLookupTable,
+  createLookupTable,
   getSimulationComputeUnits,
   prepareTransactionWithCompute,
   sendTransaction,
@@ -248,14 +248,14 @@ describe("Transaction utilities", () => {
     const recipient2 = Keypair.generate();
     const recipient3 = Keypair.generate();
 
-    const [lookupTableAddress, lookupTableAccount] = await CreateLookupTable(
+    const [lookupTableAddress, lookupTableAccount] = await createLookupTable(
       connection,
       sender,
       [
         sender.publicKey,
         recipient.publicKey,
         recipient2.publicKey,
-        recipient3.publicKey
+        recipient3.publicKey,
       ],
     );
 

@@ -597,12 +597,12 @@ const signature = await sendVersionedTransaction(
 );
 ```
 
-#### `CreateLookupTable`
+#### `createLookupTable`
 
 Creates a new address lookup table and extends it with additional addresses.
 
 ```typescript
-async function CreateLookupTable(
+async function createLookupTable(
   connection: Connection,
   sender: Keypair,
   additionalAddresses: PublicKey[],
@@ -613,7 +613,7 @@ async function CreateLookupTable(
 Example:
 
 ```typescript
-const [lookupTableAddress, lookupTableAccount] = await CreateLookupTable(
+const [lookupTableAddress, lookupTableAccount] = await createLookupTable(
   connection,
   payer,
   [account1.publicKey, account2.publicKey, account3.publicKey],

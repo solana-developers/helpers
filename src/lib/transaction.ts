@@ -725,7 +725,7 @@ async function sendVersionedTransactionWithRetry(
  * @param additionalAddresses - Array of additional addresses to include in the lookup table
  * @returns A tuple containing the lookup table address and the lookup table account
  */
-export async function CreateLookupTable(
+export async function createLookupTable(
   connection: Connection,
   sender: Keypair,
   additionalAddresses: PublicKey[],
