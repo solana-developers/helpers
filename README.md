@@ -2,6 +2,9 @@
 
 The `helpers` package contains Solana helper functions, for use in the browser and/or node.js, [made by the Solana Foundation Developer Ecosystem team](https://youtu.be/zvQIa68ObK8?t=319) and our friends at [Anza](https://anza.xyz), [Turbin3](https://turbin3.com/), [Unboxed Software](https://beunboxed.com/), and [StarAtlas](https://staratlas.com/).
 
+> [!IMPORTANT]  
+> `@solana/helpers` is for Solana web3.js version 1. An updated version of `@solana/helpers` for Solana web3.js version 2 is at https://github.com/helius-labs/kite.
+
 ## What can I do with this module?
 
 Account & Keypair Management:
