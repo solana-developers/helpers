@@ -8,13 +8,16 @@ import {
   TransactionInstruction,
   PublicKey,
   ComputeBudgetProgram,
+  AddressLookupTableProgram,
 } from "@solana/web3.js";
 import {
+  addComputeInstructions,
   airdropIfRequired,
   confirmTransaction,
+  createLookupTable,
   getSimulationComputeUnits,
-  prepareTransactionWithCompute,
   sendTransaction,
+  sendVersionedTransaction,
 } from "../../src";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 import assert from "node:assert";
@@ -35,7 +38,6 @@ describe("confirmTransaction", () => {
       lamportsToAirdrop,
       1 * LAMPORTS_PER_SOL,
     );
-
     const signature = await sendAndConfirmTransaction(
       connection,
       new Transaction().add(
@@ -47,7 +49,6 @@ describe("confirmTransaction", () => {
       ),
       [sender],
     );
-
     await confirmTransaction(connection, signature);
   });
 });
@@ -63,36 +64,30 @@ describe("getSimulationComputeUnits", () => {
       1 * LAMPORTS_PER_SOL,
     );
     const recipient = Keypair.generate().publicKey;
-
     const sendSol = SystemProgram.transfer({
       fromPubkey: sender.publicKey,
       toPubkey: recipient,
       lamports: 1_000_000,
     });
-
     const sayThanks = new TransactionInstruction({
       keys: [],
       programId: MEMO_PROGRAM_ID,
       data: Buffer.from("thanks"),
     });
-
     const computeUnitsSendSol = await getSimulationComputeUnits(
       connection,
       [sendSol],
       sender.publicKey,
       [],
     );
-
     // TODO: it would be useful to have a breakdown of exactly how 300 CUs is calculated
     assert.equal(computeUnitsSendSol, 300);
-
     const computeUnitsSendSolAndSayThanks = await getSimulationComputeUnits(
       connection,
       [sendSol, sayThanks],
       sender.publicKey,
       [],
     );
-
     // TODO: it would be useful to have a breakdown of exactly how 3888 CUs is calculated
     // also worth reviewing why memo program seems to use so many CUs.
     assert.equal(computeUnitsSendSolAndSayThanks, 3888);
@@ -172,9 +167,10 @@ describe("Transaction utilities", () => {
 
     const initialInstructionCount = transaction.instructions.length;
 
-    await prepareTransactionWithCompute(
+    transaction.instructions = await addComputeInstructions(
       connection,
-      transaction,
+      transaction.instructions,
+      [],
       sender.publicKey,
       1000,
       { multiplier: 1.1 },
@@ -193,6 +189,156 @@ describe("Transaction utilities", () => {
         "ComputeBudget111111111111111111111111111111",
       );
     });
+  });
+
+  test("send versioned transaction", async () => {
+    const connection = new Connection(LOCALHOST);
+    const sender = Keypair.generate();
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      2 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+    const recipient = Keypair.generate();
+
+    const instructions = [
+      SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: recipient.publicKey,
+        lamports: LAMPORTS_PER_SOL * 0.1,
+      }),
+    ];
+
+    const statusUpdates: any[] = [];
+    const signature = await sendVersionedTransaction(
+      connection,
+      instructions,
+      [sender],
+      1000,
+      [],
+      {
+        computeUnitBuffer: { multiplier: 1.1 },
+        onStatusUpdate: (status) => {
+          statusUpdates.push(status);
+          console.log("status", status);
+        },
+      },
+    );
+
+    assert.ok(signature);
+    assert.deepEqual(
+      statusUpdates.map((s) => s.status),
+      ["created", "signed", "sent", "confirmed"],
+    );
+
+    console.log("Versioned transaction signature", signature);
+  });
+
+  test("send versioned transaction with already setComputeLimit instructions", async () => {
+    const connection = new Connection(LOCALHOST);
+    const sender = Keypair.generate();
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      2 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+    const recipient = Keypair.generate();
+
+    const instructions = [
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: 10000,
+      }),
+      SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: recipient.publicKey,
+        lamports: LAMPORTS_PER_SOL * 0.1,
+      }),
+    ];
+
+    const statusUpdates: any[] = [];
+    const signature = await sendVersionedTransaction(
+      connection,
+      instructions,
+      [sender],
+      1000,
+      [],
+      {
+        computeUnitBuffer: { multiplier: 1.1 },
+        onStatusUpdate: (status) => {
+          statusUpdates.push(status);
+          console.log("status", status);
+        },
+      },
+    );
+
+    assert.ok(signature);
+    assert.deepEqual(
+      statusUpdates.map((s) => s.status),
+      ["created", "signed", "sent", "confirmed"],
+    );
+
+    console.log("Versioned transaction signature", signature);
+  });
+
+  test("send versioned transaction with lookup table", async () => {
+    const connection = new Connection(LOCALHOST);
+    const sender = Keypair.generate();
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      2 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+
+    const recipient = Keypair.generate();
+    const recipient2 = Keypair.generate();
+    const recipient3 = Keypair.generate();
+
+    const [lookupTableAddress, lookupTableAccount] = await createLookupTable(
+      connection,
+      sender,
+      [
+        sender.publicKey,
+        recipient.publicKey,
+        recipient2.publicKey,
+        recipient3.publicKey,
+      ],
+    );
+
+    const instructions = [
+      SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: recipient.publicKey,
+        lamports: LAMPORTS_PER_SOL * 0.1,
+      }),
+      SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: recipient2.publicKey,
+        lamports: LAMPORTS_PER_SOL * 0.1,
+      }),
+      SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: recipient3.publicKey,
+        lamports: LAMPORTS_PER_SOL * 0.1,
+      }),
+    ];
+
+    const signature = await sendVersionedTransaction(
+      connection,
+      instructions,
+      [sender],
+      10000,
+      [lookupTableAccount],
+    );
+
+    assert.ok(signature);
+
+    console.log(
+      "Versioned transaction with lookup tables signature",
+      signature,
+    );
   });
 
   test("sendTransaction should prepare and send a transaction and add priority fee instructions", async () => {
@@ -219,7 +365,7 @@ describe("Transaction utilities", () => {
       connection,
       transaction,
       [sender],
-      1000,
+      10000,
       {
         computeUnitBuffer: { multiplier: 1.1 },
         onStatusUpdate: (status) => {
@@ -242,4 +388,108 @@ describe("Transaction utilities", () => {
     );
     assert.equal(computeInstructions.length, 2);
   });
+
+  test("sendTransaction still works when there is already a setComputeUnitPrice instruction", async () => {
+    const connection = new Connection(LOCALHOST);
+    const sender = Keypair.generate();
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      2 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+    const recipient = Keypair.generate();
+
+    const transaction = new Transaction().add(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 1000000,
+      }),
+      SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: recipient.publicKey,
+        lamports: LAMPORTS_PER_SOL * 0.1,
+      }),
+    );
+
+    const statusUpdates: any[] = [];
+    const signature = await sendTransaction(
+      connection,
+      transaction,
+      [sender],
+      10000,
+      {
+        computeUnitBuffer: { multiplier: 1.1 },
+        onStatusUpdate: (status) => {
+          statusUpdates.push(status);
+          console.log("status", status);
+        },
+      },
+    );
+
+    assert.ok(signature);
+    assert.deepEqual(
+      statusUpdates.map((s) => s.status),
+      ["created", "signed", "sent", "confirmed"],
+    );
+
+    // Verify compute budget instructions were added
+    assert.equal(transaction.instructions.length, 3); // transfer + 2 compute budget instructions
+    const computeInstructions = transaction.instructions.filter((ix) =>
+      ix.programId.equals(ComputeBudgetProgram.programId),
+    );
+    assert.equal(computeInstructions.length, 2);
+  });
+
+  test("sendTransaction still works when there is already a setComputeUnitLimit instruction", async () => {
+    const connection = new Connection(LOCALHOST);
+    const sender = Keypair.generate();
+    await airdropIfRequired(
+      connection,
+      sender.publicKey,
+      2 * LAMPORTS_PER_SOL,
+      1 * LAMPORTS_PER_SOL,
+    );
+    const recipient = Keypair.generate();
+
+    const transaction = new Transaction().add(
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: 10000,
+      }),
+      SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: recipient.publicKey,
+        lamports: LAMPORTS_PER_SOL * 0.1,
+      }),
+    );
+
+    const statusUpdates: any[] = [];
+    const signature = await sendTransaction(
+      connection,
+      transaction,
+      [sender],
+      10000,
+      {
+        computeUnitBuffer: { multiplier: 1.1 },
+        onStatusUpdate: (status) => {
+          statusUpdates.push(status);
+          console.log("status", status);
+        },
+      },
+    );
+
+    assert.ok(signature);
+    assert.deepEqual(
+      statusUpdates.map((s) => s.status),
+      ["created", "signed", "sent", "confirmed"],
+    );
+
+    // Verify compute budget instructions were added
+    assert.equal(transaction.instructions.length, 3); // transfer + 2 compute budget instructions
+    const computeInstructions = transaction.instructions.filter((ix) =>
+      ix.programId.equals(ComputeBudgetProgram.programId),
+    );
+    assert.equal(computeInstructions.length, 2);
+  });
+
+  
 });

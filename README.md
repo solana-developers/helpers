@@ -327,6 +327,33 @@ const units = await getSimulationComputeUnits(
 
 You can then use `ComputeBudgetProgram.setComputeUnitLimit({ units })` as the first instruction in your transaction. See [How to Request Optimal Compute Budget](https://solana.com/developers/guides/advanced/how-to-request-optimal-compute) for more information on compute units.
 
+### `addComputeInstructions`
+
+Adds compute unit instructions for a transaction if they don't already exist:
+
+```typescript
+const updatedInstructions = await addComputeInstructions(
+  connection,
+  instructions,
+  lookupTables,
+  payer.publicKey,
+  10000, // priority fee default 10000 microLamports
+  { multiplier: 1.1 }, // compute unit buffer default adds 10%
+);
+
+// Returns instructions array with:
+// 1. setComputeUnitPrice instruction (if not present)
+// 2. setComputeUnitLimit instruction based on simulation (if not present)
+// The limit is calculated by simulating the transaction and adding the specified buffer
+```
+
+This function:
+
+1. Adds priority fee instruction if not present
+2. Simulates transaction to determine required compute units
+3. Adds compute unit limit instruction with buffer
+4. Returns the updated instructions array
+
 ## node.js specific helpers
 
 ### Get a keypair from a keypair file
@@ -541,38 +568,107 @@ For RPC providers that support priority fees:
 - Triton: see their [priority fee API](https://docs.triton.one/chains/solana/improved-priority-fees-api)
 - Quicknode: see their [priority fee estimation](https://www.quicknode.com/docs/solana/qn_estimatePriorityFees)
 
-#### `prepareTransactionWithCompute`
+#### `sendVersionedTransaction`
 
-If you need more control, you can prepare compute units separately:
+Sends a versioned transaction with compute unit optimization and automatic retries.
 
 ```typescript
-await prepareTransactionWithCompute(
+async function sendVersionedTransaction(
+  connection: Connection,
+  instructions: Array<TransactionInstruction>,
+  signers: Keypair[],
+  priorityFee: number = 10000,
+  lookupTables?: Array<AddressLookupTableAccount> | [],
+  options?: SendTransactionOptions & {
+    computeUnitBuffer?: ComputeUnitBuffer;
+  },
+): Promise<string>;
+```
+
+Example:
+
+```typescript
+const signature = await sendVersionedTransaction(
   connection,
-  transaction,
-  payer.publicKey,
-  10000, // priority fee
+  instructions,
+  [payer],
+  10000,
+  lookupTables,
   {
-    multiplier: 1.1, // add 10% buffer
-    fixed: 100, // add fixed amount of CUs
+    computeUnitBuffer: { multiplier: 1.1 },
+    onStatusUpdate: (status) => console.log(status),
   },
 );
 ```
 
-This will:
+#### `createLookupTable`
 
-1. Simulate the transaction to determine required compute units
-2. Add compute budget instructions for both price and unit limit
-3. Apply any specified compute unit buffers
+Creates a new address lookup table and extends it with additional addresses.
+
+```typescript
+async function createLookupTable(
+  connection: Connection,
+  sender: Keypair,
+  additionalAddresses: PublicKey[],
+  priorityFee: number = 10000,
+): Promise<[PublicKey, AddressLookupTableAccount]>;
+```
+
+Example:
+
+```typescript
+const [lookupTableAddress, lookupTableAccount] = await createLookupTable(
+  connection,
+  payer,
+  [account1.publicKey, account2.publicKey, account3.publicKey],
+);
+// Can either cache the lookup table address and lookup table account for reuse, or use them directly
+const signature = await sendVersionedTransaction(
+  connection,
+  instructions,
+  [payer],
+  10000,
+  [lookupTableAccount],
+  {
+    onStatusUpdate: (status) => console.log(status),
+  },
+);
+```
+
+These utilities help with:
+
+- Creating and sending versioned transactions
+- Managing compute units and priority fees
+- Using address lookup tables to fit more accounts in a single transaction
+- Automatic transaction retries and status updates
 
 ## Anchor IDL Utilities
 
-### Parse Account Data with IDL
+### Loading IDLs
+
+Get an IDL from a local file:
+
+```typescript
+const idl = await getIdlByPath("./idl/program.json");
+```
+
+Or fetch it from the chain:
+
+```typescript
+const idl = await getIdlByProgramId(
+  new PublicKey("verifycLy8mB96wd9wqq3WDXQwM4oU6r42Th37Db9fC"),
+  connection,
+);
+```
+
+### Parse Account Data
 
 Usage:
 
 ```typescript
-const accountData = await getIdlParsedAccountData(
-  "./idl/program.json",
+const idl = await getIdlByProgramId(programId, connection);
+const data = await getIdlParsedAccountData(
+  idl,
   "counter",
   accountAddress,
   connection,
@@ -588,11 +684,8 @@ Fetches and parses an account's data using an Anchor IDL file. This is useful wh
 Usage:
 
 ```typescript
-const events = await parseAnchorTransactionEvents(
-  "./idl/program.json",
-  signature,
-  connection,
-);
+const idl = await getIdlByPath("./idl/program.json");
+const events = await parseAnchorTransactionEvents(idl, signature, connection);
 
 // Events will be an array of:
 // {
@@ -608,11 +701,8 @@ Parses all Anchor events emitted in a transaction. This helps you track and veri
 Usage:
 
 ```typescript
-const decoded = await decodeAnchorTransaction(
-  "./idl/program.json",
-  signature,
-  connection,
-);
+const idl = await getIdlByProgramId(programId, connection);
+const decoded = await decodeAnchorTransaction(idl, signature, connection);
 
 // Print human-readable format
 console.log(decoded.toString());
