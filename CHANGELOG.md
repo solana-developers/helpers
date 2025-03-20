@@ -1,3 +1,8 @@
+## 2.8.1
+
+- Fix issue with CJS import of Anchor's `NodeWallet` to use the correct `Wallet` class exported
+- Fixed type errors on `ArrayBuffer`s and `Uint8Array`s
+
 ## 2.8
 
 - Added `sendVersionedTransaction()` to send a versioned transaction with lookup tables. Also adds priority fee support.

@@ -13,9 +13,9 @@ import {
   EventParser,
   BorshAccountsCoder,
   BorshInstructionCoder,
+  Wallet,
 } from "@coral-xyz/anchor";
 import BN from "bn.js";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { formatIdl } from "./convertLegacyIdl";
 
 /**
@@ -60,8 +60,7 @@ export async function getIdlByProgramId<Idl>(
   provider: AnchorProvider,
 ): Promise<Idl> {
   var idl = await Program.fetchIdl(programId, provider);
-  if (!idl)
-    throw new Error(`IDL not found for program ${programId.toString()}`);
+  if (!idl) throw new Error(`IDL not found for program ${programId.toString()}`);
 
   return idl as Idl;
 }
@@ -86,7 +85,7 @@ export function createProviderForConnection(
     commitment: "confirmed",
   },
 ): AnchorProvider {
-  return new AnchorProvider(connection, new NodeWallet(keypair), options);
+  return new AnchorProvider(connection, new Wallet(keypair), options);
 }
 
 /**
@@ -258,8 +257,7 @@ export async function decodeAnchorTransaction(
         const decoded = instructionCoder.decode(Buffer.from(ix.data));
         if (decoded) {
           const ixType = idl.instructions.find((i) => i.name === decoded.name);
-          const accountIndices =
-            "accounts" in ix ? ix.accounts : ix.accountKeyIndexes;
+          const accountIndices = "accounts" in ix ? ix.accounts : ix.accountKeyIndexes;
 
           // Get all accounts involved in this instruction
           const accounts: InvolvedAccount[] = await Promise.all(
@@ -267,8 +265,7 @@ export async function decodeAnchorTransaction(
               const pubkey = accountKeys.get(index);
               if (!pubkey) return null;
               const accountMeta = ixType?.accounts[i];
-              const accountInfo =
-                await provider.connection.getAccountInfo(pubkey);
+              const accountInfo = await provider.connection.getAccountInfo(pubkey);
 
               let accountData;
               if (accountInfo?.owner.equals(program.programId)) {
@@ -277,9 +274,7 @@ export async function decodeAnchorTransaction(
                     accountInfo.data
                       .slice(0, 8)
                       .equals(
-                        accountsCoder.accountDiscriminator(
-                          acc.name.toLowerCase(),
-                        ),
+                        accountsCoder.accountDiscriminator(acc.name.toLowerCase()) as Uint8Array,
                       ),
                   );
                   if (accountType) {
@@ -312,9 +307,7 @@ export async function decodeAnchorTransaction(
             accounts,
             toString: function () {
               let output = `\nInstruction: ${this.name}\n`;
-              output += `├─ Arguments: ${JSON.stringify(
-                formatData(this.data),
-              )}\n`;
+              output += `├─ Arguments: ${JSON.stringify(formatData(this.data))}\n`;
               output += `└─ Accounts:\n`;
               this.accounts.forEach((acc) => {
                 output += `   ├─ ${acc.name}:\n`;
@@ -322,9 +315,7 @@ export async function decodeAnchorTransaction(
                 output += `   │  ├─ Signer: ${acc.isSigner}\n`;
                 output += `   │  ├─ Writable: ${acc.isWritable}\n`;
                 if (acc.data) {
-                  output += `   │  └─ Data: ${JSON.stringify(
-                    formatData(acc.data),
-                  )}\n`;
+                  output += `   │  └─ Data: ${JSON.stringify(formatData(acc.data))}\n`;
                 }
               });
               return output;
@@ -358,9 +349,7 @@ function formatData(data: any): any {
     return data.map(formatData);
   }
   if (typeof data === "object" && data !== null) {
-    return Object.fromEntries(
-      Object.entries(data).map(([k, v]) => [k, formatData(v)]),
-    );
+    return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, formatData(v)]));
   }
   return data;
 }
