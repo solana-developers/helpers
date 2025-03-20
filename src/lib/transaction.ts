@@ -84,9 +84,7 @@ export const getSimulationComputeUnits = async (
   const simulationInstructions = [...instructions];
 
   // Replace or add compute limit instruction
-  const computeLimitIndex = simulationInstructions.findIndex(
-    isSetComputeLimitInstruction,
-  );
+  const computeLimitIndex = simulationInstructions.findIndex(isSetComputeLimitInstruction);
   const simulationLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
     units: 1_400_000,
   });
@@ -116,8 +114,7 @@ export const getSimulationComputeUnits = async (
   if (rpcResponse?.value?.err) {
     const logs = rpcResponse.value.logs?.join("\n  • ") || "No logs available";
     throw new Error(
-      `Transaction simulation failed:\n  •${logs}` +
-        JSON.stringify(rpcResponse?.value?.err),
+      `Transaction simulation failed:\n  •${logs}` + JSON.stringify(rpcResponse?.value?.err),
     );
   }
 
@@ -173,9 +170,7 @@ export type ComputeUnitBuffer = {
 /**
  * Default configuration values for transaction sending
  */
-export const DEFAULT_SEND_OPTIONS: Required<
-  Omit<SendTransactionOptions, "onStatusUpdate">
-> = {
+export const DEFAULT_SEND_OPTIONS: Required<Omit<SendTransactionOptions, "onStatusUpdate">> = {
   maxRetries: MAX_RETRIES,
   initialDelayMs: RETRY_INTERVAL_MS,
   commitment: "confirmed",
@@ -239,7 +234,7 @@ export async function sendTransaction(
   // Skip compute preparation if transaction is already signed or has compute instructions
   if (transaction.signatures.length > 0) {
     console.log("Transaction already signed, skipping compute preparation");
-    return sendRawTransactionWithRetry(connection, transaction.serialize(), {
+    return sendRawTransactionWithRetry(connection, transaction.serialize() as Uint8Array, {
       commitment,
       ...sendOptions,
     });
@@ -256,7 +251,7 @@ export async function sendTransaction(
   );
 
   transaction.sign(...signers);
-  return sendRawTransactionWithRetry(connection, transaction.serialize(), {
+  return sendRawTransactionWithRetry(connection, transaction.serialize() as Uint8Array, {
     commitment,
     ...sendOptions,
   });
@@ -318,8 +313,7 @@ export async function sendVersionedTransaction(
     ...sendOptions
   } = options;
 
-  const hasComputeLimitInstructions =
-    hasSetComputeLimitInstruction(instructions);
+  const hasComputeLimitInstructions = hasSetComputeLimitInstruction(instructions);
 
   if (!hasComputeLimitInstructions) {
     const computeUnitBuffer = userComputeBuffer ?? { multiplier: 1.1 };
@@ -336,8 +330,7 @@ export async function sendVersionedTransaction(
 
   const messageV0 = new TransactionMessage({
     payerKey: signers[0].publicKey,
-    recentBlockhash: (await connection.getLatestBlockhash(commitment))
-      .blockhash,
+    recentBlockhash: (await connection.getLatestBlockhash(commitment)).blockhash,
     instructions,
   }).compileToV0Message(lookupTables);
 
@@ -345,11 +338,7 @@ export async function sendVersionedTransaction(
 
   transaction.sign(signers);
 
-  return await sendRawTransactionWithRetry(
-    connection,
-    transaction.serialize(),
-    sendOptions,
-  );
+  return await sendRawTransactionWithRetry(connection, transaction.serialize(), sendOptions);
 }
 
 /**
@@ -399,9 +388,7 @@ export async function addComputeInstructions(
     // Apply buffer to compute units
     let finalComputeUnits = simulatedCompute;
     if (computeUnitBuffer.multiplier) {
-      finalComputeUnits = Math.floor(
-        finalComputeUnits * computeUnitBuffer.multiplier,
-      );
+      finalComputeUnits = Math.floor(finalComputeUnits * computeUnitBuffer.multiplier);
     }
     if (computeUnitBuffer.fixed) {
       finalComputeUnits += computeUnitBuffer.fixed;
@@ -541,12 +528,11 @@ export async function createLookupTable(
 ): Promise<[PublicKey, AddressLookupTableAccount]> {
   const slot = await connection.getSlot();
 
-  const [lookupTableInst, lookupTableAddress] =
-    AddressLookupTableProgram.createLookupTable({
-      authority: sender.publicKey,
-      payer: sender.publicKey,
-      recentSlot: slot,
-    });
+  const [lookupTableInst, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
+    authority: sender.publicKey,
+    payer: sender.publicKey,
+    recentSlot: slot,
+  });
 
   const extendInstruction = AddressLookupTableProgram.extendLookupTable({
     payer: sender.publicKey,
@@ -565,16 +551,9 @@ export async function createLookupTable(
   );
 
   // Need to wait until the lookup table is active
-  await confirmTransaction(
-    connection,
-    lookupTableInstructionsSignature,
-    "finalized",
-  );
+  await confirmTransaction(connection, lookupTableInstructionsSignature, "finalized");
 
-  console.log(
-    "Lookup table instructions signature",
-    lookupTableInstructionsSignature,
-  );
+  console.log("Lookup table instructions signature", lookupTableInstructionsSignature);
 
   const lookupTableAccount = (
     await connection.getAddressLookupTable(lookupTableAddress, {
