@@ -13,6 +13,9 @@ and/or node.js, made by the Solana Foundation's
 > - npm registry - https://www.npmjs.com/package/gill
 > - source repository - https://github.com/solana-foundation/gill
 
+> [!IMPORTANT]  
+> `@solana/helpers` is for Solana web3.js version 1. An updated version of `@solana/helpers` for Solana web3.js version 2 is at https://github.com/helius-labs/kite.
+
 ## What can I do with this module?
 
 ### Account & Keypair Management:
