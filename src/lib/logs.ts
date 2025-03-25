@@ -31,7 +31,7 @@ export const getErrorFromRPCResponse = (
       const errorKeys = Object.keys(error);
       if (errorKeys.length === 1) {
         if (errorKeys[0] !== "InstructionError") {
-          throw new Error(`Unknown RPC error: ${error}`);
+          throw new Error(`Unknown RPC error: ${JSON.stringify(error)}`);
         }
         // @ts-ignore due to missing typing information mentioned above.
         const instructionError = error["InstructionError"];
