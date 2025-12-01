@@ -567,3 +567,142 @@ export async function createLookupTable(
 
   return [lookupTableAddress, lookupTableAccount];
 }
+
+/**
+ * Determines the length of the compact u16 encoding for the number of signatures.
+ * This is used for encoding the signature count in the transaction wire format.
+ *
+ * @param count - The number of signatures in the transaction
+ * @returns The number of bytes required for the encoding (1, 2, or 3)
+ *
+ * @example
+ * ```typescript
+ * const length = getSignatureCountLength(1); // Returns 1
+ * const length = getSignatureCountLength(128); // Returns 2
+ * const length = getSignatureCountLength(16384); // Returns 3
+ * ```
+ */
+export function getSignatureCountLength(count: number): number {
+  if (count < 0x80) {
+    // 1-byte encoding: 0xxxxxxx
+    return 1;
+  }
+  if (count < 0x4000) {
+    // 2-byte encoding: 1xxxxxxx 0xxxxxxx
+    return 2;
+  }
+  // 3-byte encoding: 1xxxxxxx 1xxxxxxx 0xxxxxxx
+  return 3;
+}
+
+/**
+ * Writes the compact u16 length of a count into the provided buffer.
+ * This is used for encoding the signature count in the transaction wire format.
+ *
+ * @param count - The count (number of signatures) to encode
+ * @param array - The destination buffer (Uint8Array or Buffer) to write the encoded length to
+ * @param offset - The starting position in the buffer to write the length
+ * @returns The number of bytes written to the buffer (1, 2, or 3)
+ *
+ * @example
+ * ```typescript
+ * const buffer = Buffer.alloc(10);
+ * const bytesWritten = encodeLength(128, buffer, 0); // Returns 2
+ * ```
+ */
+export function encodeLength(count: number, array: Uint8Array, offset: number): number {
+  let rem_len = count;
+  let len = 0;
+
+  // Continue looping until all bits of the count are encoded (rem_len === 0)
+  for (;;) {
+    let elem = rem_len & 0x7f; // Get the lowest 7 bits
+    rem_len >>= 7; // Shift the count to process the next 7 bits
+
+    // If there are more bits remaining, set the continuation flag (0x80)
+    if (rem_len !== 0) {
+      elem |= 0x80;
+    }
+
+    // Write the byte and advance the offset
+    array[offset + len] = elem;
+    len++;
+
+    // Break the loop if there are no more bits left to encode
+    if (rem_len === 0) {
+      break;
+    }
+  }
+
+  return len;
+}
+
+/**
+ * Serializes a transaction without the standard 1232-byte size limit check.
+ * This function allows serialization of transactions that exceed the
+ * normal size limit, which is useful for testing on a cluster with large
+ * transactions.
+ *
+ * The transaction must be fully signed before calling this function.
+ *
+ * @param tx - The transaction to serialize (must be fully signed)
+ * @returns A Buffer containing the serialized transaction
+ * @throws Error if the transaction is not fully signed
+ *
+ * @example
+ * ```typescript
+ * // Create and sign a transaction
+ * const transaction = new Transaction().add(
+ *   SystemProgram.transfer({
+ *     fromPubkey: sender.publicKey,
+ *     toPubkey: recipient.publicKey,
+ *     lamports: 1_000_000,
+ *   })
+ * );
+ * transaction.recentBlockhash = blockhash;
+ * transaction.feePayer = sender.publicKey;
+ * transaction.sign(sender);
+ *
+ * // Serialize without size limit
+ * const serialized = serializeTransactionWithoutSizeLimit(transaction);
+ *
+ * // Use case: Large batch payments
+ * // When creating transactions with many instructions that exceed 1232 bytes,
+ * // use this function to serialize them for sending via sendRawTransaction
+ * ```
+ */
+export function serializeTransactionWithoutSizeLimit(tx: Transaction): Buffer {
+  const message = tx.compileMessage();
+  const serializedMessage = message.serialize();
+
+  const signatureCount = tx.signatures.length;
+
+  const signatureCountLength = getSignatureCountLength(signatureCount);
+  const serializedSignaturesLength = signatureCountLength + signatureCount * 64;
+  const transactionSize = serializedSignaturesLength + serializedMessage.length;
+
+  const wireTransaction = Buffer.alloc(transactionSize);
+  let offset = 0;
+
+  // Write the signature count (compact u16)
+  offset += encodeLength(tx.signatures.length, wireTransaction, offset);
+
+  // Write all 64-byte signatures
+  for (const signature of tx.signatures) {
+    if (!signature.signature) {
+      throw new Error("Transaction must be fully signed before serialization");
+    }
+    // Check if signature is all zeros (unsigned)
+    const sigArray = Array.from(signature.signature);
+    if (sigArray.length === 64 && sigArray.every((byte) => byte === 0)) {
+      throw new Error("Transaction must be fully signed before serialization");
+    }
+    wireTransaction.set(signature.signature, offset);
+    offset += 64;
+  }
+
+  // Write the serialized message data
+  wireTransaction.set(serializedMessage, offset);
+
+  return wireTransaction;
+}
