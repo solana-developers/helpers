@@ -13,10 +13,47 @@ import {
   EventParser,
   BorshAccountsCoder,
   BorshInstructionCoder,
-  Wallet,
 } from "@coral-xyz/anchor";
+import type {
+  Transaction,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import BN from "bn.js";
 import { formatIdl } from "./convertLegacyIdl";
+
+/**
+ * Minimal wallet implementation compatible with AnchorProvider.
+ * Replaces the `Wallet` class from `@coral-xyz/anchor` which is not
+ * exported from the browser bundle (only available in CJS/Node builds).
+ * See: https://github.com/solana-developers/helpers/issues/81
+ */
+class KeypairWallet {
+  constructor(readonly payer: Keypair) {}
+
+  get publicKey(): PublicKey {
+    return this.payer.publicKey;
+  }
+
+  async signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
+    if ('version' in tx) {
+      (tx as VersionedTransaction).sign([this.payer]);
+    } else {
+      (tx as Transaction).partialSign(this.payer);
+    }
+    return tx;
+  }
+
+  async signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
+    for (const tx of txs) {
+      if ('version' in tx) {
+        (tx as VersionedTransaction).sign([this.payer]);
+      } else {
+        (tx as Transaction).partialSign(this.payer);
+      }
+    }
+    return txs;
+  }
+}
 
 /**
  * Loads an Anchor IDL from a local file path
@@ -85,7 +122,7 @@ export function createProviderForConnection(
     commitment: "confirmed",
   },
 ): AnchorProvider {
-  return new AnchorProvider(connection, new Wallet(keypair), options);
+  return new AnchorProvider(connection, new KeypairWallet(keypair), options);
 }
 
 /**
