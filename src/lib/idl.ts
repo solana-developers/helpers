@@ -153,7 +153,7 @@ export async function parseAnchorTransactionEvents(
 
   const transaction = await provider.connection.getTransaction(signature, {
     commitment: "confirmed",
-    maxSupportedTransactionVersion: 0,
+    maxSupportedTransactionVersion: 1,
   });
 
   if (!transaction?.meta?.logMessages) {
@@ -228,7 +228,7 @@ export async function decodeAnchorTransaction(
 
   const transaction = await provider.connection.getTransaction(signature, {
     commitment: "confirmed",
-    maxSupportedTransactionVersion: 0,
+    maxSupportedTransactionVersion: 1,
   });
 
   if (!transaction) {
