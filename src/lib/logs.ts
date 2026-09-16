@@ -7,7 +7,7 @@ export const getLogs = async (
 ): Promise<Array<string>> => {
   await confirmTransaction(connection, tx);
   const txDetails = await connection.getTransaction(tx, {
-    maxSupportedTransactionVersion: 0,
+    maxSupportedTransactionVersion: 1,
     commitment: "confirmed",
   });
   return txDetails?.meta?.logMessages || [];
