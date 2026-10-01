@@ -87,7 +87,11 @@ export const createAccountsMintsAndTokenAccounts = async (
     ...mintTokensInstructions,
   ];
 
-  const signers = [...users, ...mints, payer];
+  // Users only sign when they are the mint authority for a nonzero balance.
+  const mintAuthorities = users.filter((_, userIndex) =>
+    usersAndTokenBalances[userIndex].some((balance) => balance !== 0),
+  );
+  const signers = [...mintAuthorities, ...mints, payer];
 
   // Finally, make the transaction and send it.
   await makeAndSendAndConfirmTransaction(
