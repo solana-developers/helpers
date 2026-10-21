@@ -13,24 +13,69 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/setup-solana@v1.0
-        with:
-          # Install Solana CLI (beta, required to fix 'ahash' issue)
-          solana-cli-version: "1.18.5"
 
-      - name: Setup Node.js version 
+      - name: Install Agave (Solana CLI)
+        # Pinned because the tests assert exact compute unit counts, which can change between
+        # validator versions. Update the version and the counts in transaction.test.ts together.
+        # Needs Agave 4 or newer, which supports version 1 transactions (SIMD-0385).
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v4.3.2/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Setup Node.js version
         uses: actions/setup-node@v4
         with:
-          node-version: 21.x
-
-      - name: Run Solana validator (and background it)
-        run: solana-test-validator &
+          # The package needs Node.js 20.19+ or 22.12+. The require-esm job below checks those versions
+          node-version: 24.x
 
       - name: Install everything
         run: npm ci
 
+      # Starts the validator with a copy of a devnet Anchor program, which the tests send
+      # version 1 transactions to
+      - name: Run Solana validator (and background it)
+        run: npm run validator -- --quiet &
+
       - name: Check Solana keygen is installed
         run: echo $PATH; which solana-keygen
 
+      - name: Build
+        run: npm run build
+
+      - name: Wait for the validator to be ready
+        run: |
+          for attempt in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8899 -X POST -H 'Content-Type: application/json' \
+              -d '{"jsonrpc":"2.0","id":1,"method":"getHealth"}' | grep -q '"ok"' && exit 0
+            sleep 1
+          done
+          echo "Validator did not become healthy" && exit 1
+
       - name: Run tests
         run: npm run test:ci
+
+  # The package is ESM only, and CommonJS users load it with require(), which needs
+  # Node.js 20.19+ or 22.12+. Check the oldest versions in package.json's 'engines'.
+  require-esm:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.19.0, 22.12.0]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js version
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install everything
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check require() works
+        run: npm run test:require

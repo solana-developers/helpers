@@ -1,16 +1,26 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ES2022",
+    // The package is ESM only. Every Node.js version it supports (20.19+ and 22.12+) can require()
+    // an ES module, so a separate CommonJS build would add nothing. A CommonJS build couldn't load on
+    // older Node.js versions anyway, since a dependency (@noble/hashes, used by Codama) is ESM only.
+    // 'nodenext' makes TypeScript check imports work in node.js, including that relative imports
+    // end in '.js'
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    // Kit's types use web platform types like CryptoKeyPair
     "lib": ["ES2022", "DOM"],
-    "moduleResolution": "node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "isolatedModules": true,
     "preserveConstEnums": true,
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
