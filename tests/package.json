@@ -1,10 +1,6 @@
 {
   "scripts": {
-    "clean": "rm -rf dist",
-    "test": "npm run test:esm",
-    "test:ci": "npm run test:cjs && npm run test:esm",
-    "pretest:cjs": "npm run clean && tsc -p tsconfig.test.json",
-    "test:cjs": "node --test dist/tests/src/**/*.test.js",
-    "test:esm": "node --test --require esbuild-register src/**"
+    "test": "node --test --import tsx src/**/*.test.ts",
+    "test:typecheck": "tsc -p tsconfig.test.json"
   }
 }

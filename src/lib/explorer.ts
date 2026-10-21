@@ -1,13 +1,10 @@
-import { Cluster } from "@solana/web3.js";
-
 export const getCustomErrorMessage = (
   possibleProgramErrors: Array<string>,
   errorMessage: string,
 ): string | null => {
-  const customErrorExpression =
-    /.*custom program error: 0x(?<errorNumber>[0-9abcdef]+)/;
+  const customErrorExpression = /.*custom program error: 0x(?<errorNumber>[0-9abcdef]+)/;
 
-  let match = customErrorExpression.exec(errorMessage);
+  const match = customErrorExpression.exec(errorMessage);
   const errorNumberFound = match?.groups?.errorNumber;
   if (!errorNumberFound) {
     return null;
@@ -27,20 +24,52 @@ const encodeURL = (baseUrl: string, searchParams: Record<string, string>) => {
   return url.toString();
 };
 
-export const getExplorerLink = (
-  linkType: "transaction" | "tx" | "address" | "block",
+/**
+ * The Solana network an Explorer link is for. 'localnet' is a local solana-test-validator.
+ */
+export type ExplorerCluster = "mainnet" | "devnet" | "testnet" | "localnet";
+
+// Solana's main network was called 'mainnet-beta' until it was renamed to 'mainnet'.
+// We still accept the old name, but warn (once, to avoid flooding logs) so people update their code.
+let hasWarnedAboutMainnetBeta = false;
+const warnAboutMainnetBeta = () => {
+  if (hasWarnedAboutMainnetBeta) {
+    return;
+  }
+  hasWarnedAboutMainnetBeta = true;
+  console.warn(`'mainnet-beta' is now called 'mainnet'. Please use 'mainnet' instead.`);
+};
+
+type ExplorerLinkType = "transaction" | "tx" | "address" | "block";
+
+/** @deprecated 'mainnet-beta' is now called 'mainnet'. Use 'mainnet' instead. */
+export function getExplorerLink(
+  linkType: ExplorerLinkType,
   id: string,
-  cluster: Cluster | "localnet" = "mainnet-beta",
-): string => {
+  cluster: "mainnet-beta",
+): string;
+export function getExplorerLink(
+  linkType: ExplorerLinkType,
+  id: string,
+  cluster?: ExplorerCluster,
+): string;
+export function getExplorerLink(
+  linkType: ExplorerLinkType,
+  id: string,
+  cluster: ExplorerCluster | "mainnet-beta" = "mainnet",
+): string {
+  if (cluster === "mainnet-beta") {
+    warnAboutMainnetBeta();
+    cluster = "mainnet";
+  }
   const searchParams: Record<string, string> = {};
-  if (cluster !== "mainnet-beta") {
-    if (cluster === "localnet") {
-      // localnet technically isn't a cluster, so requires special handling
-      searchParams["cluster"] = "custom";
-      searchParams["customUrl"] = "http://localhost:8899";
-    } else {
-      searchParams["cluster"] = cluster;
-    }
+  if (cluster === "localnet") {
+    // localnet technically isn't a cluster, so requires special handling
+    searchParams["cluster"] = "custom";
+    searchParams["customUrl"] = "http://localhost:8899";
+  } else if (cluster !== "mainnet") {
+    // Mainnet is Explorer's default, so it doesn't need a cluster parameter
+    searchParams["cluster"] = cluster;
   }
   let baseUrl: string = "";
   if (linkType === "address") {
@@ -53,4 +82,4 @@ export const getExplorerLink = (
     baseUrl = `https://explorer.solana.com/block/${id}`;
   }
   return encodeURL(baseUrl, searchParams);
-};
+}

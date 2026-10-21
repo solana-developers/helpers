@@ -1,6 +1,6 @@
 import { type Connection, Keypair, LAMPORTS_PER_SOL, type PublicKey } from "@solana/web3.js";
-import type { InitializeKeypairOptions } from "../types";
-import { addKeypairToEnvFile, getKeypairFromEnvironment, getKeypairFromFile } from "./keypair";
+import type { InitializeKeypairOptions } from "../types.js";
+import { addKeypairToEnvFile, getKeypairFromEnvironment, getKeypairFromFile } from "./keypair.js";
 
 const DEFAULT_AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL;
 const DEFAULT_MINIMUM_BALANCE = 0.5 * LAMPORTS_PER_SOL;
@@ -26,23 +26,18 @@ export const initializeKeypair = async (
   if (keypairPath) {
     keypair = await getKeypairFromFile(keypairPath);
   } else if (process.env[envVariableName]) {
-    keypair = getKeypairFromEnvironment(envVariableName);
+    keypair = await getKeypairFromEnvironment(envVariableName);
   } else {
-    keypair = Keypair.generate();
+    keypair = await Keypair.generate();
     await addKeypairToEnvFile(keypair, envVariableName, envFileName);
   }
 
   if (airdropAmount) {
-    await airdropIfRequired(
-      connection,
-      keypair.publicKey,
-      airdropAmount,
-      minimumBalance,
-    );
+    await airdropIfRequired(connection, keypair.publicKey, airdropAmount, minimumBalance);
   }
 
   return keypair;
-}
+};
 
 // Not exported as we don't want to encourage people to
 // request airdrops when they don't need them, ie - don't bother
@@ -50,12 +45,9 @@ export const initializeKeypair = async (
 const requestAndConfirmAirdrop = async (
   connection: Connection,
   publicKey: PublicKey,
-  amount: number,
-) => {
-  const airdropTransactionSignature = await connection.requestAirdrop(
-    publicKey,
-    amount,
-  );
+  lamports: number | bigint,
+): Promise<bigint> => {
+  const airdropTransactionSignature = await connection.requestAirdrop(publicKey, Number(lamports));
   // Wait for airdrop confirmation
   const latestBlockHash = await connection.getLatestBlockhash();
   await connection.confirmTransaction(
@@ -74,11 +66,11 @@ const requestAndConfirmAirdrop = async (
 export const airdropIfRequired = async (
   connection: Connection,
   publicKey: PublicKey,
-  airdropAmount: number,
-  minimumBalance: number,
-): Promise<number> => {
+  airdropAmount: number | bigint,
+  minimumBalance: number | bigint,
+): Promise<bigint> => {
   const balance = await connection.getBalance(publicKey, "confirmed");
-  if (balance < minimumBalance) {
+  if (balance < BigInt(minimumBalance)) {
     return requestAndConfirmAirdrop(connection, publicKey, airdropAmount);
   }
   return balance;

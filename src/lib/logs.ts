@@ -1,53 +1,62 @@
-import { Connection, RpcResponseAndContext, SignatureResult, SimulatedTransactionResponse } from "@solana/web3.js";
-import { confirmTransaction } from "./transaction";
+import type {
+  Connection,
+  RpcResponseAndContext,
+  SignatureResult,
+  SimulatedTransactionResponse,
+} from "@solana/web3.js";
+import { confirmTransaction } from "./transaction.js";
+import { MAX_SUPPORTED_TRANSACTION_VERSION } from "./rpc.js";
 
 export const getLogs = async (
   connection: Connection,
-  tx: string,
+  signature: string,
 ): Promise<Array<string>> => {
-  await confirmTransaction(connection, tx);
-  const txDetails = await connection.getTransaction(tx, {
-    maxSupportedTransactionVersion: 0,
+  await confirmTransaction(connection, signature);
+  const transactionDetails = await connection.getTransaction(signature, {
+    maxSupportedTransactionVersion: MAX_SUPPORTED_TRANSACTION_VERSION,
     commitment: "confirmed",
   });
-  return txDetails?.meta?.logMessages || [];
+  return [...(transactionDetails?.meta?.logMessages || [])];
 };
 
-export const getErrorFromRPCResponse = (
-  rpcResponse: RpcResponseAndContext<
-    SignatureResult | SimulatedTransactionResponse
-  >,
-) => {
-  // Note: `confirmTransaction` does not throw an error if the confirmation does not succeed,
-  // but rather a `TransactionError` object. so we handle that here
-  // See https://solana-labs.github.io/solana-web3.js/v1.x/classes/Connection.html#confirmTransaction.confirmTransaction-1
+// JSON.stringify() throws on bigints, which RPC errors can contain
+const stringifyWithBigInts = (value: unknown): string => {
+  return JSON.stringify(value, (_key, item) => (typeof item === "bigint" ? item.toString() : item));
+};
 
+// `confirmTransaction` and `simulateTransaction` do not throw when the transaction fails,
+// they return a `TransactionError` in `value.err` instead - so we turn that into a thrown Error here.
+export const getErrorFromRPCResponse = (
+  rpcResponse: RpcResponseAndContext<SignatureResult | SimulatedTransactionResponse>,
+) => {
   const error = rpcResponse.value.err;
-  if (error) {
-    // Can be a string or an object (literally just {}, no further typing is provided by the library)
-    // https://github.com/solana-labs/solana-web3.js/blob/4436ba5189548fc3444a9f6efb51098272926945/packages/library-legacy/src/connection.ts#L2930
-    // TODO: if still occurs in web3.js 2 (unlikely), fix it.
-    if (typeof error === "object") {
-      const errorKeys = Object.keys(error);
-      if (errorKeys.length === 1) {
-        if (errorKeys[0] !== "InstructionError") {
-          throw new Error(`Unknown RPC error: ${error}`);
-        }
-        // @ts-ignore due to missing typing information mentioned above.
-        const instructionError = error["InstructionError"];
-        // An instruction error is a custom program error and looks like:
-        // [
-        //   1,
-        //   {
-        //     "Custom": 1
-        //   }
-        // ]
-        // See also https://solana.stackexchange.com/a/931/294
-        throw new Error(
-          `Error in transaction: instruction index ${instructionError[0]}, custom program error ${instructionError[1]["Custom"]}`,
-        );
-      }
-    }
-    throw Error(error.toString());
+  if (!error) {
+    return;
   }
+
+  if (typeof error === "string") {
+    throw new Error(error);
+  }
+
+  if ("InstructionError" in error) {
+    const [instructionIndex, instructionError] = error.InstructionError;
+    // A custom program error looks like:
+    // [
+    //   1,
+    //   {
+    //     "Custom": 1
+    //   }
+    // ]
+    // See also https://solana.stackexchange.com/a/931/294
+    if (typeof instructionError === "object" && "Custom" in instructionError) {
+      throw new Error(
+        `Error in transaction: instruction index ${instructionIndex}, custom program error ${instructionError.Custom}`,
+      );
+    }
+    throw new Error(
+      `Error in transaction: instruction index ${instructionIndex}, ${stringifyWithBigInts(instructionError)}`,
+    );
+  }
+
+  throw new Error(`Error in transaction: ${stringifyWithBigInts(error)}`);
 };

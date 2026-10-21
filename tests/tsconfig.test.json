@@ -1,20 +1,13 @@
+// Typechecks the tests, which tsx runs directly
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "target": "ES2022",
-    "moduleResolution": "node",
+    "module": "esnext",
+    // The tests import the helpers from '../../src', which tsx resolves
+    "moduleResolution": "bundler",
     "rootDir": "../",
-    "outDir": "../tests/dist",
-    "types": ["node"],
-    "esModuleInterop": true
+    "noEmit": true,
+    "types": ["node"]
   },
-  "include": ["src/**/*", "tests/src/*"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "tests/bankrun_test",
-    "coverage/**",
-    "**/*.d.ts"
-  ]
+  "include": ["../src/**/*", "src/**/*"]
 }
